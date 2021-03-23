@@ -42,6 +42,12 @@ namespace ft {
             return *this;
         }
 
+        VectorIterator operator++(int) {
+            VectorIterator<T> ret;
+            ret._value = _value + 1;
+            return ret;
+        }
+
         bool    operator!=(VectorIterator<T> const& other) {
             return _value != other._value;
         }
@@ -81,11 +87,14 @@ namespace ft {
             _capacity = n;
         }
 
-//        template <class InputIterator>
-//        vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type()) :
-//            _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
-//
-//        }
+        template <class InputIterator>
+        vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type()) :
+            _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
+            while (first != last) {
+                push_back(*first);
+                ++first;
+            }
+        }
 
         vector(const vector& x) {
 
@@ -102,7 +111,7 @@ namespace ft {
         template <class InputIterator>
             void assign (InputIterator first, InputIterator last) {
 
-        }
+            }
 
         void assign (size_type n, const value_type& val) {
 
