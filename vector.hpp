@@ -11,7 +11,7 @@ namespace ft {
     class VectorIterator : public std::iterator<std::random_access_iterator_tag, T>
     {
 
-        T&   _value;
+        T   _value;
 
         VectorIterator() {}
 
@@ -20,7 +20,8 @@ namespace ft {
         typedef typename std::iterator_traits<T>::reference reference;
         typedef typename std::iterator_traits<T>::value_type value_type;
 
-        explicit VectorIterator(T& value) : _value(value) {}
+        explicit VectorIterator(T value) : _value(value) {}
+//        explicit VectorIterator(T& value) : _value(value) {}
 
         VectorIterator(VectorIterator<T> const& other) : _value(other._value) {
         }
@@ -37,7 +38,7 @@ namespace ft {
         }
 
         VectorIterator& operator++() {
-            _value += sizeof(value_type);
+            ++_value;
             return *this;
         }
 
@@ -69,13 +70,13 @@ namespace ft {
         }
 
         explicit vector(size_type n, const value_type& val = value_type(), const allocator_type& alloc = allocator_type()) :
-            _allocator(alloc) {
+            _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
             if (n != 0) {
                 _data = _allocator.allocate(n);
-                _end = _data + n * sizeof(value_type);
-                _allocator.construct(_data, val);
-//            for(pointer _p = _data; _p != _end; ++_p) {
-//            }
+                _end = _data + n;
+                for(pointer p = _data; p != _end; p += 1) {
+                    _allocator.construct(p, val);
+                }
             }
             _capacity = n;
         }
@@ -90,14 +91,16 @@ namespace ft {
 
         }
 
-        ~vector() {}
+        ~vector() {
+            clear();
+        }
 
         vector& operator=(const vector& x) {
 
         }
 
         template <class InputIterator>
-        void assign (InputIterator first, InputIterator last) {
+            void assign (InputIterator first, InputIterator last) {
 
         }
 
@@ -114,7 +117,7 @@ namespace ft {
         }
 
         const_iterator begin() const {
-
+            return const_iterator(_data);
         }
 
         iterator end() {
@@ -122,27 +125,27 @@ namespace ft {
         }
 
         const_iterator end() const {
-
+            return const_iterator(_end);
         }
 
         reverse_iterator rbegin() {
-
+            return reverse_iterator(_data);
         }
 
         const_reverse_iterator rbegin() const {
-
+            return const_reverse_iterator(_data);
         }
 
         reverse_iterator rend() {
-
+            return reverse_iterator(_end);
         }
 
         const_reverse_iterator rend() const {
-
+            return const_reverse_iterator(_end);
         }
 
         size_type size() const {
-            return static_cast<size_type>((_end - _data) / sizeof(value_type));
+            return static_cast<size_type>((_end - _data));
         }
 
         size_type max_size() const {
@@ -198,15 +201,117 @@ namespace ft {
 
         }
 
+        void push_back(const T& x) {
+
+        }
+
+        void pop_back() {
+
+        }
+
+        iterator insert(iterator position, const T& x) {
+
+        }
+
+        void insert(iterator position, size_type n, const T& x) {
+
+        }
+
+        template<class InputIterator>
+                void insert(iterator position, InputIterator first, InputIterator last) {
+
+                }
+
+        iterator erase(iterator position) {
+
+        }
+
+        iterator erase(iterator first, iterator last) {
+
+        }
+
+        void swap(vector<T, Alloc>& other) {
+            pointer data = _data;
+            pointer end = _end;
+            allocator_type allocator = _allocator;
+            size_type capacity = _capacity;
+
+            _data = other._data;
+            _end = other._end;
+            _allocator = other._allocator;
+            _capacity = other._capacity;
+
+            other._data = data;
+            other._end = end;
+            other._allocator = allocator;
+            other._capacity = capacity;
+        }
+
+        void clear() {
+            for (pointer p = _data; p != _end; p += sizeof(value_type)) {
+                _allocator.destroy(p);
+            }
+            _allocator.deallocate(_data, 0);
+       }
+
     private:
 
         allocator_type  _allocator;
         pointer         _data;
         pointer         _end;
-        size_type       _size;
         size_type       _capacity;
 
     };
+
+    template<class T, class Allocator>
+        bool operator==(const vector<T, Allocator>& x, const vector<T, Allocator>& y) {
+            if (x.size() != y.size())
+                return false;
+            for (typename vector<T, Allocator>::iterator xit = x.begin(), yit = y.begin;
+                    xit != x.end(); ++xit, ++yit) {
+                if (*xit != *yit) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+    template<class T, class Allocator>
+        bool operator<(const vector<T, Allocator>& x, const vector<T, Allocator>& y) {
+            for (typename vector<T, Allocator>::iterator xit = x.begin(), yit = y.begin;
+                 yit != y.end(); ++xit, ++yit) {
+                if (xit == x.end() || *xit < *yit)
+                    return true;
+                if (*yit < *xit)
+                    return false;
+            }
+            return false;
+        }
+
+    template<class T, class Allocator>
+        bool operator!=(const vector<T, Allocator>& x, const vector<T, Allocator>& y) {
+            return !(x == y);
+        }
+
+    template<class T, class Allocator>
+        bool operator>(const vector<T, Allocator>& x, const vector<T, Allocator>& y) {
+            return y < x;
+        }
+
+    template<class T, class Allocator>
+        bool operator>=(const vector<T, Allocator>& x, const vector<T, Allocator>& y) {
+            return !(x < y);
+        }
+
+    template<class T, class Allocator>
+        bool operator<=(const vector<T, Allocator>& x, const vector<T, Allocator>& y) {
+            return !(y < x);
+        }
+
+    template<class T, class Allocator>
+        void swap(vector<T, Allocator>& x, vector<T, Allocator>& y) {
+            x.swap(y);
+        }
 
 };
 
