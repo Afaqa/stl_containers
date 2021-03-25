@@ -39,10 +39,10 @@ int main() {
     std::vector<int> sv1 = std::vector<int>();
     std::vector<int> sv2(0);
     std::vector<int> *sv3 = new std::vector<int>(10, 15);
-//    printVectorInfo(sv);
-//    printVectorInfo(sv1);
-//    printVectorInfo(sv2);
-//    printVectorInfo(*sv3);
+    printVectorInfo(sv);
+    printVectorInfo(sv1);
+    printVectorInfo(sv2);
+    printVectorInfo(*sv3);
     printVectorInfo(fv);
     printVectorInfo(fv1);
     printVectorInfo(*fv2);

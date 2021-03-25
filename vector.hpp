@@ -7,6 +7,12 @@
 
 namespace ft {
 
+    template <class T, class U>     struct is_same          { static const bool value = false; };
+    template <class T>              struct is_same<T, T>    { static const bool value = true; };
+
+    template <bool, class T = void> struct enable_if            {};
+    template <class T>              struct enable_if<true, T>   { typedef T type; };
+
     template <typename T>
     class VectorIterator : public std::iterator<std::random_access_iterator_tag, T>
     {
@@ -88,7 +94,10 @@ namespace ft {
         }
 
         template <class InputIterator>
-        vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type()) :
+        vector(InputIterator first,
+               typename enable_if<is_same<typename InputIterator::iterator_type, std::random_access_iterator_tag>::value,
+                InputIterator>::type last,
+               const allocator_type& alloc = allocator_type()) :
             _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
             while (first != last) {
                 push_back(*first);
@@ -109,7 +118,9 @@ namespace ft {
         }
 
         template <class InputIterator>
-            void assign (InputIterator first, InputIterator last) {
+            void assign (InputIterator first,
+                         typename enable_if<is_same<typename InputIterator::iterator_type, std::random_access_iterator_tag>::value,
+                                 InputIterator>::type last) {
 
             }
 
