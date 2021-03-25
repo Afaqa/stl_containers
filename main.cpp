@@ -25,7 +25,8 @@ void printVectorInfo(ft::vector<T> & vector) {
     int i = 0;
     std::cout << "<start> ";
     for (typename ft::vector<T>::iterator it = vector.begin(); it != vector.end(); ++it) {
-        std::cout << ++i << ": " << *it << std::endl;
+        vector[i] += 5;
+        std::cout << ++i << ": " << *it << " (iterator) | " << vector[i - 1] << " ([])" << std::endl;
     }
     std::cout << "<end> " << std::endl;
     std::cout << std::endl;

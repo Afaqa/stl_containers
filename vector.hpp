@@ -190,19 +190,19 @@ namespace ft {
         }
 
         reference operator[] (size_type n) {
-
+            return _data[n];
         }
 
         const_reference operator[] (size_type n) const {
-
+            return _data[n];
         }
 
         reference at (size_type n) {
-
+            return _data[n];
         }
 
         const_reference at (size_type n) const {
-
+            return _data[n];
         }
 
         reference front() {
