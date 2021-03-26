@@ -110,7 +110,10 @@ namespace ft {
         }
 
         ~vector() {
-            clear();
+            if (_data != NULL) {
+                clear();
+                _allocator.deallocate(_data, _capacity);
+            }
         }
 
         vector& operator=(const vector& x) {
@@ -275,7 +278,6 @@ namespace ft {
             for (pointer p = _data; p != _end; p += sizeof(value_type)) {
                 _allocator.destroy(p);
             }
-            _allocator.deallocate(_data, 0);
        }
 
     private:
