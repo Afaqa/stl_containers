@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <iterator>
+#include "iterator.hpp"
 #include <iostream>
 
 namespace ft {
@@ -12,53 +13,6 @@ namespace ft {
 
     template <bool, class T = void> struct enable_if            {};
     template <class T>              struct enable_if<true, T>   { typedef T type; };
-
-    template <typename T>
-    class VectorIterator : public std::iterator<std::random_access_iterator_tag, T>
-    {
-
-        T   _value;
-
-        VectorIterator() {}
-
-    public:
-
-        typedef typename std::iterator_traits<T>::reference reference;
-        typedef typename std::iterator_traits<T>::value_type value_type;
-
-        explicit VectorIterator(T value) : _value(value) {}
-//        explicit VectorIterator(T& value) : _value(value) {}
-
-        VectorIterator(VectorIterator<T> const& other) : _value(other._value) {
-        }
-
-        VectorIterator& operator=(VectorIterator<T> const& other) {
-            _value = other._value;
-            return *this;
-        }
-
-        ~VectorIterator() {}
-
-        reference  operator*() {
-            return *_value;
-        }
-
-        VectorIterator& operator++() {
-            ++_value;
-            return *this;
-        }
-
-        VectorIterator operator++(int) {
-            VectorIterator<T> ret;
-            ret._value = _value + 1;
-            return ret;
-        }
-
-        bool    operator!=(VectorIterator<T> const& other) {
-            return _value != other._value;
-        }
-
-    };
 
     template<class T, class Alloc = std::allocator<T> >
     class vector {
@@ -72,8 +26,8 @@ namespace ft {
         typedef typename allocator_type::const_reference                    const_reference;
         typedef typename allocator_type::pointer                            pointer;
         typedef typename allocator_type::const_pointer                      const_pointer;
-        typedef VectorIterator<pointer>                                     iterator;
-        typedef VectorIterator<const_pointer>                               const_iterator;
+        typedef random_access_iterator<value_type>                          iterator;
+        typedef random_access_iterator<const value_type>                    const_iterator;
         typedef std::reverse_iterator<iterator>                             reverse_iterator;
         typedef std::reverse_iterator<const_iterator>                       const_reverse_iterator;
         typedef typename std::iterator_traits<iterator>::difference_type    difference_type;
@@ -152,19 +106,19 @@ namespace ft {
         }
 
         reverse_iterator rbegin() {
-            return reverse_iterator(_data);
+            return reverse_iterator(end());
         }
 
         const_reverse_iterator rbegin() const {
-            return const_reverse_iterator(_data);
+            return const_reverse_iterator(end());
         }
 
         reverse_iterator rend() {
-            return reverse_iterator(_end);
+            return reverse_iterator(begin());
         }
 
         const_reverse_iterator rend() const {
-            return const_reverse_iterator(_end);
+            return const_reverse_iterator(begin());
         }
 
         size_type size() const {
@@ -275,7 +229,7 @@ namespace ft {
         }
 
         void clear() {
-            for (pointer p = _data; p != _end; p += sizeof(value_type)) {
+            for (pointer p = _data; p != _end; ++p) {
                 _allocator.destroy(p);
             }
        }
