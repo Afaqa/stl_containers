@@ -65,8 +65,7 @@ namespace ft {
 
         ~vector() {
             if (_data != NULL) {
-                clear();
-                _allocator.deallocate(_data, _capacity);
+                _delete_data();
             }
         }
 
@@ -248,7 +247,7 @@ namespace ft {
 
         void _delete_data() {
             clear();
-            _allocator.deallocate(_data);
+            _allocator.deallocate(_data, _capacity);
             _capacity = 0;
         }
 
