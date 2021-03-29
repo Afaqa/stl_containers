@@ -49,7 +49,7 @@ namespace ft {
 
         template <class InputIterator>
         vector(InputIterator first,
-               typename enable_if<is_same<typename InputIterator::iterator_type, std::random_access_iterator_tag>::value,
+               typename enable_if<is_same<typename InputIterator::iterator_type, std::input_iterator_tag>::value,
                 InputIterator>::type last,
                const allocator_type& alloc = allocator_type()) :
             _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
@@ -59,8 +59,13 @@ namespace ft {
             }
         }
 
-        vector(const vector& x) {
-
+        vector(const vector& x) : _allocator(x._allocator) {
+            _data = _allocator.allocate(x._capacity);
+            _end = _data + x.size();
+            _capacity = x._capacity;
+            for (pointer p = _data, ps = x._data; ps != x._end; ++p, ++ps) {
+                _allocator.construct(p, *ps);
+            }
         }
 
         ~vector() {
