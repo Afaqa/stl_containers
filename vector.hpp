@@ -59,13 +59,8 @@ namespace ft {
             }
         }
 
-        vector(const vector& x) : _allocator(x._allocator) {
-            _data = _allocator.allocate(x._capacity);
-            _end = _data + x.size();
-            _capacity = x._capacity;
-            for (pointer p = _data, ps = x._data; ps != x._end; ++p, ++ps) {
-                _allocator.construct(p, *ps);
-            }
+        vector(const vector& other) : _allocator(other._allocator) {
+            _copy_other(other);
         }
 
         ~vector() {
@@ -75,8 +70,13 @@ namespace ft {
             }
         }
 
-        vector& operator=(const vector& x) {
-
+        vector& operator=(const vector& other) {
+            if (this != &other) {
+                _delete_data();
+                _allocator = allocator_type(other._allocator);
+                _copy_other(other);
+            }
+            return *this;
         }
 
         template <class InputIterator>
@@ -234,8 +234,8 @@ namespace ft {
         }
 
         void clear() {
-            for (pointer p = _data; p != _end; ++p) {
-                _allocator.destroy(p);
+            while (_data != _end) {
+                _allocator.destroy(--_end);
             }
        }
 
@@ -245,6 +245,21 @@ namespace ft {
         pointer         _data;
         pointer         _end;
         size_type       _capacity;
+
+        void _delete_data() {
+            clear();
+            _allocator.deallocate(_data);
+            _capacity = 0;
+        }
+
+        void _copy_other(const vector& other) {
+            _data = _allocator.allocate(other._capacity);
+            _end = _data + other.size();
+            _capacity = other._capacity;
+            for (pointer p = _data, ps = other._data; ps != other._end; ++p, ++ps) {
+                _allocator.construct(p, *ps);
+            }
+        }
 
     };
 
