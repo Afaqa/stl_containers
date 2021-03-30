@@ -155,7 +155,22 @@ namespace ft {
         }
 
         void resize (size_type n, value_type val = value_type()) {
-
+            if (_capacity != n) {
+                pointer new_data = _allocator.allocate(n, _data);
+                size_type i = 0;
+                while (i < size()) {
+//                    new_data[i] = _data[i];
+                    _allocator.construct(new_data + i, _data[i]);
+                    ++i;
+                }
+                while (i < n) {
+                    _allocator.construct(new_data + i, val);
+                }
+                _delete_data();
+                _data = new_data;
+                _end = _data + n;
+                _capacity = n;
+            }
         }
 
         size_type capacity() const {
