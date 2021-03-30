@@ -6,7 +6,7 @@
 namespace ft {
 
     template<typename T>
-    class input_iterator : public std::iterator<std::input_iterator_tag, T> {
+    class input_iterator {
     public:
         typedef T                           value_type;
         typedef std::ptrdiff_t              difference_type;
@@ -46,7 +46,7 @@ namespace ft {
     };
 
     template<typename T>
-    class output_iterator : public std::iterator<std::output_iterator_tag, T> {
+    class output_iterator {
     public:
         typedef T                           value_type;
         typedef std::ptrdiff_t              difference_type;
@@ -83,7 +83,7 @@ namespace ft {
     };
 
     template<typename T>
-    class forward_iterator : public std::iterator<std::forward_iterator_tag, T> {
+    class forward_iterator {
     public:
         typedef T                           value_type;
         typedef std::ptrdiff_t              difference_type;
@@ -124,7 +124,7 @@ namespace ft {
     };
 
     template<typename T>
-    class bidirectional_iterator : public std::iterator<std::bidirectional_iterator_tag, T> {
+    class bidirectional_iterator {
     public:
         typedef T                               value_type;
         typedef std::ptrdiff_t                  difference_type;
@@ -151,6 +151,12 @@ namespace ft {
             return *this;
         }
 
+        bidirectional_iterator operator++(int) {
+            bidirectional_iterator ret(_data);
+            ++*this;
+            return ret;
+        }
+
         bidirectional_iterator operator--(int) {
             bidirectional_iterator ret(_data);
             --*this;
@@ -170,7 +176,7 @@ namespace ft {
     };
 
     template<typename T>
-    class random_access_iterator : public std::iterator<std::random_access_iterator_tag, T> {
+    class random_access_iterator {
     public:
         typedef T                               value_type;
         typedef std::ptrdiff_t                  difference_type;
@@ -187,14 +193,13 @@ namespace ft {
         }
         ~random_access_iterator() {}
 
-        random_access_iterator& operator++() {
-            ++_data;
-            return *this;
-        }
+        random_access_iterator& operator++() { ++_data; return *this; }
+        random_access_iterator& operator--() { --_data; return *this; }
 
-        random_access_iterator& operator--() {
-            --_data;
-            return *this;
+        random_access_iterator operator++(int) {
+            random_access_iterator ret(_data);
+            ++*this;
+            return ret;
         }
 
         random_access_iterator operator--(int) {
@@ -203,14 +208,8 @@ namespace ft {
             return ret;
         }
 
-        random_access_iterator& operator+=(difference_type n) {
-            _data += n;
-            return *this;
-        }
-
-        random_access_iterator& operator-=(difference_type n) {
-            return *this += -n;
-        }
+        random_access_iterator& operator+=(difference_type n) { _data += n; return *this; }
+        random_access_iterator& operator-=(difference_type n) { return *this += -n; }
 
         random_access_iterator operator+(difference_type n) const {
             random_access_iterator  tmp(_data + n);
@@ -222,9 +221,9 @@ namespace ft {
             return tmp;
         }
 
-        reference operator[](difference_type n) {
-            return *(*this + n);
-        }
+        difference_type operator-(random_access_iterator const& n) const { return _data - n._data; }
+
+        reference operator[](difference_type n) { return *(*this + n); }
 
         bool operator==(random_access_iterator const& other) const { return _data == other._data; }
         bool operator!=(random_access_iterator const& other) const { return !(*this == other); }
