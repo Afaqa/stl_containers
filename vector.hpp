@@ -4,15 +4,10 @@
 #include <limits>
 #include <iterator>
 #include "iterator.hpp"
+#include "type_traits.hpp"
 #include <iostream>
 
 namespace ft {
-
-    template <class T, class U>     struct is_same          { static const bool value = false; };
-    template <class T>              struct is_same<T, T>    { static const bool value = true; };
-
-    template <bool, class T = void> struct enable_if            {};
-    template <class T>              struct enable_if<true, T>   { typedef T type; };
 
     template<class T, class Alloc = std::allocator<T> >
     class vector {
@@ -49,13 +44,34 @@ namespace ft {
 
         template <class InputIterator>
         vector(InputIterator first,
-               typename enable_if<is_same<typename InputIterator::iterator_type, std::input_iterator_tag>::value,
+               typename enable_if<is_valid_iterator_type<InputIterator, std::random_access_iterator_tag, pointer>::value &&
+                                  !is_same<typename std::iterator_traits<InputIterator>::iterator_category, std::random_access_iterator_tag>::value,
                 InputIterator>::type last,
                const allocator_type& alloc = allocator_type()) :
             _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
             while (first != last) {
                 push_back(*first);
                 ++first;
+            }
+        }
+
+        template <class RandomAccessIterator>
+        vector(RandomAccessIterator first,
+               typename enable_if<is_valid_iterator_type<RandomAccessIterator, std::random_access_iterator_tag, pointer>::value &&
+                                  !is_same<typename std::iterator_traits<RandomAccessIterator>::iterator_category, std::input_iterator_tag>::value,
+                       RandomAccessIterator>::type last,
+               const allocator_type& alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
+            difference_type n = last - first;
+            if (n != 0) {
+                _data = _allocator.allocate(n);
+                _end = _data + n;
+                size_type i = 0;
+                while (first != last) {
+                    _allocator.construct(_data + i, *first);
+                    ++first;
+                    ++i;
+                }
+                _capacity = n;
             }
         }
 
@@ -80,7 +96,7 @@ namespace ft {
 
         template <class InputIterator>
             void assign (InputIterator first,
-                         typename enable_if<is_same<typename InputIterator::iterator_type, std::random_access_iterator_tag>::value,
+                         typename enable_if<is_same<typename InputIterator::iterator_type, std::input_iterator_tag>::value,
                                  InputIterator>::type last) {
 
             }
