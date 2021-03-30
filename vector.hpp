@@ -33,13 +33,9 @@ namespace ft {
         explicit vector(size_type n, const value_type& val = value_type(), const allocator_type& alloc = allocator_type()) :
             _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
             if (n != 0) {
-                _data = _allocator.allocate(n);
-                _end = _data + n;
-                for(pointer p = _data; p != _end; p += 1) {
-                    _allocator.construct(p, val);
-                }
+                _allocate(n);
+                _construct_data(_data, _end, val);
             }
-            _capacity = n;
         }
 
         template <class InputIterator>
@@ -63,15 +59,8 @@ namespace ft {
                const allocator_type& alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
             difference_type n = last - first;
             if (n != 0) {
-                _data = _allocator.allocate(n);
-                _end = _data + n;
-                size_type i = 0;
-                while (first != last) {
-                    _allocator.construct(_data + i, *first);
-                    ++first;
-                    ++i;
-                }
-                _capacity = n;
+                _allocate(n);
+                _construct_data(first, last);
             }
         }
 
@@ -104,26 +93,18 @@ namespace ft {
         void assign (size_type n, const_reference val) {
             if (n > _capacity) {
                 _delete_data();
-                _data = _allocator.allocate(n);
-                _end = _data + n;
-                for (pointer p = _data; p != _end; ++p) {
-                    _allocator.construct(p, val);
-                }
-                _capacity = n;
+                _allocate(n);
+                _construct_data(_data, _end, val);
             }
             else {
-                size_type newSize = std::min(n, size());
-                size_type i = 0;
-                while (i < newSize) {
+                size_type copySize = std::min(n, size());
+                for (size_type i = 0; i < copySize; ++i) {
                     _data[i] = val;
-                    ++i;
                 }
-                if (newSize < n)
-                    _allocator.construct(_data + i, val);
+                if (copySize < n)
+                    _construct_end_until(_data + n, val);
                 else
-                    for (; i < size(); ++i)
-                        _allocator.destroy(_data + i);
-                _end = _data + n;
+                    _destroy_end_until(_data + n);
 
             }
         }
@@ -284,6 +265,12 @@ namespace ft {
         pointer         _end;
         size_type       _capacity;
 
+        void _allocate(size_type n) {
+            _data = _allocator.allocate(n);
+            _end = _data + n;
+            _capacity = n;
+        }
+
         void _delete_data() {
             clear();
             _allocator.deallocate(_data, _capacity);
@@ -294,8 +281,31 @@ namespace ft {
             _data = _allocator.allocate(other._capacity);
             _end = _data + other.size();
             _capacity = other._capacity;
-            for (pointer p = _data, ps = other._data; ps != other._end; ++p, ++ps) {
-                _allocator.construct(p, *ps);
+            _construct_data(other.begin(), other.end());
+        }
+
+        template<typename Iterator>
+            void _construct_data(Iterator begin, Iterator end) {
+                for (pointer p = _data; begin != end; ++p, ++begin) {
+                    _allocator.construct(p, *begin);
+                }
+            }
+
+        void _construct_data(pointer begin, pointer end, const_reference value) {
+            for (pointer p = begin; p != end; ++p) {
+                _allocator.construct(p, value);
+            }
+        }
+
+        void _construct_end_until(pointer end, const_reference value) {
+            for (pointer p = _end; p != end; ++p) {
+                _allocator.construct(p, value);
+            }
+        }
+
+        void _destroy_end_until(pointer new_end) {
+            while (new_end != _end) {
+                _allocator.destroy(--_end);
             }
         }
 
