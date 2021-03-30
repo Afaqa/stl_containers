@@ -96,13 +96,36 @@ namespace ft {
 
         template <class InputIterator>
             void assign (InputIterator first,
-                         typename enable_if<is_same<typename InputIterator::iterator_type, std::input_iterator_tag>::value,
+                         typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value,
                                  InputIterator>::type last) {
 
             }
 
-        void assign (size_type n, const value_type& val) {
+        void assign (size_type n, const_reference val) {
+            if (n > _capacity) {
+                _delete_data();
+                _data = _allocator.allocate(n);
+                _end = _data + n;
+                for (pointer p = _data; p != _end; ++p) {
+                    _allocator.construct(p, val);
+                }
+                _capacity = n;
+            }
+            else {
+                size_type newSize = std::min(n, size());
+                size_type i = 0;
+                while (i < newSize) {
+                    _data[i] = val;
+                    ++i;
+                }
+                if (newSize < n)
+                    _allocator.construct(_data + i, val);
+                else
+                    for (; i < size(); ++i)
+                        _allocator.destroy(_data + i);
+                _end = _data + n;
 
+            }
         }
 
         allocator_type get_allocator() const {
@@ -202,7 +225,7 @@ namespace ft {
 
         }
 
-        void push_back(const T& x) {
+        void push_back(const_reference x) {
 
         }
 
