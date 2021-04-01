@@ -87,8 +87,33 @@ namespace ft {
             void assign (InputIterator first,
                          typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value,
                                  InputIterator>::type last) {
-
+                for (; first != last; ++first) {
+                    push_back(*first);
+                }
             }
+
+        template <class RandomAccess>
+            void assign (RandomAccess first,
+                         typename enable_if<is_valid_iterator_type<RandomAccess, std::random_access_iterator_tag, pointer>::value,
+                                 RandomAccess>::type last) {
+                size_type n = last - first;
+                if (n > _capacity) {
+                    _delete_data();
+                    _allocate(n);
+                    _construct_data(first, last);
+                }
+                else {
+                    if (n > size()) {
+                        for (size_type i = 0; i < size(); ++first, ++i) {
+                            _data[i] = *first;
+                        }
+                        _construct_end(first + size(), last);
+                    }
+                    else
+                        _destroy_end_until(_data + n);
+                }
+            }
+
 
         void assign (size_type n, const_reference val) {
             if (n > _capacity) {
@@ -311,6 +336,14 @@ namespace ft {
                 _allocator.construct(p, value);
             }
         }
+
+        template<typename Iterator>
+            void _construct_end(Iterator begin, Iterator end) {
+                while (begin != end) {
+                    _allocator.construct(_end, *begin);
+                    ++_end;
+                }
+            }
 
         void _construct_end_until(pointer end, const_reference value) {
             for (pointer p = _end; p != end; ++p) {

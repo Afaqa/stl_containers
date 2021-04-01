@@ -79,6 +79,6 @@ int main() {
     printVectorInfo(*fv4);
     printVectorInfo(a1);
     printVectorInfo(a2);
-    delete fv2;
-    delete sv3;
+    delete fv2, delete fv3, delete fv4;
+    delete sv3, delete sv4, delete sv5;
 }
