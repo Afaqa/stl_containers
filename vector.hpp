@@ -207,7 +207,17 @@ namespace ft {
         }
 
         void reserve (size_type n) {
-
+            if (_capacity < n) {
+                pointer newData = _allocator.allocate(n);
+                size_type size_ = 0;
+                for (pointer p = _data; p != _end; ++p, ++size_) {
+                    newData[size_] = *p;
+                }
+                _delete_data();
+                _data = newData;
+                _end = _data + size_;
+                _capacity = n;
+            }
         }
 
         reference operator[] (size_type n) {
@@ -231,19 +241,19 @@ namespace ft {
         }
 
         reference front() {
-
+            return *_data;
         }
 
         const_reference front() const {
-
+            return *_data;
         }
 
         reference back() {
-
+            return *(_end - 1);
         }
 
         const_reference back() const {
-
+            return *(_end - 1);
         }
 
         void push_back(const_reference x) {
@@ -251,7 +261,9 @@ namespace ft {
         }
 
         void pop_back() {
-
+            if (size() > 0) {
+                _allocator.destroy(--_end);
+            }
         }
 
         iterator insert(iterator position, const T& x) {
