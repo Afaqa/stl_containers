@@ -184,12 +184,12 @@ namespace ft {
                 pointer new_data = _allocator.allocate(n, _data);
                 size_type i = 0;
                 while (i < size()) {
-//                    new_data[i] = _data[i];
                     _allocator.construct(new_data + i, _data[i]);
                     ++i;
                 }
                 while (i < n) {
                     _allocator.construct(new_data + i, val);
+                    ++i;
                 }
                 _delete_data();
                 _data = new_data;
@@ -257,13 +257,29 @@ namespace ft {
         }
 
         void push_back(const_reference x) {
-
+            if (_capacity == 0) {
+                size_type n = 1;
+                _allocate(n);
+                --_end;
+            }
+            else if (size() >= _capacity) {
+                size_type n = _capacity * 2;
+                pointer newData = _allocator.allocate(n, _data);
+                size_type i = 0;
+                while (i < size()) {
+                    _allocator.construct(newData + i, _data[i]);
+                    ++i;
+                }
+                _delete_data();
+                _data = newData;
+                _end = _data + i;
+                _capacity = n;
+            }
+            _allocator.construct(_end++, x);
         }
 
         void pop_back() {
-            if (size() > 0) {
-                _allocator.destroy(--_end);
-            }
+            _allocator.destroy(--_end);
         }
 
         iterator insert(iterator position, const T& x) {

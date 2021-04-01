@@ -5,37 +5,71 @@
 #include <deque>
 
 template<typename T>
-void printVectorInfo(std::vector<T> const& vector) {
+void printVectorInfo(std::vector<T> const& vector, bool print = true) {
     std::cout << "empty: " << vector.empty() << std::endl;
     std::cout << "size: " << vector.size() << std::endl;
     std::cout << "max_size: " << vector.max_size() << std::endl;
     std::cout << "capacity: " << vector.capacity() << std::endl;
-    int i = 0;
-    std::cout << "<start> ";
-    for (typename std::vector<T>::const_iterator it = vector.begin(); it != vector.end(); ++it) {
-        std::cout << ++i << ": " << *it << std::endl;
+    if (print) {
+        int i = 0;
+        std::cout << "<start> ";
+        for (typename std::vector<T>::const_iterator it = vector.begin(); it != vector.end(); ++it) {
+            std::cout << ++i << ": " << *it << std::endl;
+        }
+        std::cout << "<end> " << std::endl;
     }
-    std::cout << "<end> " << std::endl;
     std::cout << std::endl;
 }
 template<typename T>
-void printVectorInfo(ft::vector<T> & vector) {
+void printVectorInfo(ft::vector<T> & vector, bool print = true) {
     std::cout << "empty: " << vector.empty() << std::endl;
     std::cout << "size: " << vector.size() << std::endl;
     std::cout << "max_size: " << vector.max_size() << std::endl;
     std::cout << "capacity: " << vector.capacity() << std::endl;
-    int i = 0;
-    std::cout << "<start> ";
-    for (typename ft::vector<T>::iterator it = vector.begin(); it != vector.end(); ++it) {
-        vector[i] += 5;
-        std::cout << (i + 1) << ": " << *it << " (iterator) | " << vector[i] << " ([])" << std::endl;
-        ++i;
+    if (print) {
+        int i = 0;
+        std::cout << "<start> ";
+        for (typename ft::vector<T>::iterator it = vector.begin(); it != vector.end(); ++it) {
+            std::cout << (i + 1) << ": " << *it << " (iterator) | " << vector[i] << " ([])" << std::endl;
+            ++i;
+        }
     }
     std::cout << "<end> " << std::endl;
     std::cout << std::endl;
 }
 
-int main() {
+int main1() {
+    const std::size_t start_size = 15;
+    const std::size_t v_size = 2200;
+
+    ft::vector<std::string, std::allocator<std::string> > fv(start_size);
+    std::string v;
+    for (ft::vector<std::string>::size_type i = 0; i < v_size; ++i, v.push_back(static_cast<char>((31 + i * 3) % 127))) {
+        fv.push_back(v);
+    }
+    for (std::size_t i = 0; i < 3; ++i) {
+        std::cout << (i + 1) << ": " << fv[i] << std::endl;
+    }
+    std::cout << "last val: " << fv[fv.size() - 1] << std::endl;
+    printVectorInfo(fv, false);
+    std::vector<std::string, std::allocator<std::string> > sv(start_size);
+    v.clear();
+    for (std::vector<std::string>::size_type i = 0; i < v_size; ++i, v.push_back(static_cast<char>((31 + i * 3) % 127))) {
+        sv.push_back(v);
+    }
+    for (std::size_t i = 0; i < 3; ++i) {
+        std::cout << (i + 1) << ": " << sv[i] << std::endl;
+    }
+    std::cout << "last val: " << sv[sv.size() - 1] << std::endl;
+    printVectorInfo(sv, false);
+    while (fv.size())
+        fv.pop_back();
+    while (sv.size())
+        sv.pop_back();
+    return 0;
+}
+
+int main2() {
     ft::vector<int>  fv;
     ft::vector<int>  fv1(0);
     ft::vector<int>  *fv2 = new ft::vector<int>(10, 15);
@@ -81,4 +115,9 @@ int main() {
     printVectorInfo(a2);
     delete fv2, delete fv3, delete fv4;
     delete sv3, delete sv4, delete sv5;
+    return 0;
+}
+
+int main() {
+    return main1();
 }
