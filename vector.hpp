@@ -283,16 +283,81 @@ namespace ft {
         }
 
         iterator insert(iterator position, const T& x) {
-
+            pointer pos = &*position;
+            size_type id = pos - _data; // todo rework
+            if (size() >= _capacity) {
+                size_type n = _capacity * 2;
+                pointer newData = _allocator.allocate(n);
+                size_type i = 0;
+                while (_data + i != pos) {
+                    _allocator.construct(newData + i, _data[i]);
+                    ++i;
+                }
+                _allocator.construct(newData + i++, x);
+                while (_data + i <= _end) {
+                    _allocator.construct(newData + i, _data[i - 1]);
+                    ++i;
+                }
+                _delete_data();
+                _data = newData;
+                _end = _data + i;
+                _capacity = n;
+            }
+            else {
+                _allocator.construct(_end, *(_end - 1));
+                for (pointer p = _end - 1; p != pos; --p) {
+                    *p = *(p - 1);
+                }
+                *pos = x;
+                ++_end;
+            }
+            return iterator(_data + id);
         }
 
         void insert(iterator position, size_type n, const T& x) {
-
+            pointer pos = &*position;
+            if (size() + n >= _capacity) {
+                size_type newCapacity = _capacity * 2;
+                pointer newData = _allocator.allocate(newCapacity, _data);
+                size_type i = 0;
+                while (_data + i != pos) {
+                    _allocator.construct(newData + i, _data[i]);
+                    ++i;
+                }
+                for (size_type j = 0; j < n; ++j, ++i) {
+                    _allocator.construct(newData + i, x);
+                }
+                while (_data + i - n != _end) {
+                    _allocator.construct(newData + i, _data[i - n]);
+                    ++i;
+                }
+                _delete_data();
+                _data = newData;
+                _end = _data + i;
+                _capacity = newCapacity;
+            }
+            else {
+                pointer p = _end - 1;
+                for (size_type i = 0; i < n; ++i) {
+                    _allocator.construct(p + n + i, *(p + i));
+                }
+                for (; p != pos + n; --p) {
+                    *p = *(p - 1);
+                }
+                while (p >= pos) {
+                    *p = x;
+                    --p;
+                }
+                _end += n;
+            }
         }
 
         template<class InputIterator>
                 void insert(iterator position, InputIterator first, InputIterator last) {
-
+                    while (first != last) {
+                        position = insert(position, *first++);
+                        ++position;
+                    }
                 }
 
         iterator erase(iterator position) {

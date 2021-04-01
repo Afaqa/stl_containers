@@ -118,6 +118,42 @@ int main2() {
     return 0;
 }
 
+int main3() {
+    ft::vector<std::string> fv;
+    std::vector<std::string> sv;
+    fv.insert(fv.begin(), "");
+    sv.insert(sv.begin(), "");
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    std::size_t i;
+    std::string strings[] = {"first", "second", "third", "forth", "fifth"};
+    for (i = 0; i < 5; ++i) {
+        fv.push_back(strings[i]);
+        sv.push_back(strings[i]);
+    }
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    fv.insert(++++++fv.begin(), "insertSingle");
+    sv.insert(++++++sv.begin(), "insertSingle");
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    fv.insert(++++++++++fv.begin(), 5, "insertMultiple");
+    sv.insert(++++++++++sv.begin(), 5, "insertMultiple");
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    std::string iterstr[] = {"1iter1", "2iter2", "3iter3", "4iter4", "5iter5"};
+    ft::vector<std::string> vec(iterstr, iterstr + 5);
+    fv.insert(++fv.begin(), vec.begin(), vec.end());
+    sv.insert(++sv.begin(), vec.begin(), vec.end());
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    fv.insert(++++++++++++++++++++++fv.begin(), "lastInsert");
+    sv.insert(++++++++++++++++++++++sv.begin(), "lastInsert");
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    return 0;
+}
+
 int main() {
-    return main1();
+    return main3();
 }
