@@ -380,7 +380,7 @@ namespace ft {
         }
 
         iterator erase(iterator first, iterator last) {
-            return 1 + last;
+            return 1 + last + first - first;
         }
 
         void swap(vector<T, Alloc>& other) {

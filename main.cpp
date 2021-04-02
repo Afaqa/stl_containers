@@ -129,7 +129,6 @@ int main3() {
     sv.erase(sv.begin());
     printVectorInfo(fv);
     printVectorInfo(sv);
-    std::size_t i;
     std::string strings[] = {"first", "second", "third", "forth", "fifth"};
     fv.insert(fv.begin(), strings, strings + 5);
     sv.insert(sv.begin(), strings, strings + 5);
