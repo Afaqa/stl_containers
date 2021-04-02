@@ -125,12 +125,14 @@ int main3() {
     sv.insert(sv.begin(), "");
     printVectorInfo(fv);
     printVectorInfo(sv);
+    fv.erase(fv.begin());
+    sv.erase(sv.begin());
+    printVectorInfo(fv);
+    printVectorInfo(sv);
     std::size_t i;
     std::string strings[] = {"first", "second", "third", "forth", "fifth"};
-    for (i = 0; i < 5; ++i) {
-        fv.push_back(strings[i]);
-        sv.push_back(strings[i]);
-    }
+    fv.insert(fv.begin(), strings, strings + 5);
+    sv.insert(sv.begin(), strings, strings + 5);
     printVectorInfo(fv);
     printVectorInfo(sv);
     fv.insert(++++++fv.begin(), "insertSingle");
@@ -149,6 +151,10 @@ int main3() {
     printVectorInfo(sv);
     fv.insert(++++++++++++++++++++++fv.begin(), "lastInsert");
     sv.insert(++++++++++++++++++++++sv.begin(), "lastInsert");
+    printVectorInfo(fv);
+    printVectorInfo(sv);
+    fv.erase(++++++++++++fv.begin());
+    sv.erase(++++++++++++sv.begin());
     printVectorInfo(fv);
     printVectorInfo(sv);
     return 0;

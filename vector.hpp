@@ -286,7 +286,7 @@ namespace ft {
             pointer pos = &*position;
             size_type id = pos - _data; // todo rework
             if (size() >= _capacity) {
-                size_type n = _capacity * 2;
+                size_type n = _capacity == 0 ? 1 : _capacity * 2;
                 pointer newData = _allocator.allocate(n);
                 size_type i = 0;
                 while (_data + i != pos) {
@@ -304,9 +304,11 @@ namespace ft {
                 _capacity = n;
             }
             else {
-                _allocator.construct(_end, *(_end - 1));
-                for (pointer p = _end - 1; p != pos; --p) {
-                    *p = *(p - 1);
+                if (size() != 0) {
+                    _allocator.construct(_end, *(_end - 1));
+                    for (pointer p = _end - 1; p > pos; --p) {
+                        *p = *(p - 1);
+                    }
                 }
                 *pos = x;
                 ++_end;
@@ -317,7 +319,7 @@ namespace ft {
         void insert(iterator position, size_type n, const T& x) {
             pointer pos = &*position;
             if (size() + n >= _capacity) {
-                size_type newCapacity = _capacity * 2;
+                size_type newCapacity = _capacity == 0 ? n : _capacity * 2;
                 pointer newData = _allocator.allocate(newCapacity, _data);
                 size_type i = 0;
                 while (_data + i != pos) {
@@ -355,17 +357,30 @@ namespace ft {
         template<class InputIterator>
                 void insert(iterator position, InputIterator first, InputIterator last) {
                     while (first != last) {
+                        std::cout << "size: " << size() << " | pos: " << (position - begin()) << " | cap: " << _capacity << std::endl;
                         position = insert(position, *first++);
                         ++position;
                     }
                 }
 
         iterator erase(iterator position) {
-
+            difference_type pos = position - begin();
+            pointer p = _data + pos;
+            _allocator.destroy(p);
+            if (p + 1 != _end) {
+                _allocator.construct(p, *(p + 1));
+                for (++p; p < _end - 1; ++p) {
+                    *p = *(p + 1);
+                }
+                _allocator.destroy(--_end);
+            }
+            else
+                --_end;
+            return iterator(_data + pos);
         }
 
         iterator erase(iterator first, iterator last) {
-
+            return 1 + last;
         }
 
         void swap(vector<T, Alloc>& other) {
