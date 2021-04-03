@@ -64,8 +64,9 @@ namespace ft {
             }
         }
 
-        vector(const vector& other) : _allocator(other._allocator) {
-            _copy_other(other);
+        vector(const vector& other) : _allocator(other._allocator), _data(NULL), _end(NULL), _capacity(0) {
+            if (other._capacity)
+                _copy_other(other);
         }
 
         ~vector() {
@@ -78,7 +79,8 @@ namespace ft {
             if (this != &other) {
                 _delete_data();
                 _allocator = allocator_type(other._allocator);
-                _copy_other(other);
+                if (other._capacity)
+                    _copy_other(other);
             }
             return *this;
         }
