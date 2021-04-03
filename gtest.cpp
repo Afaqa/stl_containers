@@ -2,122 +2,117 @@
 #include "vector.hpp"
 #include "gtest/gtest.h"
 
-TEST(CompareVectors, DefaultConstructor) {
-    ft::vector<int> ftv;
-    std::vector<int> stv;
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(&(ftv[0]), &(stv[0]));
-    EXPECT_EQ(&(*ftv.end()), &(*stv.end()));
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+struct SomeStruct {
+    std::string name;
+    float       number;
+    SomeStruct() : name("empty"), number(15.51) {}
+    SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {}
+    SomeStruct& operator=(SomeStruct const& other) { name = other.name; number = other.number; return *this; }
+    ~SomeStruct() {}
+};
+
+template<typename T, typename U>
+void testContainersEqual(T const& cont1, U const& cont2) {
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    EXPECT_EQ(cont1.size(), cont2.size());
+    EXPECT_EQ(cont1.max_size(), cont2.max_size());
+    EXPECT_EQ(cont1.capacity(), cont2.capacity());
+    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
+    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
 }
 
-TEST(CompareVectors, ZeroElementsConstructor) {
-    ft::vector<int> ftv(0);
-    std::vector<int> stv(0);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(&(ftv[0]), &(stv[0]));
-    EXPECT_EQ(&(*ftv.end()), &(*stv.end()));
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+template<typename T, typename U>
+void testEmptyContainersEqual(T const& cont1, U const& cont2) {
+    testContainersEqual(cont1, cont2);
+    EXPECT_EQ(&(cont1[0]), &(cont2[0]));
+    EXPECT_EQ(&(*cont1.end()), &(*cont2.end()));
 }
 
-TEST(CompareVectors, TwentyElementsConstructor) {
-    ft::vector<int> ftv(20);
-    std::vector<int> stv(20);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+template<typename T>
+void defaultConstructorTest() {
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    testEmptyContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructor) {
-    ft::vector<int> ftv(20, 17);
-    std::vector<int> stv(20, 17);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+TEST(CompareVectors, DefaultConstructorInt)         { defaultConstructorTest<int>(); }
+TEST(CompareVectors, DefaultConstructorFloat)       { defaultConstructorTest<float>(); }
+TEST(CompareVectors, DefaultConstructorString)      { defaultConstructorTest<std::string>(); }
+TEST(CompareVectors, DefaultConstructorSomeStruct)  { defaultConstructorTest<SomeStruct>(); }
+
+template<typename T>
+void zeroElementsConstructorTest() {
+    ft::vector<T> ftv(0);
+    std::vector<T> stv(0);
+    testEmptyContainersEqual(ftv, stv);
+
 }
 
-TEST(CompareVectors, CopyConstructor) {
-    ft::vector<int> ftv_o(20, 17);
-    std::vector<int> stv_o(20, 17);
-    ft::vector<int> ftv(ftv_o);
-    std::vector<int> stv(stv_o);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+TEST(CompareVectors, ZeroElementsConstructorInt)        { zeroElementsConstructorTest<int>(); }
+TEST(CompareVectors, ZeroElementsConstructorFloat)      { zeroElementsConstructorTest<float>(); }
+TEST(CompareVectors, ZeroElementsConstructorString)     { zeroElementsConstructorTest<std::string>(); }
+TEST(CompareVectors, ZeroElementsConstructorSomeStruct) { zeroElementsConstructorTest<SomeStruct>(); }
+
+template<typename T>
+void twentyElementsConstructorTest() {
+    ft::vector<T> ftv(20);
+    std::vector<T> stv(20);
+    testContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, DefaultCopyConstructor) {
-    ft::vector<int> ftv_o;
-    std::vector<int> stv_o;
-    ft::vector<int> ftv(ftv_o);
-    std::vector<int> stv(stv_o);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(&(ftv[0]), &(stv[0]));
-    EXPECT_EQ(&(*ftv.end()), &(*stv.end()));
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+TEST(CompareVectors, TwentyElementsConstructorInt)          { twentyElementsConstructorTest<int>(); }
+TEST(CompareVectors, TwentyElementsConstructorFloat)        { twentyElementsConstructorTest<float>(); }
+TEST(CompareVectors, TwentyElementsConstructorString)       { twentyElementsConstructorTest<std::string>(); }
+TEST(CompareVectors, TwentyElementsConstructorSomeStruct)   { twentyElementsConstructorTest<SomeStruct>(); }
+
+template<typename T>
+void twentyElementsWithDefaultValueConstructorTest() {
+    ft::vector<T> ftv(20, 17);
+    std::vector<T> stv(20, 17);
+    testContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, ZeroElementsCopyConstructor) {
-    ft::vector<int> ftv_o(0);
-    std::vector<int> stv_o(0);
-    ft::vector<int> ftv(ftv_o);
-    std::vector<int> stv(stv_o);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(&(ftv[0]), &(stv[0]));
-    EXPECT_EQ(&(*ftv.end()), &(*stv.end()));
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
+TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorInt)          { twentyElementsConstructorTest<int>(); }
+TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorFloat)        { twentyElementsConstructorTest<float>(); }
+TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorString)       { twentyElementsConstructorTest<std::string>(); }
+TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorSomeStruct)   { twentyElementsConstructorTest<SomeStruct>(); }
+
+template<typename T>
+void copyConstructorTest() {
+    {
+        ft::vector<int> ftv_o(20, 17);
+        std::vector<int> stv_o(20, 17);
+        ft::vector<int> ftv(ftv_o);
+        std::vector<int> stv(stv_o);
+        testContainersEqual(ftv, stv);
+    }
+    {
+        ft::vector<int> ftv_o;
+        std::vector<int> stv_o;
+        ft::vector<int> ftv(ftv_o);
+        std::vector<int> stv(stv_o);
+        testEmptyContainersEqual(ftv, stv);
+    }
+    {
+        ft::vector<int> ftv_o(0);
+        std::vector<int> stv_o(0);
+        ft::vector<int> ftv(ftv_o);
+        std::vector<int> stv(stv_o);
+        testEmptyContainersEqual(ftv, stv);
+    }
+    {
+        ft::vector<int> ftv_o(20);
+        std::vector<int> stv_o(20);
+        ft::vector<int> ftv(ftv_o);
+        std::vector<int> stv(stv_o);
+        testContainersEqual(ftv, stv);
+    }
 }
 
-TEST(CompareVectors, TwentyElementsCopyConstructor) {
-    ft::vector<int> ftv_o(20);
-    std::vector<int> stv_o(20);
-    ft::vector<int> ftv(ftv_o);
-    std::vector<int> stv(stv_o);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
-}
-
-TEST(CompareVectors, TwentyElementsWithDefaultValueCopyConstructor) {
-    ft::vector<int> ftv_o(20, 17);
-    std::vector<int> stv_o(20, 17);
-    ft::vector<int> ftv(ftv_o);
-    std::vector<int> stv(stv_o);
-    EXPECT_EQ(ftv.empty(), stv.empty());
-    EXPECT_EQ(ftv.size(), stv.size());
-    EXPECT_EQ(ftv.max_size(), stv.max_size());
-    EXPECT_EQ(ftv.capacity(), stv.capacity());
-    EXPECT_EQ(ftv.begin() == ftv.end(), stv.begin() == stv.end());
-    EXPECT_EQ(ftv.rbegin() == ftv.rend(), stv.rbegin() == stv.rend());
-}
+TEST(CompareVectors, CopyConstructorInt)        { copyConstructorTest<int>(); }
+TEST(CompareVectors, CopyConstructorFloat)      { copyConstructorTest<float>(); }
+TEST(CompareVectors, CopyConstructorString)     { copyConstructorTest<std::string>(); }
+TEST(CompareVectors, CopyConstructorSomeStruct) { copyConstructorTest<SomeStruct>(); }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

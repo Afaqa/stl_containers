@@ -33,6 +33,13 @@ namespace ft {
             static const bool value = sizeof(f<T>(0)) == sizeof(uint64_t) || is_same<T, Ptr>::value;
         };
 
+    template<typename T>
+    void swap(T& a, T& b) {
+        T c = a;
+        a = b;
+        b = c;
+    }
+
 }
 
 #endif

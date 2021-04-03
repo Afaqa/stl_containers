@@ -5,6 +5,7 @@
 #include <iterator>
 #include "iterator.hpp"
 #include "type_traits.hpp"
+#include "algorithm.hpp"
 #include <iostream>
 
 namespace ft {
@@ -177,8 +178,7 @@ namespace ft {
         }
 
         size_type max_size() const {
-            //return std::min(_allocator.max_size(), std::numeric_limits<T>::min()); //todo check
-            return _allocator.max_size();
+            return min<size_type>(_allocator.max_size(), std::numeric_limits<difference_type>::min());
         }
 
         void resize (size_type n, value_type val = value_type()) {
