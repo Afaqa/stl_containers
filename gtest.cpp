@@ -9,7 +9,14 @@ struct SomeStruct {
     SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {}
     SomeStruct& operator=(SomeStruct const& other) { name = other.name; number = other.number; return *this; }
     ~SomeStruct() {}
+    bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
 };
+
+#define FT_DO_TEST(function) { \
+        function<int>();\
+        function<float>();\
+        function<std::string>();\
+        function<SomeStruct>();}
 
 template<typename T, typename U>
 void testContainersEqual(T const& cont1, U const& cont2) {
@@ -19,6 +26,22 @@ void testContainersEqual(T const& cont1, U const& cont2) {
     EXPECT_EQ(cont1.capacity(), cont2.capacity());
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+    typename T::const_iterator it1 = cont1.begin();
+    typename U::const_iterator it2 = cont2.begin();
+    while (it1 != cont1.end() && it2 != cont2.end()) {
+        EXPECT_EQ(*it1, *it2);
+        ++it1;
+        ++it2;
+    }
+    EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
+    typename T::const_reverse_iterator rit1 = cont1.rbegin();
+    typename U::const_reverse_iterator rit2 = cont2.rbegin();
+    while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+        EXPECT_EQ(*rit1, *rit2);
+        ++rit1;
+        ++rit2;
+    }
+    EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
 }
 
 template<typename T, typename U>
@@ -35,10 +58,7 @@ void defaultConstructorTest() {
     testEmptyContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, DefaultConstructorInt)         { defaultConstructorTest<int>(); }
-TEST(CompareVectors, DefaultConstructorFloat)       { defaultConstructorTest<float>(); }
-TEST(CompareVectors, DefaultConstructorString)      { defaultConstructorTest<std::string>(); }
-TEST(CompareVectors, DefaultConstructorSomeStruct)  { defaultConstructorTest<SomeStruct>(); }
+TEST(CompareVectors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 
 template<typename T>
 void zeroElementsConstructorTest() {
@@ -48,10 +68,7 @@ void zeroElementsConstructorTest() {
 
 }
 
-TEST(CompareVectors, ZeroElementsConstructorInt)        { zeroElementsConstructorTest<int>(); }
-TEST(CompareVectors, ZeroElementsConstructorFloat)      { zeroElementsConstructorTest<float>(); }
-TEST(CompareVectors, ZeroElementsConstructorString)     { zeroElementsConstructorTest<std::string>(); }
-TEST(CompareVectors, ZeroElementsConstructorSomeStruct) { zeroElementsConstructorTest<SomeStruct>(); }
+TEST(CompareVectors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 
 template<typename T>
 void twentyElementsConstructorTest() {
@@ -60,10 +77,7 @@ void twentyElementsConstructorTest() {
     testContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, TwentyElementsConstructorInt)          { twentyElementsConstructorTest<int>(); }
-TEST(CompareVectors, TwentyElementsConstructorFloat)        { twentyElementsConstructorTest<float>(); }
-TEST(CompareVectors, TwentyElementsConstructorString)       { twentyElementsConstructorTest<std::string>(); }
-TEST(CompareVectors, TwentyElementsConstructorSomeStruct)   { twentyElementsConstructorTest<SomeStruct>(); }
+TEST(CompareVectors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
 
 template<typename T>
 void twentyElementsWithDefaultValueConstructorTest() {
@@ -72,10 +86,7 @@ void twentyElementsWithDefaultValueConstructorTest() {
     testContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorInt)          { twentyElementsConstructorTest<int>(); }
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorFloat)        { twentyElementsConstructorTest<float>(); }
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorString)       { twentyElementsConstructorTest<std::string>(); }
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructorSomeStruct)   { twentyElementsConstructorTest<SomeStruct>(); }
+TEST(CompareVectors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
 
 template<typename T>
 void copyConstructorTest() {
@@ -109,10 +120,7 @@ void copyConstructorTest() {
     }
 }
 
-TEST(CompareVectors, CopyConstructorInt)        { copyConstructorTest<int>(); }
-TEST(CompareVectors, CopyConstructorFloat)      { copyConstructorTest<float>(); }
-TEST(CompareVectors, CopyConstructorString)     { copyConstructorTest<std::string>(); }
-TEST(CompareVectors, CopyConstructorSomeStruct) { copyConstructorTest<SomeStruct>(); }
+TEST(CompareVectors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
