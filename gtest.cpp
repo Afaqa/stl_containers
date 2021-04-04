@@ -6,6 +6,7 @@ struct SomeStruct {
     std::string name;
     float       number;
     SomeStruct() : name("empty"), number(15.51) {}
+    SomeStruct(std::string const& name, float number) : name(name), number(number) {}
     SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {}
     SomeStruct& operator=(SomeStruct const& other) { name = other.name; number = other.number; return *this; }
     ~SomeStruct() {}
@@ -106,8 +107,6 @@ void defaultConstructorTest() {
     testEmptyContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
-
 template<typename T>
 void zeroElementsConstructorTest() {
     printTestName<T>("Constructor for 0 elements");
@@ -117,8 +116,6 @@ void zeroElementsConstructorTest() {
 
 }
 
-TEST(CompareVectors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
-
 template<typename T>
 void twentyElementsConstructorTest() {
     printTestName<T>("Constructor for N elements");
@@ -127,40 +124,62 @@ void twentyElementsConstructorTest() {
     testContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
-
 template<typename T>
 T getRandomValue();
 
 template<>
 int getRandomValue<int>() {
-    return 17;
+    return rand() % 10101010 - rand() % 5050505;
 }
 
 template<>
 float getRandomValue<float>() {
-    return 48.229;
+    return rand() % 10101010 / (float)(rand() % 1010101);
 }
 
 template<>
 std::string getRandomValue<std::string>() {
-    return std::string("emptyString");
+    const int length = rand() % 35 + 15;
+    char str[length + 1];
+    str[length] = 0;
+    for (int i = 0; i < length; ++i) {
+        str[i] = rand() % 94 + 32;
+    }
+    return std::string(str);
 }
 
 template<>
 SomeStruct getRandomValue<SomeStruct>() {
-    return SomeStruct();
+    return SomeStruct(getRandomValue<std::string>(), getRandomValue<float>());
 }
 
 template<typename T>
 void twentyElementsWithDefaultValueConstructorTest() {
     printTestName<T>("Constructor for N elements with value");
-    ft::vector<T> ftv(20, getRandomValue<T>());
-    std::vector<T> stv(20, getRandomValue<T>());
+    T value = getRandomValue<T>();
+    ft::vector<T> ftv(20, value);
+    std::vector<T> stv(20, value);
     testContainersEqual(ftv, stv);
 }
 
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
+template<typename T>
+void iteratorConstructorTest() {
+    printTestName<T>("Constructor for iterators begin and end");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    std::vector<T> siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
+    }
+
+    ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
+    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
+
+    testContainersEqual(ftv, stv);
+}
 
 template<typename T>
 void copyConstructorTest() {
@@ -190,17 +209,24 @@ void copyConstructorTest() {
     }
     {
         printTestName<T>("Copy constructor for N elements with value");
-        ft::vector<T> ftv_o(20, getRandomValue<T>());
-        std::vector<T> stv_o(20, getRandomValue<T>());
+        T value = getRandomValue<T>();
+        ft::vector<T> ftv_o(20, value);
+        std::vector<T> stv_o(20, value);
         ft::vector<T> ftv(ftv_o);
         std::vector<T> stv(stv_o);
         testContainersEqual(ftv, stv);
     }
 }
 
+TEST(CompareVectors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
+TEST(CompareVectors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
+TEST(CompareVectors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
+TEST(CompareVectors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
+TEST(CompareVectors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
 TEST(CompareVectors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
 
 int main(int argc, char **argv) {
+    srand(time(NULL));
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
