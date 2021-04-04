@@ -182,8 +182,9 @@ namespace ft {
         }
 
         void resize (size_type n, value_type val = value_type()) {
-            if (_capacity != n) {
-                pointer new_data = _allocator.allocate(n, _data);
+            if (_capacity < n) {
+                size_type newCapacity = n > _capacity * 2 ? n : _capacity * 2;
+                pointer new_data = _allocator.allocate(newCapacity, _data);
                 size_type i = 0;
                 while (i < size()) {
                     _allocator.construct(new_data + i, _data[i]);
@@ -196,7 +197,10 @@ namespace ft {
                 _delete_data();
                 _data = new_data;
                 _end = _data + n;
-                _capacity = n;
+                _capacity = newCapacity;
+            }
+            else if (n < size()) {
+                _destroy_end_until(_data + n);
             }
         }
 

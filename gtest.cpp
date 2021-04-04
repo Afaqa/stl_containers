@@ -216,14 +216,134 @@ void copyConstructorTest() {
         std::vector<T> stv(stv_o);
         testContainersEqual(ftv, stv);
     }
+    {
+        printTestName<T>("Copy constructor for iterators begin and end");
+
+        std::size_t numOfItems = rand() % 20 + 10;
+        ft::vector<T> fiter;
+        std::vector<T> siter;
+        for (std::size_t i = 0; i < numOfItems; ++i) {
+            T value = getRandomValue<T>();
+            fiter.push_back(value);
+            siter.push_back(value);
+        }
+
+        ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+
+        ft::vector<T> ftv(ftv_o);
+        std::vector<T> stv(stv_o);
+
+        testContainersEqual(ftv, stv);
+    }
 }
 
-TEST(CompareVectors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
-TEST(CompareVectors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
-TEST(CompareVectors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
-TEST(CompareVectors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
-TEST(CompareVectors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
-TEST(CompareVectors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
+template<typename T>
+void assignationOperatorTest() {
+    printTestName<T>("Assignation operator");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    std::vector<T> siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
+    }
+
+    ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+    std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+    ft::vector<T> ftv(fiter.rbegin(), fiter.rend() - 9);
+    std::vector<T> stv(siter.rbegin(), siter.rend() - 9);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void resizeLessTest() {
+    printTestName<T>("Resize to a lesser value");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    ftv.resize(numOfItems - 5);
+    stv.resize(numOfItems - 5);
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void resizeMoreTest() {
+    printTestName<T>("Resize to a bigger value");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv(5);
+    std::vector<T> stv(5);
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    std::cout << "Initial data: " << std::endl;
+    std::cout << "empty: " << ftv.empty() << " | " << stv.empty() << std::endl;
+    std::cout << "size: " << ftv.size() << " | " << stv.size() << std::endl;
+    std::cout << "capacity: " << ftv.capacity() << " | " << stv.capacity() << std::endl;
+
+    ftv.resize(15 + ftv.capacity());
+    stv.resize(15 + stv.capacity());
+
+    std::cout << "Resized data: " << std::endl;
+    std::cout << "empty: " << ftv.empty() << " | " << stv.empty() << std::endl;
+    std::cout << "size: " << ftv.size() << " | " << stv.size() << std::endl;
+    std::cout << "capacity: " << ftv.capacity() << " | " << stv.capacity() << std::endl;
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void resizeSameTest() {
+    printTestName<T>("Resize to the same value");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    ftv.resize(ftv.size());
+    stv.resize(stv.size());
+
+    testContainersEqual(ftv, stv);
+}
+
+TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
+TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
+TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
+TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
+TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
+TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
+TEST(VectorConstructors, AssignationOperator)  FT_DO_TEST(assignationOperatorTest)
+
+TEST(VectorCapacity, ResizeLess)  FT_DO_TEST(resizeLessTest)
+TEST(VectorCapacity, ResizeMore)  FT_DO_TEST(resizeMoreTest)
+TEST(VectorCapacity, ResizeSame)  FT_DO_TEST(resizeSameTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
