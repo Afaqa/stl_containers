@@ -119,7 +119,7 @@ int main2() {
 }
 
 int main3() {
-    ft::vector<std::string> fv;
+    ft::vector<std::string, std::allocator<std::string> > fv;
     std::vector<std::string> sv;
     fv.insert(fv.begin(), "");
     sv.insert(sv.begin(), "");

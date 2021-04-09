@@ -244,7 +244,7 @@ void copyConstructorTest() {
 
 template<typename T>
 void assignationOperatorToMoreCapTest() {
-    printTestName<T>("Assignation operator");
+    printTestName<T>("Assignation operator to the bigger capacity");
 
     std::size_t numOfItems = rand() % 20 + 10;
     ft::vector<T> fiter;
@@ -268,7 +268,7 @@ void assignationOperatorToMoreCapTest() {
 
 template<typename T>
 void assignationOperatorToMoreSizeTest() {
-    printTestName<T>("Assignation operator");
+    printTestName<T>("Assignation operator to the bigger size");
 
     std::size_t numOfItems = rand() % 20 + 10;
     ft::vector<T> fiter;
@@ -294,7 +294,7 @@ void assignationOperatorToMoreSizeTest() {
 
 template<typename T>
 void assignationOperatorToLessTest() {
-    printTestName<T>("Assignation operator");
+    printTestName<T>("Assignation operator to the lesser size");
 
     std::size_t numOfItems = rand() % 20 + 10;
     ft::vector<T> fiter;
@@ -318,7 +318,7 @@ void assignationOperatorToLessTest() {
 
 template<typename T>
 void assignationOperatorToSameTest() {
-    printTestName<T>("Assignation operator");
+    printTestName<T>("Assignation operator to the same size");
 
     std::size_t numOfItems = rand() % 20 + 10;
     ft::vector<T> fiter;
@@ -411,6 +411,206 @@ void resizeSameTest() {
     testContainersEqual(ftv, stv);
 }
 
+template<typename T>
+void reserveLessTest() {
+    printTestName<T>("Reserve lesser capacity");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    typename ft::vector<T>::iterator fit_before = ftv.begin();
+    typename std::vector<T>::iterator sit_before = stv.begin();
+
+    testContainersEqual(ftv, stv);
+
+    ftv.reserve(ftv.capacity() / 2);
+    stv.reserve(stv.capacity() / 2);
+
+    testContainersEqual(ftv, stv);
+    EXPECT_EQ(fit_before == ftv.begin(), sit_before == stv.begin());
+}
+
+template<typename T>
+void reserveMoreTest() {
+    printTestName<T>("Reserve bigger capacity");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    typename ft::vector<T>::iterator fit_before = ftv.begin();
+    typename std::vector<T>::iterator sit_before = stv.begin();
+
+    testContainersEqual(ftv, stv);
+
+    ftv.reserve(ftv.capacity() * 2);
+    stv.reserve(stv.capacity() * 2);
+
+    testContainersEqual(ftv, stv);
+    EXPECT_EQ(fit_before == ftv.begin(), sit_before == stv.begin());
+}
+
+template<typename T>
+void reserveSameTest() {
+    printTestName<T>("Reserve the same capacity");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    typename ft::vector<T>::iterator fit_before = ftv.begin();
+    typename std::vector<T>::iterator sit_before = stv.begin();
+
+    testContainersEqual(ftv, stv);
+
+    ftv.reserve(ftv.capacity());
+    stv.reserve(stv.capacity());
+
+    testContainersEqual(ftv, stv);
+    EXPECT_EQ(fit_before == ftv.begin(), sit_before == stv.begin());
+}
+
+template<typename T>
+void reserveGreaterThanMaxTest() {
+    printTestName<T>("Reserver to capacity bigger than max_size");
+
+    ft::vector<T> ftv(0);
+    std::vector<T> stv(0);
+
+    std::string ferr = "success";
+    std::string serr = "success";
+    try {
+        ftv.reserve(ftv.max_size() + 1);
+    }
+    catch (std::length_error &e) {
+        ferr = e.what();
+    }
+    try {
+        stv.reserve(stv.max_size() + 1);
+    }
+    catch (std::length_error &e) {
+        serr = e.what();
+    }
+
+    testContainersEqual(ftv, stv);
+    EXPECT_EQ(ferr, serr);
+}
+
+template<typename T>
+void OperatorBracketsAccessTest() {
+    printTestName<T>("Testing operator[]");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    std::size_t i = 0;
+
+    while (i < ftv.size() && i < stv.size()) {
+        EXPECT_EQ(ftv[i], stv[i]);
+        ++i;
+    }
+}
+
+template<typename T>
+void FunctionAtTest() {
+    printTestName<T>("Testing function at");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    std::size_t i = 0;
+
+    while (i < ftv.size() && i < stv.size()) {
+        EXPECT_EQ(ftv.at(i), stv.at(i));
+        ++i;
+    }
+    for (int j = 0; j < 5; ++j) {
+        std::string ferr = "success";
+        std::string serr = "success";
+        try { ftv.at(i); }
+        catch (std::out_of_range &e) { ferr = e.what(); }
+        try { stv.at(i); }
+        catch (std::out_of_range &e) { serr = e.what(); }
+        EXPECT_EQ(ferr, serr);
+        ++i;
+    }
+    ftv.clear();
+    stv.clear();
+    std::string ferr = "success";
+    std::string serr = "success";
+    try { ftv.at(0); }
+    catch (std::out_of_range &e) { ferr = e.what(); }
+    try { stv.at(0); }
+    catch (std::out_of_range &e) { serr = e.what(); }
+    EXPECT_EQ(ferr, serr);
+}
+
+template<typename T>
+void FunctionFrontTest() {
+    printTestName<T>("Testing function front");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+    EXPECT_EQ(ftv.front(), stv.front());
+}
+
+template<typename T>
+void FunctionBackTest() {
+    printTestName<T>("Testing function back");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+    EXPECT_EQ(ftv.back(), stv.back());
+}
+
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
@@ -418,14 +618,24 @@ TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(t
 TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
 TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
 
-TEST(VectorAssignation, AssignationOperatorToMoreCap)  FT_DO_TEST(assignationOperatorToMoreCapTest)
-TEST(VectorAssignation, AssignationOperatorToMoreSize)  FT_DO_TEST(assignationOperatorToMoreSizeTest)
-TEST(VectorAssignation, AssignationOperatorToLess)  FT_DO_TEST(assignationOperatorToLessTest)
-TEST(VectorAssignation, AssignationOperatorToSame)  FT_DO_TEST(assignationOperatorToSameTest)
+TEST(VectorAssignation, AssignationOperatorToMoreCap) FT_DO_TEST(assignationOperatorToMoreCapTest)
+TEST(VectorAssignation, AssignationOperatorToMoreSize) FT_DO_TEST(assignationOperatorToMoreSizeTest)
+TEST(VectorAssignation, AssignationOperatorToLess) FT_DO_TEST(assignationOperatorToLessTest)
+TEST(VectorAssignation, AssignationOperatorToSame) FT_DO_TEST(assignationOperatorToSameTest)
 
-TEST(VectorCapacity, ResizeLess)  FT_DO_TEST(resizeLessTest)
-TEST(VectorCapacity, ResizeMore)  FT_DO_TEST(resizeMoreTest)
-TEST(VectorCapacity, ResizeSame)  FT_DO_TEST(resizeSameTest)
+TEST(VectorCapacity, ResizeLess) FT_DO_TEST(resizeLessTest)
+TEST(VectorCapacity, ResizeMore) FT_DO_TEST(resizeMoreTest)
+TEST(VectorCapacity, ResizeSame) FT_DO_TEST(resizeSameTest)
+
+TEST(VectorCapacity, ReserveLess) FT_DO_TEST(reserveLessTest)
+TEST(VectorCapacity, ReserveMore) FT_DO_TEST(reserveMoreTest)
+TEST(VectorCapacity, ReserveSame) FT_DO_TEST(reserveSameTest)
+TEST(VectorCapacity, ReserveGreaterThanMax) FT_DO_TEST(reserveGreaterThanMaxTest)
+
+TEST(VectorElementAccess, operatorBracketsAccess) FT_DO_TEST(OperatorBracketsAccessTest)
+TEST(VectorElementAccess, functionAt) FT_DO_TEST(FunctionAtTest)
+TEST(VectorElementAccess, functionFront) FT_DO_TEST(FunctionFrontTest)
+TEST(VectorElementAccess, functionBack) FT_DO_TEST(FunctionBackTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
