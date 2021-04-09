@@ -79,7 +79,6 @@ namespace ft {
         vector& operator=(const vector& other) {
             if (this != &other) {
                 _delete_data();
-                _allocator = allocator_type(other._allocator);
                 if (other._capacity)
                     _copy_other(other);
             }
