@@ -160,5 +160,5 @@ int main3() {
 }
 
 int main() {
-    return main3();
+    return main2();
 }

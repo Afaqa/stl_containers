@@ -2,6 +2,7 @@
 #define ITERATOR_HPP
 
 #include <iterator>
+#include "type_traits.hpp"
 
 namespace ft {
 
@@ -240,6 +241,29 @@ namespace ft {
         pointer _data;
 
     };
+
+    template <class InputIterator>
+    inline typename std::iterator_traits<InputIterator>::difference_type
+    distance(InputIterator first,
+             typename enable_if<is_same<typename std::iterator_traits<InputIterator>::iterator_category,
+            std::input_iterator_tag>::value &&
+                !is_same<typename std::iterator_traits<InputIterator>::iterator_category,
+                std::forward_iterator_tag>::value, InputIterator>::type last)
+    {
+        typename std::iterator_traits<InputIterator>::difference_type dist(0);
+        for (; first != last; ++first)
+            ++dist;
+        return dist;
+    }
+
+    template <class RandomAccessIterator>
+    inline typename std::iterator_traits<RandomAccessIterator>::difference_type
+    distance(RandomAccessIterator first,
+             typename enable_if<is_same<typename std::iterator_traits<RandomAccessIterator>::iterator_category,
+                std::random_access_iterator_tag>::value, RandomAccessIterator>::type last)
+    {
+        return last - first;
+    }
 }
 
 #endif
