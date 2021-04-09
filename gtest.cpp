@@ -36,9 +36,13 @@ void printValues(std::size_t id, std::string const& v1, std::string const& v2) {
 template<typename T, typename U>
 void testContainersEqual(T const& cont1, U const& cont2) {
     EXPECT_EQ(cont1.empty(), cont2.empty());
+    std::cout << "Empty " << cont1.empty() << " == " << cont2.empty() << std::endl;
     EXPECT_EQ(cont1.size(), cont2.size());
+    std::cout << "Size " << cont1.size() << " == " << cont2.size() << std::endl;
     EXPECT_EQ(cont1.max_size(), cont2.max_size());
+    std::cout << "Max size " << cont1.max_size() << " == " << cont2.max_size() << std::endl;
     EXPECT_EQ(cont1.capacity(), cont2.capacity());
+    std::cout << "Capacity " << cont1.capacity() << " == " << cont2.capacity() << std::endl;
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
     if (cont1.size() || cont2.size()) {
@@ -239,7 +243,7 @@ void copyConstructorTest() {
 }
 
 template<typename T>
-void assignationOperatorTest() {
+void assignationOperatorToMoreCapTest() {
     printTestName<T>("Assignation operator");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -255,6 +259,80 @@ void assignationOperatorTest() {
     std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
     ft::vector<T> ftv(fiter.rbegin(), fiter.rend() - 9);
     std::vector<T> stv(siter.rbegin(), siter.rend() - 9);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void assignationOperatorToMoreSizeTest() {
+    printTestName<T>("Assignation operator");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    std::vector<T> siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
+    }
+
+    ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+    std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+    ft::vector<T> ftv(fiter.rbegin(), fiter.rend() - 9);
+    std::vector<T> stv(siter.rbegin(), siter.rend() - 9);
+
+    ftv.reserve(fiter.size());
+    stv.reserve(siter.size());
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void assignationOperatorToLessTest() {
+    printTestName<T>("Assignation operator");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    std::vector<T> siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
+    }
+
+    ft::vector<T> ftv_o(fiter.begin() + 5, fiter.end() - 4);
+    std::vector<T> stv_o(siter.begin() + 5, siter.end() - 4);
+    ft::vector<T> ftv(fiter.rbegin(), fiter.rend() - 2);
+    std::vector<T> stv(siter.rbegin(), siter.rend() - 2);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void assignationOperatorToSameTest() {
+    printTestName<T>("Assignation operator");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    std::vector<T> siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
+    }
+
+    ft::vector<T> ftv_o(fiter.begin() + 5, fiter.end() - 4);
+    std::vector<T> stv_o(siter.begin() + 5, siter.end() - 4);
+    ft::vector<T> ftv(fiter.rbegin() + 2, fiter.rend() - 7);
+    std::vector<T> stv(siter.rbegin() + 2, siter.rend() - 7);
 
     ftv = ftv_o;
     stv = stv_o;
@@ -339,7 +417,11 @@ TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsCon
 TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
 TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
 TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
-TEST(VectorConstructors, AssignationOperator)  FT_DO_TEST(assignationOperatorTest)
+
+TEST(VectorAssignation, AssignationOperatorToMoreCap)  FT_DO_TEST(assignationOperatorToMoreCapTest)
+TEST(VectorAssignation, AssignationOperatorToMoreSize)  FT_DO_TEST(assignationOperatorToMoreSizeTest)
+TEST(VectorAssignation, AssignationOperatorToLess)  FT_DO_TEST(assignationOperatorToLessTest)
+TEST(VectorAssignation, AssignationOperatorToSame)  FT_DO_TEST(assignationOperatorToSameTest)
 
 TEST(VectorCapacity, ResizeLess)  FT_DO_TEST(resizeLessTest)
 TEST(VectorCapacity, ResizeMore)  FT_DO_TEST(resizeMoreTest)

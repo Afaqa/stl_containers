@@ -78,16 +78,15 @@ namespace ft {
 
         vector& operator=(const vector& other) {
             if (this != &other) {
-                _delete_data();
-                if (other._capacity)
-                    _copy_other(other);
+                assign(other.begin(), other.end());
             }
             return *this;
         }
 
         template <class InputIterator>
             void assign (InputIterator first,
-                         typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value,
+                         typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value &&
+                                !is_valid_iterator_type<InputIterator, std::forward_iterator_tag, pointer>::value,
                                  InputIterator>::type last) {
                 for (; first != last; ++first) {
                     push_back(*first);
@@ -109,10 +108,14 @@ namespace ft {
                         for (size_type i = 0; i < size(); ++first, ++i) {
                             _data[i] = *first;
                         }
-                        _construct_end(first + size(), last);
+                        _construct_end(first, last);
                     }
-                    else
+                    else {
                         _destroy_end_until(_data + n);
+                        for (size_type i = 0; i < size(); ++i) {
+                            _data[i] = *first++;
+                        }
+                    }
                 }
             }
 
@@ -216,7 +219,7 @@ namespace ft {
                 pointer newData = _allocator.allocate(n);
                 size_type size_ = 0;
                 for (pointer p = _data; p != _end; ++p, ++size_) {
-                    newData[size_] = *p;
+                    _allocator.construct(newData + size_, *p);
                 }
                 _delete_data();
                 _data = newData;
@@ -362,7 +365,6 @@ namespace ft {
         template<class InputIterator>
                 void insert(iterator position, InputIterator first, InputIterator last) {
                     while (first != last) {
-                        std::cout << "size: " << size() << " | pos: " << (position - begin()) << " | cap: " << _capacity << std::endl;
                         position = insert(position, *first++);
                         ++position;
                     }
@@ -453,7 +455,7 @@ namespace ft {
         template<typename Iterator>
             void _construct_end(Iterator begin, Iterator end) {
                 while (begin != end) {
-                    _allocator.construct(_end, *begin);
+                    _allocator.construct(_end, *begin++);
                     ++_end;
                 }
             }

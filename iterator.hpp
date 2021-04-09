@@ -243,6 +243,41 @@ namespace ft {
     };
 
     template <class InputIterator>
+    inline void advance_sub_(InputIterator& it,
+            typename std::iterator_traits<InputIterator>::difference_type n,
+            std::input_iterator_tag)
+    {
+        for (; n > 0; --n)
+            ++it;
+    }
+
+    template <class BidirectionalIterator>
+    inline void advance_sub_(BidirectionalIterator& it,
+                        typename std::iterator_traits<BidirectionalIterator>::difference_type n,
+                        std::bidirectional_iterator_tag)
+    {
+        if (n > 0)
+            for (; n > 0; --n)
+                ++it;
+        else
+            for (; n < 0; ++n)
+                --it;
+    }
+
+    template <class RandomAccessIterator>
+    inline void advance_sub_(RandomAccessIterator& it,
+                typename std::iterator_traits<RandomAccessIterator>::difference_type n,
+                std::random_access_iterator_tag)
+    {
+        it += n;
+    }
+
+    template<typename Iterator>
+    inline void advance(Iterator& it, typename std::iterator_traits<Iterator>::difference_type n) {
+        advance_sub_(it, n, typename std::iterator_traits<Iterator>::iterator_category());
+    }
+
+    template <class InputIterator>
     inline typename std::iterator_traits<InputIterator>::difference_type
     distance(InputIterator first,
              typename enable_if<is_same<typename std::iterator_traits<InputIterator>::iterator_category,
