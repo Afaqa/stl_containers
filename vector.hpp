@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <iterator>
+#include "memory.hpp"
 #include "iterator.hpp"
 #include "type_traits.hpp"
 #include "algorithm.hpp"
@@ -10,7 +11,7 @@
 
 namespace ft {
 
-    template<class T, class Alloc = std::allocator<T> >
+    template<class T, class Alloc = allocator<T> >
     class vector {
 
     public:

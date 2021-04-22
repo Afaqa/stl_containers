@@ -783,6 +783,28 @@ void PushBackTest() {
     testContainersEqual(ftv, stv);
 }
 
+template<typename T>
+void PopBackTest() {
+    printTestName<T>("Testing pop back on small container size with every delete state check (overkill?)");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    while (!(ftv.empty() || stv.empty())) {
+        ftv.pop_back();
+        stv.pop_back();
+        testContainersEqual(ftv, stv);
+    }
+
+    testContainersEqual(ftv, stv);
+}
+
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
@@ -817,6 +839,7 @@ TEST(VectorAssign, assignFillMoreThanMax) FT_DO_TEST(AssignFillMoreThanMaxTest)
 TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
 
 TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
+TEST(VectorPopBack, popBack) FT_DO_TEST(PopBackTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
