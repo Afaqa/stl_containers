@@ -611,6 +611,178 @@ void FunctionBackTest() {
     EXPECT_EQ(ftv.back(), stv.back());
 }
 
+template<typename T>
+void AssignFillLessTest() {
+    printTestName<T>("Testing assign with size lesser than cap");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    T value = getRandomValue<T>();
+    ftv.assign(ftv.capacity() * .7, value);
+    stv.assign(stv.capacity() * .7, value);
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void AssignFillBetweenSizeCapTest() {
+    printTestName<T>("Testing assign with size between size and cap");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    ftv.resize(ftv.capacity() * 2);
+    stv.resize(stv.capacity() * 2);
+    T value = getRandomValue<T>();
+    ftv.assign(ftv.capacity() * 1.5, value);
+    stv.assign(stv.capacity() * 1.5, value);
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void AssignFillMoreTest() {
+    printTestName<T>("Testing assign with size more than cap");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    T value = getRandomValue<T>();
+    ftv.assign(ftv.capacity() * 1.6, value);
+    stv.assign(stv.capacity() * 1.6, value);
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void AssignFillMaxSizeTest() {
+    printTestName<T>("Testing assign with maximum size");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    bool err = false;
+    std::string fmsg = "success";
+    std::string smsg = "success";
+    T value = getRandomValue<T>();
+    try {
+        ftv.assign(ftv.max_size(), value);
+    } catch(std::exception& e) { fmsg = e.what(); err = true; }
+    try {
+        stv.assign(stv.max_size(), value);
+    } catch(std::exception& e) { smsg = e.what(); err = true; }
+
+    EXPECT_EQ(fmsg, smsg);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void AssignFillMoreThanMaxTest() {
+    printTestName<T>("Testing assign with size more than the maximum cap");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    bool err = false;
+    std::string fmsg = "success";
+    std::string smsg = "success";
+    T value = getRandomValue<T>();
+    try {
+        ftv.assign(ftv.max_size() + 1, value);
+    } catch(std::exception& e) { fmsg = e.what(); err = true; }
+    try {
+        stv.assign(stv.max_size() + 1, value);
+    } catch(std::exception& e) { smsg = e.what(); err = true; }
+
+    EXPECT_EQ(fmsg, smsg);
+    testContainersEqual(ftv, stv);
+
+    value = getRandomValue<T>();
+    ftv.push_back(value);
+    stv.push_back(value);
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void AssignFillSameTest() {
+    printTestName<T>("Testing assign with same size as cap");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+
+    T value = getRandomValue<T>();
+    ftv.assign(ftv.capacity(), value);
+    stv.assign(stv.capacity(), value);
+
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void PushBackTest() {
+    printTestName<T>("Testing push back on empty container with few values");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+
+    testContainersEqual(ftv, stv);
+}
+
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
@@ -636,6 +808,15 @@ TEST(VectorElementAccess, operatorBracketsAccess) FT_DO_TEST(OperatorBracketsAcc
 TEST(VectorElementAccess, functionAt) FT_DO_TEST(FunctionAtTest)
 TEST(VectorElementAccess, functionFront) FT_DO_TEST(FunctionFrontTest)
 TEST(VectorElementAccess, functionBack) FT_DO_TEST(FunctionBackTest)
+
+TEST(VectorAssign, assignFillLess) FT_DO_TEST(AssignFillLessTest)
+TEST(VectorAssign, assignFillBetweenSizeCap) FT_DO_TEST(AssignFillBetweenSizeCapTest)
+TEST(VectorAssign, assignFillMore) FT_DO_TEST(AssignFillMoreTest)
+TEST(VectorAssign, assignFillMaxSize) FT_DO_TEST(AssignFillMaxSizeTest)
+TEST(VectorAssign, assignFillMoreThanMax) FT_DO_TEST(AssignFillMoreThanMaxTest)
+TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
+
+TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));

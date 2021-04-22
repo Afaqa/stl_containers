@@ -136,7 +136,6 @@ namespace ft {
                     _construct_end_until(_data + n, val);
                 else
                     _destroy_end_until(_data + n);
-
             }
         }
 
@@ -422,6 +421,8 @@ namespace ft {
         size_type      _capacity;
 
         void _allocate(size_type n) {
+            if (n > max_size())
+                throw std::length_error("vector");
             _data     = _allocator.allocate(n);
             _end      = _data + n;
             _capacity = n;
@@ -429,7 +430,8 @@ namespace ft {
 
         void _delete_data() {
             clear();
-            _allocator.deallocate(_data, _capacity);
+            if (_capacity)
+                _allocator.deallocate(_data, _capacity);
             _capacity = 0;
         }
 
@@ -462,8 +464,8 @@ namespace ft {
         }
 
         void _construct_end_until(pointer end, const_reference value) {
-            for (pointer p = _end; p != end; ++p) {
-                _allocator.construct(p, value);
+            for (; _end != end; ++_end) {
+                _allocator.construct(_end, value);
             }
         }
 
