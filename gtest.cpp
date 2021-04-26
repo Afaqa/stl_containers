@@ -72,6 +72,38 @@ void testContainersEqual(T const& cont1, U const& cont2) {
 }
 
 template<typename T, typename U>
+void testContainersEqualNoprint(T const& cont1, U const& cont2) {
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    EXPECT_EQ(cont1.size(), cont2.size());
+    EXPECT_EQ(cont1.max_size(), cont2.max_size());
+    EXPECT_EQ(cont1.capacity(), cont2.capacity());
+    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
+    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+    if (cont1.size() || cont2.size()) {
+        typename T::const_iterator it1 = cont1.begin();
+        typename U::const_iterator it2 = cont2.begin();
+        while (it1 != cont1.end() && it2 != cont2.end()) {
+            printValues(it1 - cont1.begin(), *it1, *it2);
+            EXPECT_EQ(*it1, *it2);
+            ++it1;
+            ++it2;
+        }
+        EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
+        typename T::const_reverse_iterator rit1 = cont1.rbegin();
+        typename U::const_reverse_iterator rit2 = cont2.rbegin();
+        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+            printValues(cont2.rend() - rit2 - 1, *rit1, *rit2);
+            EXPECT_EQ(*rit1, *rit2);
+            ++rit1;
+            ++rit2;
+        }
+        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
+        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
+            std::cout << std::endl;
+    }
+}
+
+template<typename T, typename U>
 void testEmptyContainersEqual(T const& cont1, U const& cont2) {
     EXPECT_EQ(&(cont1[0]), &(cont2[0]));
     EXPECT_EQ(&(*cont1.end()), &(*cont2.end()));
@@ -805,6 +837,201 @@ void PopBackTest() {
     testContainersEqual(ftv, stv);
 }
 
+template<typename T>
+void SwapTest() {
+    printTestName<T>("Testing swap for a slightly filled container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ft::vector<T> ftv_sw;
+    std::vector<T> stv_sw;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv_sw.push_back(value);
+        stv_sw.push_back(value);
+    }
+    testContainersEqualNoprint(ftv_sw, stv_sw);
+
+    ft::swap(ftv, ftv_sw);
+    std::swap(stv, stv_sw);
+
+    testContainersEqualNoprint(ftv_sw, stv_sw);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void SwapOneEmptyTest() {
+    printTestName<T>("Testing swap with one of containers initially empty");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ft::vector<T> ftv_sw;
+    std::vector<T> stv_sw;
+    testContainersEqualNoprint(ftv_sw, stv_sw);
+
+    ft::swap(ftv, ftv_sw);
+    std::swap(stv, stv_sw);
+
+    testContainersEqual(ftv_sw, stv_sw);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void SwapOneClearedTest() {
+    printTestName<T>("Testing swap with one of containers cleared");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ft::vector<T> ftv_sw;
+    std::vector<T> stv_sw;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv_sw.push_back(value);
+        stv_sw.push_back(value);
+    }
+    ftv_sw.clear();
+    stv_sw.clear();
+    testContainersEqualNoprint(ftv_sw, stv_sw);
+
+    ft::swap(ftv, ftv_sw);
+    std::swap(stv, stv_sw);
+
+    testContainersEqual(ftv_sw, stv_sw);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void SwapEmptyTest() {
+    printTestName<T>("Testing swap with both containers initially empty");
+
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    testContainersEqualNoprint(ftv, stv);
+
+    ft::vector<T> ftv_sw;
+    std::vector<T> stv_sw;
+    testContainersEqualNoprint(ftv_sw, stv_sw);
+
+    ft::swap(ftv, ftv_sw);
+    std::swap(stv, stv_sw);
+
+    testContainersEqual(ftv_sw, stv_sw);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void SwapClearedTest() {
+    printTestName<T>("Testing swap with both containers cleared");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    ftv.clear();
+    stv.clear();
+    testContainersEqualNoprint(ftv, stv);
+
+    ft::vector<T> ftv_sw;
+    std::vector<T> stv_sw;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv_sw.push_back(value);
+        stv_sw.push_back(value);
+    }
+    ftv_sw.clear();
+    stv_sw.clear();
+    testContainersEqualNoprint(ftv_sw, stv_sw);
+
+    ft::swap(ftv, ftv_sw);
+    std::swap(stv, stv_sw);
+
+    testContainersEqual(ftv_sw, stv_sw);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void ClearTest() {
+    printTestName<T>("Testing clear on slightly filled container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ftv.clear();
+    stv.clear();
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void ClearEmptyTest() {
+    printTestName<T>("Testing clear on initially empty container");
+
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    testContainersEqualNoprint(ftv, stv);
+
+    ftv.clear();
+    stv.clear();
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void ClearDoubleTest() {
+    printTestName<T>("Testing clear on already cleared container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ftv.clear();
+    stv.clear();
+    testContainersEqualNoprint(ftv, stv);
+
+    ftv.clear();
+    stv.clear();
+    testContainersEqual(ftv, stv);
+}
+
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
@@ -840,6 +1067,16 @@ TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
 
 TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
 TEST(VectorPopBack, popBack) FT_DO_TEST(PopBackTest)
+
+TEST(VectorSwap, swap) FT_DO_TEST(SwapTest)
+TEST(VectorSwap, swapOneEmpty) FT_DO_TEST(SwapOneEmptyTest)
+TEST(VectorSwap, swapOneCleared) FT_DO_TEST(SwapOneClearedTest)
+TEST(VectorSwap, swapEmpty) FT_DO_TEST(SwapEmptyTest)
+TEST(VectorSwap, swapCleared) FT_DO_TEST(SwapClearedTest)
+
+TEST(VectorClear, clear) FT_DO_TEST(ClearTest)
+TEST(VectorClear, clearEmpty) FT_DO_TEST(ClearEmptyTest)
+TEST(VectorClear, clearDouble) FT_DO_TEST(ClearDoubleTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
