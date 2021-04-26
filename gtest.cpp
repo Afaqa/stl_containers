@@ -18,7 +18,7 @@ std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
     return o;
 }
 
-#define FT_DO_TEST(function) { \
+#define FT_DO_TEST(function) {\
         function<int>();\
         function<float>();\
         function<std::string>();\
@@ -1032,6 +1032,119 @@ void ClearDoubleTest() {
     testContainersEqual(ftv, stv);
 }
 
+template<typename T>
+void InsertTest() {
+    printTestName<T>("Testing insert single value into container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    T value = getRandomValue<T>();
+    ftv.insert(++++++++ftv.begin(), value);
+    stv.insert(++++++++stv.begin(), value);
+    value = getRandomValue<T>();
+    ftv.insert(----------------ftv.end(), value);
+    stv.insert(----------------stv.end(), value);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void InsertMultipleTest() {
+    printTestName<T>("Testing insert multiple copies of value into container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    T value = getRandomValue<T>();
+    ftv.insert(++++++++ftv.begin(), 12, value);
+    stv.insert(++++++++stv.begin(), 12, value);
+    value = getRandomValue<T>();
+    ftv.insert(----------------ftv.end(), 7, value);
+    stv.insert(----------------stv.end(), 7, value);
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void InsertRangeTest() {
+    printTestName<T>("Testing insert iterators range into container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    std::vector<T> range;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+        range.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    T value = getRandomValue<T>();
+    ftv.insert(++++++++ftv.begin(), range.begin(), range.end());
+    stv.insert(++++++++stv.begin(), range.begin(), range.end());
+    value = getRandomValue<T>();
+    ftv.insert(----------------ftv.end(), ++++++++range.begin(), ----range.end());
+    stv.insert(----------------stv.end(), ++++++++range.begin(), ----range.end());
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void EraseTest() {
+    printTestName<T>("Testing erase single value from container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ftv.erase(++++++++ftv.begin());
+    stv.erase(++++++++stv.begin());
+    ftv.erase(----------------ftv.end());
+    stv.erase(----------------stv.end());
+    testContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void EraseRangeTest() {
+    printTestName<T>("Testing erase range of values from container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> ftv;
+    std::vector<T> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push_back(value);
+        stv.push_back(value);
+    }
+    testContainersEqualNoprint(ftv, stv);
+
+    ftv.erase(++++++++ftv.begin(), ------ftv.end());
+    stv.erase(++++++++stv.begin(), ------stv.end());
+    ftv.erase(----------------ftv.end(), ftv.end());
+    stv.erase(----------------stv.end(), stv.end());
+    testContainersEqual(ftv, stv);
+}
+
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
@@ -1077,6 +1190,12 @@ TEST(VectorSwap, swapCleared) FT_DO_TEST(SwapClearedTest)
 TEST(VectorClear, clear) FT_DO_TEST(ClearTest)
 TEST(VectorClear, clearEmpty) FT_DO_TEST(ClearEmptyTest)
 TEST(VectorClear, clearDouble) FT_DO_TEST(ClearDoubleTest)
+
+TEST(VectorInsert, insert) FT_DO_TEST(InsertTest)
+TEST(VectorInsert, insertMultiple) FT_DO_TEST(InsertMultipleTest)
+TEST(VectorInsert, insertRange) FT_DO_TEST(InsertRangeTest)
+TEST(VectorErase, erase) FT_DO_TEST(EraseTest)
+TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));

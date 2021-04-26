@@ -335,16 +335,16 @@ namespace ft {
                     _allocator.construct(newData + i, _data[i]);
                     ++i;
                 }
-                for (size_type j = 0; j < n; ++j, ++i) {
-                    _allocator.construct(newData + i, x);
+                for (size_type j = 0; j < n; ++j) {
+                    _allocator.construct(newData + i + j, x);
                 }
-                while (_data + i - n != _end) {
-                    _allocator.construct(newData + i, _data[i - n]);
+                while (_data + i != _end) {
+                    _allocator.construct(newData + i + n, _data[i]);
                     ++i;
                 }
                 _delete_data();
                 _data     = newData;
-                _end      = _data + i;
+                _end      = _data + i + n;
                 _capacity = newCapacity;
             }
             else {
@@ -364,7 +364,8 @@ namespace ft {
         }
 
         template<class InputIterator>
-        void insert(iterator position, InputIterator first, InputIterator last) {
+        void insert(iterator position, InputIterator first,  typename enable_if<
+            is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value, InputIterator>::type last) {
             while (first != last) {
                 position = insert(position, *first++);
                 ++position;
@@ -387,8 +388,9 @@ namespace ft {
             return iterator(_data + pos);
         }
 
-        iterator erase(iterator first, iterator last) {
-            return 1 + last + first - first;
+//        iterator erase(iterator first, iterator last) {
+        iterator erase(iterator first, iterator ) {
+            return first;
         }
 
         void swap(vector<T, Alloc> &other) {
