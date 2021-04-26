@@ -42,7 +42,7 @@ int main1() {
     const std::size_t start_size = 15;
     const std::size_t v_size = 2200;
 
-    ft::vector<std::string, std::allocator<std::string> > fv(start_size);
+    ft::vector<std::string> fv(start_size);
     std::string v;
     for (ft::vector<std::string>::size_type i = 0; i < v_size; ++i, v.push_back(static_cast<char>((31 + i * 3) % 127))) {
         fv.push_back(v);
@@ -119,7 +119,7 @@ int main2() {
 }
 
 int main3() {
-    ft::vector<std::string, std::allocator<std::string> > fv;
+    ft::vector<std::string> fv;
     std::vector<std::string> sv;
     fv.insert(fv.begin(), "");
     sv.insert(sv.begin(), "");

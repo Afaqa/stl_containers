@@ -38,10 +38,8 @@ namespace ft {
 
         allocator() throw() {}
 
-        allocator(const allocator &alloc) throw() {}
-
         template<class U>
-        allocator(const allocator<U> &alloc) throw() {}
+        allocator(const allocator<U> &) throw() {}
 
         ~allocator() throw() {}
 
@@ -53,15 +51,14 @@ namespace ft {
             return &x;
         }
 
-        pointer allocate(size_type n, allocator<void>::const_pointer hint = 0) {
+        pointer allocate(size_type n, allocator<void>::const_pointer = 0) {
             if (n > max_size())
                 throw std::length_error("allocator<T>::allocate(size_t n)"
                                         " 'n' exceeds maximum supported size");
-            return reinterpret_cast<pointer>(::operator new(n * sizeof(value_type)));
+            return static_cast<pointer>(::operator new(n * sizeof(value_type)));
         }
 
-        void deallocate(pointer p, size_type n) {
-            (void) n;
+        void deallocate(pointer p, size_type) {
             ::operator delete(p);
         }
 
