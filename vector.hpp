@@ -349,16 +349,21 @@ namespace ft {
             }
             else {
                 pointer        p = _end - 1;
+                std::cout << "INSERT MULTIPLE" << std::endl; // todo remove poor debug
                 for (size_type i = 0; i < n; ++i) {
+                    std::cout << "MOVE id " << (p - _data) + n + i << " to id " << (p - _data) + i << std::endl; // todo remove poor debug
                     _allocator.construct(p + n + i, *(p + i));
                 }
                 for (; p != pos + n; --p) {
+                    std::cout << "Assign id " << (p - _data) << " with value of id " << (p - _data) - 1 << std::endl; // todo remove poor debug
                     *p = *(p - 1);
                 }
                 while (p >= pos) {
+                    std::cout << "Assign id " << (p - _data) << " with X #" << (p - pos) << std::endl; // todo remove poor debug
                     *p = x;
                     --p;
                 }
+                std::cout << " -- fin -- " << std::endl; // todo remove poor debug
                 _end += n;
             }
         }

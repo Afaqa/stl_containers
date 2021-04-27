@@ -66,8 +66,9 @@ namespace ft {
             return std::numeric_limits<size_type>::max() / sizeof(value_type);
         }
 
-        void construct(pointer p, const_reference val) {
-            new((void *) p) value_type(val);
+        template<class U>
+        void construct(U* p, const_reference val) {
+            ::new((void *) p) U(val);
         }
 
         void destroy(pointer p) {
