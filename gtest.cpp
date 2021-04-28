@@ -1073,8 +1073,8 @@ void InsertMultipleTest() {
     ftv.insert(++++++++ftv.begin(), 12, value);
     stv.insert(++++++++stv.begin(), 12, value);
     value = getRandomValue<T>();
-    ftv.insert(----------------ftv.end(), 7, value);
-    stv.insert(----------------stv.end(), 7, value);
+    ftv.insert(--------------------ftv.end(), 7, value);
+    stv.insert(--------------------stv.end(), 7, value);
     testContainersEqual(ftv, stv);
 }
 
@@ -1117,10 +1117,12 @@ void EraseTest() {
     }
     testContainersEqualNoprint(ftv, stv);
 
-    ftv.erase(++++++++ftv.begin());
-    stv.erase(++++++++stv.begin());
-    ftv.erase(----------------ftv.end());
-    stv.erase(----------------stv.end());
+    auto ferend = ftv.erase(++++++++ftv.begin());
+    auto serend = stv.erase(++++++++stv.begin());
+    EXPECT_EQ(*ferend, *serend);
+    ferend = ftv.erase(----------------ftv.end());
+    serend = stv.erase(----------------stv.end());
+    EXPECT_EQ(*ferend, *serend);
     testContainersEqual(ftv, stv);
 }
 
@@ -1128,7 +1130,7 @@ template<typename T>
 void EraseRangeTest() {
     printTestName<T>("Testing erase range of values from container");
 
-    std::size_t numOfItems = rand() % 20 + 10;
+    std::size_t numOfItems = rand() % 20 + 20;
     ft::vector<T> ftv;
     std::vector<T> stv;
     for (std::size_t i = 0; i < numOfItems; ++i) {
@@ -1138,10 +1140,12 @@ void EraseRangeTest() {
     }
     testContainersEqualNoprint(ftv, stv);
 
-    ftv.erase(++++++++ftv.begin(), ------ftv.end());
-    stv.erase(++++++++stv.begin(), ------stv.end());
-    ftv.erase(----------------ftv.end(), ftv.end());
-    stv.erase(----------------stv.end(), stv.end());
+    auto ferend = ftv.erase(++++++++++++++ftv.begin(), ------ftv.end());
+    auto serend = stv.erase(++++++++++++++stv.begin(), ------stv.end());
+    EXPECT_EQ(*ferend, *serend);
+    ferend = ftv.erase(----------------ftv.end(), ftv.end());
+    serend = stv.erase(----------------stv.end(), stv.end());
+    EXPECT_EQ(*--ferend, *--serend);
     testContainersEqual(ftv, stv);
 }
 

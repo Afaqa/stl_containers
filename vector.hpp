@@ -327,7 +327,7 @@ namespace ft {
 
         void insert(iterator position, size_type n, const T &x) {
             pointer pos = &*position;
-            if (size() + n >= _capacity) {
+            if (size() + n > _capacity) {
                 size_type newCapacity = _capacity == 0 ? n : _capacity * 2;
                 pointer   newData     = _allocator.allocate(newCapacity, _data);
                 size_type i           = 0;
@@ -348,22 +348,16 @@ namespace ft {
                 _capacity = newCapacity;
             }
             else {
-                pointer        p = _end - 1;
-                std::cout << "INSERT MULTIPLE" << std::endl; // todo remove poor debug
+                difference_type moveEndSize = _end - 1 - pos;
                 for (size_type i = 0; i < n; ++i) {
-                    std::cout << "MOVE id " << (p - _data) + n + i << " to id " << (p - _data) + i << std::endl; // todo remove poor debug
-                    _allocator.construct(p + n + i, *(p + i));
+                    _allocator.construct(pos + n + moveEndSize - i, *(pos + moveEndSize - i));
                 }
-                for (; p != pos + n; --p) {
-                    std::cout << "Assign id " << (p - _data) << " with value of id " << (p - _data) - 1 << std::endl; // todo remove poor debug
-                    *p = *(p - 1);
+                for (size_type i = 0; i <= moveEndSize - n; ++i) {
+                    *(pos + moveEndSize - i) = *(pos + moveEndSize - n - i);
                 }
-                while (p >= pos) {
-                    std::cout << "Assign id " << (p - _data) << " with X #" << (p - pos) << std::endl; // todo remove poor debug
-                    *p = x;
-                    --p;
+                for (size_type i = 0; i < n; ++i) {
+                    *(pos + i) = x;
                 }
-                std::cout << " -- fin -- " << std::endl; // todo remove poor debug
                 _end += n;
             }
         }
@@ -393,9 +387,15 @@ namespace ft {
             return iterator(_data + pos);
         }
 
-//        iterator erase(iterator first, iterator last) {
-        iterator erase(iterator first, iterator ) {
-            return first;
+        iterator erase(iterator first, iterator last) {
+            pointer eraseEnd = _data + (first - begin());
+            if (first != last) {
+                while (last != end()) {
+                    *first++ = *last++;
+                }
+                _destroy_end_until(&*first);
+            }
+            return iterator(eraseEnd);
         }
 
         void swap(vector<T, Alloc> &other) {
