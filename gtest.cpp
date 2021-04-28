@@ -298,6 +298,7 @@ void assignationOperatorToMoreCapTest() {
     testContainersEqual(ftv, stv);
 }
 
+
 template<typename T>
 void assignationOperatorToMoreSizeTest() {
     printTestName<T>("Assignation operator to the bigger size");
@@ -1094,10 +1095,8 @@ void InsertRangeTest() {
     }
     testContainersEqualNoprint(ftv, stv);
 
-    T value = getRandomValue<T>();
     ftv.insert(++++++++ftv.begin(), range.begin(), range.end());
     stv.insert(++++++++stv.begin(), range.begin(), range.end());
-    value = getRandomValue<T>();
     ftv.insert(----------------ftv.end(), ++++++++range.begin(), ----range.end());
     stv.insert(----------------stv.end(), ++++++++range.begin(), ----range.end());
     testContainersEqual(ftv, stv);
