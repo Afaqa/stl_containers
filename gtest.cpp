@@ -1,15 +1,57 @@
 #include <vector>
 #include "vector.hpp"
 #include "gtest/gtest.h"
+#include <fstream>
+
+#define COLOR_BLACK	"\033[0;30m"
+#define COLOR_RED		"\033[0;31m"
+#define COLOR_GREEN	"\033[0;32m"
+#define COLOR_ORANGE	"\033[0;33m"
+#define COLOR_BLUE	"\033[0;34m"
+#define COLOR_PURPLE	"\033[0;35m"
+#define COLOR_CYAN	"\033[0;36m"
+#define COLOR_LGRAY	"\033[0;37m"
+#define COLOR_DGRAY	"\033[1;30m"
+#define COLOR_LRED	"\033[1;31m"
+#define COLOR_LGREEN	"\033[1;32m"
+#define COLOR_YELLOW	"\033[1;33m"
+#define COLOR_LBLUE	"\033[1;34m"
+#define COLOR_LPURPLE	"\033[1;35m"
+#define COLOR_LCYAN	"\033[1;36m"
+#define COLOR_WHITE	"\033[1;37m"
+#define COLOR_RESET	"\033[0m"
+
+#define LOG_FT "ft.out"
+#define LOG_ST "std.out"
+
+std::ofstream g_logft(LOG_FT);
+std::ofstream g_logst(LOG_ST);
+std::ostream *g_logcurrent = NULL;
 
 struct SomeStruct {
     std::string name;
     float       number;
-    SomeStruct() : name("empty"), number(15.51) {}
-    SomeStruct(std::string const& name, float number) : name(name), number(number) {}
-    SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {}
-    SomeStruct& operator=(SomeStruct const& other) { name = other.name; number = other.number; return *this; }
-    ~SomeStruct() {}
+    SomeStruct() : name("empty"), number(15.51) {
+        (*g_logcurrent) << COLOR_RED "SomeStruct Default Constructor" COLOR_RESET << std::endl;
+    }
+    SomeStruct(std::string const& name, float number) : name(name), number(number) {
+        (*g_logcurrent) << COLOR_ORANGE "SomeStruct Values Constructor for name '" COLOR_CYAN << name << COLOR_ORANGE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+    }
+    SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {
+        (*g_logcurrent) << COLOR_PURPLE "SomeStruct Copy Constructor for name '" COLOR_CYAN << name << COLOR_PURPLE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+    }
+    SomeStruct(SomeStruct const&& other) : name(other.name), number(other.number) {
+        (*g_logcurrent) << COLOR_GREEN "SomeStruct Move Constructor for name '" COLOR_CYAN << name << COLOR_GREEN "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+    }
+    SomeStruct& operator=(SomeStruct const& other) {
+        name = other.name;
+        number = other.number;
+        (*g_logcurrent) << COLOR_BLUE "SomeStruct Assignation Operator for name '" COLOR_CYAN << name << COLOR_BLUE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+        return *this;
+    }
+    ~SomeStruct() {
+        (*g_logcurrent) << COLOR_YELLOW "SomeStruct Destructor for name '" COLOR_CYAN << name << COLOR_YELLOW "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+    }
     bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
 };
 
@@ -19,9 +61,9 @@ std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
 }
 
 #define FT_DO_TEST(function) {\
-        function<int>();\
+        /*function<int>();\
         function<float>();\
-        function<std::string>();\
+        function<std::string>();*/\
         function<SomeStruct>();}
 
 template<typename T>
@@ -111,53 +153,78 @@ void testEmptyContainersEqual(T const& cont1, U const& cont2) {
 }
 
 template<typename T>
-void printTestName(std::string const& name) {
-    (void)*(char*)(&name - &name);
-}
+void printTestName(std::string const& name);
 
 template<>
 void printTestName<int>(std::string const& name) {
     std::cout << name << " <int>" << std::endl;
+    g_logft << name << " <int>" << std::endl;
+    g_logst << name << " <int>" << std::endl;
 }
 
 template<>
 void printTestName<float>(std::string const& name) {
     std::cout << name << " <float>" << std::endl;
+    g_logft << name << " <float>" << std::endl;
+    g_logst << name << " <float>" << std::endl;
 }
 
 template<>
 void printTestName<std::string>(std::string const& name) {
     std::cout << name << " <std::string>" << std::endl;
+    g_logft << name << " <std::string>" << std::endl;
+    g_logst << name << " <std::string>" << std::endl;
 }
 
 template<>
 void printTestName<SomeStruct>(std::string const& name) {
     std::cout << name << " <SomeStruct>" << std::endl;
+    g_logft << name << " <SomeStruct>" << std::endl;
+    g_logst << name << " <SomeStruct>" << std::endl;
 }
 
 template<typename T>
 void defaultConstructorTest() {
+    g_logcurrent = &std::cout;
     printTestName<T>("Default constructor");
+    g_logcurrent = &g_logft;
     ft::vector<T> ftv;
+    g_logcurrent = &g_logst;
     std::vector<T> stv;
+    g_logcurrent = NULL;
     testEmptyContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void zeroElementsConstructorTest() {
+    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for 0 elements");
+    g_logcurrent = &g_logft;
     ft::vector<T> ftv(0);
+    g_logcurrent = &g_logst;
     std::vector<T> stv(0);
+    g_logcurrent = NULL;
     testEmptyContainersEqual(ftv, stv);
 
 }
 
 template<typename T>
 void twentyElementsConstructorTest() {
-    printTestName<T>("Constructor for N elements");
-    ft::vector<T> ftv(20);
-    std::vector<T> stv(20);
-    testContainersEqual(ftv, stv);
+    g_logcurrent = &std::cout;
+    {
+        printTestName<T>("Constructor for N elements");
+        g_logcurrent = &g_logft;
+        ft::vector<T> ftv(20);
+        g_logcurrent = &g_logst;
+        {
+            std::vector<T> stv(20);
+            g_logcurrent = &std::cout;
+            testContainersEqual(ftv, stv);
+            g_logcurrent = &g_logst;
+        }
+        g_logcurrent = &g_logft;
+    }
+    g_logcurrent = NULL;
 }
 
 template<typename T>
@@ -191,91 +258,230 @@ SomeStruct getRandomValue<SomeStruct>() {
 
 template<typename T>
 void twentyElementsWithDefaultValueConstructorTest() {
+    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for N elements with value");
-    T value = getRandomValue<T>();
-    ft::vector<T> ftv(20, value);
-    std::vector<T> stv(20, value);
-    testContainersEqual(ftv, stv);
+    {
+        T value = getRandomValue<T>();
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T> ftv(20, value);
+            g_logcurrent = &g_logst;
+            {
+                std::vector<T> stv(20, value);
+                g_logcurrent = &std::cout;
+                testContainersEqual(ftv, stv);
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = &std::cout;
+    }
+    g_logcurrent = NULL;
 }
 
 template<typename T>
 void iteratorConstructorTest() {
+    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for iterators begin and end");
 
     std::size_t numOfItems = rand() % 20 + 10;
-    ft::vector<T> fiter;
-    std::vector<T> siter;
-    for (std::size_t i = 0; i < numOfItems; ++i) {
-        T value = getRandomValue<T>();
-        fiter.push_back(value);
-        siter.push_back(value);
+    {
+        g_logcurrent = &g_logft;
+        ft::vector<T> fiter;
+        {
+            g_logcurrent       = &g_logst;
+            std::vector<T>   siter;
+            for (std::size_t i = 0; i < numOfItems; ++i) {
+                g_logcurrent = &std::cout;
+                T value      = getRandomValue<T>();
+                {
+                    g_logcurrent = &g_logft;
+                    fiter.push_back(value);
+                    {
+                        g_logcurrent = &g_logst;
+                        siter.push_back(value);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &std::cout;
+            }
+
+            {
+                g_logcurrent = &g_logft;
+                ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
+                {
+                    g_logcurrent = &g_logst;
+                    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
+                    testContainersEqual(ftv, stv);
+                }
+                g_logcurrent = &g_logft;
+            }
+            g_logcurrent = &g_logst;
+        }
+        g_logcurrent = &g_logft;
     }
-
-    ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
-    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
-
-    testContainersEqual(ftv, stv);
+    g_logcurrent = NULL;
 }
 
 template<typename T>
 void copyConstructorTest() {
     {
+        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for default container");
-        ft::vector<T> ftv_o;
-        std::vector<T> stv_o;
-        ft::vector<T> ftv(ftv_o);
-        std::vector<T> stv(stv_o);
-        testEmptyContainersEqual(ftv, stv);
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T> ftv_o;
+            {
+                g_logcurrent = &g_logst;
+                std::vector<T> stv_o;
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T> ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv(stv_o);
+                        testEmptyContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
     }
     {
+        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for 0 elements");
-        ft::vector<T> ftv_o(0);
-        std::vector<T> stv_o(0);
-        ft::vector<T> ftv(ftv_o);
-        std::vector<T> stv(stv_o);
-        testEmptyContainersEqual(ftv, stv);
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T> ftv_o(0);
+            {
+                g_logcurrent = &g_logst;
+                std::vector<T> stv_o(0);
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T> ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv(stv_o);
+                        testEmptyContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
     }
     {
+        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for N elements");
-        ft::vector<T> ftv_o(20);
-        std::vector<T> stv_o(20);
-        ft::vector<T> ftv(ftv_o);
-        std::vector<T> stv(stv_o);
-        testContainersEqual(ftv, stv);
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T>  ftv_o(20);
+            {
+                g_logcurrent = &g_logst;
+                std::vector<T> stv_o(20);
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T>  ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv(stv_o);
+                        testContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
     }
     {
+        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for N elements with value");
-        T value = getRandomValue<T>();
-        ft::vector<T> ftv_o(20, value);
-        std::vector<T> stv_o(20, value);
-        ft::vector<T> ftv(ftv_o);
-        std::vector<T> stv(stv_o);
-        testContainersEqual(ftv, stv);
+        {
+            T value = getRandomValue<T>();
+            {
+                g_logcurrent = &g_logft;
+                ft::vector<T> ftv_o(20, value);
+                {
+                    g_logcurrent = &g_logst;
+                    std::vector<T> stv_o(20, value);
+                    {
+                        g_logcurrent = &g_logft;
+                        ft::vector<T> ftv(ftv_o);
+                        {
+                            g_logcurrent = &g_logst;
+                            std::vector<T> stv(stv_o);
+                            testContainersEqual(ftv, stv);
+                        }
+                        g_logcurrent = &g_logft;
+                    }
+                    g_logcurrent = &g_logst;
+                }
+                g_logcurrent = &g_logft;
+            }
+            g_logcurrent = &std::cout;
+        }
+        g_logcurrent = NULL;
     }
     {
+        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for iterators begin and end");
 
         std::size_t numOfItems = rand() % 20 + 10;
-        ft::vector<T> fiter;
-        std::vector<T> siter;
-        for (std::size_t i = 0; i < numOfItems; ++i) {
-            T value = getRandomValue<T>();
-            fiter.push_back(value);
-            siter.push_back(value);
+        {
+            g_logcurrent       = &g_logft;
+            ft::vector<T>    fiter;
+            {
+                g_logcurrent       = &g_logst;
+                std::vector<T>   siter;
+                for (std::size_t i = 0; i < numOfItems; ++i) {
+                    g_logcurrent = &std::cout;
+                    T value = getRandomValue<T>();
+                    g_logcurrent = &g_logft;
+                    fiter.push_back(value);
+                    g_logcurrent = &g_logst;
+                    siter.push_back(value);
+                }
+
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+
+                        {
+                            g_logcurrent = &g_logft;
+                            ft::vector<T> ftv(ftv_o);
+                            {
+                                g_logcurrent = &g_logst;
+                                std::vector<T> stv(stv_o);
+
+                                testContainersEqual(ftv, stv);
+                            }
+                            g_logcurrent = &g_logft;
+                        }
+                        g_logcurrent = &g_logst;
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
         }
-
-        ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
-        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
-
-        ft::vector<T> ftv(ftv_o);
-        std::vector<T> stv(stv_o);
-
-        testContainersEqual(ftv, stv);
+        g_logcurrent = NULL;
     }
 }
 
 template<typename T>
 void assignationOperatorToMoreCapTest() {
+    g_logcurrent = &std::cout;
     printTestName<T>("Assignation operator to the bigger capacity");
 
     std::size_t numOfItems = rand() % 20 + 10;
