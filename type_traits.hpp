@@ -30,14 +30,19 @@ namespace ft {
     template<class T, class U, class Ptr>
     struct is_valid_iterator_type {
     private:
-        template<class T1>
-        static uint64_t f(enable_if<is_same<typename T1::iterator_category, U>::value, Ptr> T1::* = 0) { return 0; }
+        struct _char2 {
+            char one;
+            char two;
+        };
 
         template<class T1>
-        static char f(...) { return 0; }
+        static _char2 f(enable_if<is_same<typename T1::iterator_category, U>::value, Ptr> T1::* = 0);
+
+        template<class T1>
+        static char f(...);
 
     public:
-        static const bool value = sizeof(f<T>(0)) == sizeof(uint64_t) || is_same<T, Ptr>::value;
+        static const bool value = sizeof(f<T>(0)) == sizeof(_char2) || is_same<T, Ptr>::value;
     };
 
     template<typename T>

@@ -25,8 +25,8 @@ namespace ft {
         typedef typename allocator_type::const_pointer                   const_pointer;
         typedef random_access_iterator<value_type>                       iterator;
         typedef random_access_iterator<const value_type>                 const_iterator;
-        typedef std::reverse_iterator<iterator>                          reverse_iterator;
-        typedef std::reverse_iterator<const_iterator>                    const_reverse_iterator;
+        typedef ft::reverse_iterator<iterator>                           reverse_iterator;
+        typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
         typedef typename std::iterator_traits<iterator>::difference_type difference_type;
 
         explicit vector(const allocator_type &alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL),
@@ -76,7 +76,7 @@ namespace ft {
         }
 
         ~vector() {
-            if (_data != NULL) {
+            if (_capacity != 0) {
                 _delete_data();
             }
         }
@@ -130,7 +130,7 @@ namespace ft {
             }
             else {
                 size_type      copySize = std::min(n, size());
-                for (size_type i        = 0; i < copySize; ++i) {
+                for (size_type i = 0; i < copySize; ++i) {
                     _data[i] = val;
                 }
                 if (copySize < n)
@@ -292,8 +292,8 @@ namespace ft {
         }
 
         iterator insert(iterator position, const T &x) {
-            pointer   pos = &*position;
-            size_type id  = pos - _data; // todo rework
+            size_type id  = position - begin();
+            pointer   pos = _data + id;
             if (size() >= _capacity) {
                 size_type n       = _capacity == 0 ? 1 : _capacity * 2;
                 pointer   newData = _allocator.allocate(n);
