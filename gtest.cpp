@@ -1,5 +1,7 @@
 #include <vector>
 #include "vector.hpp"
+#include <list>
+#include "list.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 
@@ -184,6 +186,35 @@ void printTestName<SomeStruct>(std::string const& name) {
 }
 
 template<typename T>
+T getRandomValue();
+
+template<>
+int getRandomValue<int>() {
+    return rand() % 10101010 - rand() % 5050505;
+}
+
+template<>
+float getRandomValue<float>() {
+    return rand() % 10101010 / (float)(rand() % 1010101);
+}
+
+template<>
+std::string getRandomValue<std::string>() {
+    const int length = rand() % 35 + 15;
+    char str[length + 1];
+    str[length] = 0;
+    for (int i = 0; i < length; ++i) {
+        str[i] = rand() % 94 + 32;
+    }
+    return std::string(str);
+}
+
+template<>
+SomeStruct getRandomValue<SomeStruct>() {
+    return SomeStruct(getRandomValue<std::string>(), getRandomValue<float>());
+}
+
+template<typename T>
 void defaultConstructorTest() {
     g_logcurrent = &std::cout;
     printTestName<T>("Default constructor");
@@ -225,35 +256,6 @@ void twentyElementsConstructorTest() {
         g_logcurrent = &g_logft;
     }
     g_logcurrent = NULL;
-}
-
-template<typename T>
-T getRandomValue();
-
-template<>
-int getRandomValue<int>() {
-    return rand() % 10101010 - rand() % 5050505;
-}
-
-template<>
-float getRandomValue<float>() {
-    return rand() % 10101010 / (float)(rand() % 1010101);
-}
-
-template<>
-std::string getRandomValue<std::string>() {
-    const int length = rand() % 35 + 15;
-    char str[length + 1];
-    str[length] = 0;
-    for (int i = 0; i < length; ++i) {
-        str[i] = rand() % 94 + 32;
-    }
-    return std::string(str);
-}
-
-template<>
-SomeStruct getRandomValue<SomeStruct>() {
-    return SomeStruct(getRandomValue<std::string>(), getRandomValue<float>());
 }
 
 template<typename T>
@@ -1354,6 +1356,275 @@ void EraseRangeTest() {
     testContainersEqual(ftv, stv);
 }
 
+template<typename T>
+void defaultListConstructorTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("Default constructor");
+    g_logcurrent = &g_logft;
+    ft::list<T> ftv;
+    g_logcurrent = &g_logst;
+    std::list<T> stv;
+    g_logcurrent = NULL;
+    testEmptyContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void zeroElementsListConstructorTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("Constructor for 0 elements");
+    g_logcurrent = &g_logft;
+    ft::vector<T> ftv(0);
+    g_logcurrent = &g_logst;
+    std::vector<T> stv(0);
+    g_logcurrent = NULL;
+    testEmptyContainersEqual(ftv, stv);
+
+}
+
+template<typename T>
+void twentyElementsListConstructorTest() {
+    g_logcurrent = &std::cout;
+    {
+        printTestName<T>("Constructor for N elements");
+        g_logcurrent = &g_logft;
+        ft::vector<T> ftv(20);
+        g_logcurrent = &g_logst;
+        {
+            std::vector<T> stv(20);
+            g_logcurrent = &std::cout;
+            testContainersEqual(ftv, stv);
+            g_logcurrent = &g_logst;
+        }
+        g_logcurrent = &g_logft;
+    }
+    g_logcurrent = NULL;
+}
+
+template<typename T>
+void twentyElementsWithDefaultValueListConstructorTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("Constructor for N elements with value");
+    {
+        T value = getRandomValue<T>();
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T> ftv(20, value);
+            g_logcurrent = &g_logst;
+            {
+                std::vector<T> stv(20, value);
+                g_logcurrent = &std::cout;
+                testContainersEqual(ftv, stv);
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = &std::cout;
+    }
+    g_logcurrent = NULL;
+}
+
+template<typename T>
+void iteratorListConstructorTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("Constructor for iterators begin and end");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    {
+        g_logcurrent = &g_logft;
+        ft::vector<T> fiter;
+        {
+            g_logcurrent       = &g_logst;
+            std::vector<T>   siter;
+            for (std::size_t i = 0; i < numOfItems; ++i) {
+                g_logcurrent = &std::cout;
+                T value      = getRandomValue<T>();
+                {
+                    g_logcurrent = &g_logft;
+                    fiter.push_back(value);
+                    {
+                        g_logcurrent = &g_logst;
+                        siter.push_back(value);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &std::cout;
+            }
+
+            {
+                g_logcurrent = &g_logft;
+                ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
+                {
+                    g_logcurrent = &g_logst;
+                    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
+                    testContainersEqual(ftv, stv);
+                }
+                g_logcurrent = &g_logft;
+            }
+            g_logcurrent = &g_logst;
+        }
+        g_logcurrent = &g_logft;
+    }
+    g_logcurrent = NULL;
+}
+
+template<typename T>
+void copyListConstructorTest() {
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for default container");
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T> ftv_o;
+            {
+                g_logcurrent = &g_logst;
+                std::vector<T> stv_o;
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T> ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv(stv_o);
+                        testEmptyContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
+    }
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for 0 elements");
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T> ftv_o(0);
+            {
+                g_logcurrent = &g_logst;
+                std::vector<T> stv_o(0);
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T> ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv(stv_o);
+                        testEmptyContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
+    }
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for N elements");
+        {
+            g_logcurrent = &g_logft;
+            ft::vector<T>  ftv_o(20);
+            {
+                g_logcurrent = &g_logst;
+                std::vector<T> stv_o(20);
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T>  ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv(stv_o);
+                        testContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
+    }
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for N elements with value");
+        {
+            T value = getRandomValue<T>();
+            {
+                g_logcurrent = &g_logft;
+                ft::vector<T> ftv_o(20, value);
+                {
+                    g_logcurrent = &g_logst;
+                    std::vector<T> stv_o(20, value);
+                    {
+                        g_logcurrent = &g_logft;
+                        ft::vector<T> ftv(ftv_o);
+                        {
+                            g_logcurrent = &g_logst;
+                            std::vector<T> stv(stv_o);
+                            testContainersEqual(ftv, stv);
+                        }
+                        g_logcurrent = &g_logft;
+                    }
+                    g_logcurrent = &g_logst;
+                }
+                g_logcurrent = &g_logft;
+            }
+            g_logcurrent = &std::cout;
+        }
+        g_logcurrent = NULL;
+    }
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for iterators begin and end");
+
+        std::size_t numOfItems = rand() % 20 + 10;
+        {
+            g_logcurrent       = &g_logft;
+            ft::vector<T>    fiter;
+            {
+                g_logcurrent       = &g_logst;
+                std::vector<T>   siter;
+                for (std::size_t i = 0; i < numOfItems; ++i) {
+                    g_logcurrent = &std::cout;
+                    T value = getRandomValue<T>();
+                    g_logcurrent = &g_logft;
+                    fiter.push_back(value);
+                    g_logcurrent = &g_logst;
+                    siter.push_back(value);
+                }
+
+                {
+                    g_logcurrent = &g_logft;
+                    ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+
+                        {
+                            g_logcurrent = &g_logft;
+                            ft::vector<T> ftv(ftv_o);
+                            {
+                                g_logcurrent = &g_logst;
+                                std::vector<T> stv(stv_o);
+
+                                testContainersEqual(ftv, stv);
+                            }
+                            g_logcurrent = &g_logft;
+                        }
+                        g_logcurrent = &g_logst;
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
+    }
+}
+
+/*** VECTOR TESTS ***/
+
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
 TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
 TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
@@ -1405,6 +1676,15 @@ TEST(VectorInsert, insertMultiple) FT_DO_TEST(InsertMultipleTest)
 TEST(VectorInsert, insertRange) FT_DO_TEST(InsertRangeTest)
 TEST(VectorErase, erase) FT_DO_TEST(EraseTest)
 TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
+
+/*** LIST TESTS ***/
+
+TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
+TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
+TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
+TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
+TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
+TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));

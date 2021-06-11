@@ -26,7 +26,6 @@ namespace ft {
 
     template<class T, class Alloc = allocator<T> >
     class list {
-        typedef _list_node_base<T> _node_base;
     public:
         typedef T                                                        value_type;
         typedef std::size_t                                              size_type;
@@ -40,26 +39,31 @@ namespace ft {
         typedef ft::reverse_iterator<iterator>                           reverse_iterator;
         typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
         typedef typename std::iterator_traits<iterator>::difference_type difference_type;
+    private:
+        typedef _list_node_base<T> _node_base;
+        typedef _list_node<T> _node_type;
+        typedef typename allocator_type::template rebind<_node_type>::other _node_allocator;
+    public:
 
         explicit list(const allocator_type &alloc = allocator_type())
-            : _node(), _size(), _capacity(), _allocator(alloc) {
+            : _node(), _size(), _capacity(), _allocator(_node_allocator(alloc)) {
 
         }
 
         explicit list(size_type n, const value_type &val = value_type(),
                       const allocator_type &alloc = allocator_type())
-            : _node(), _size(), _capacoty(), _allocator(alloc) {
+            : _node(), _size(), _capacity(), _allocator(_node_allocator(alloc)) {
 
         }
 
         template<class InputIterator>
         list(InputIterator first, InputIterator last,
              const allocator_type &alloc = allocator_type())
-            : _node(), _size(), _capacity(), _allocator(alloc) {
+            : _node(), _size(), _capacity(), _allocator(_node_allocator(alloc)) {
 
         }
 
-        list(const list &x) : _node(), _size(), _capacity(), _allocator(x._allocator) {
+        list(const list &x) : _node(), _size(x._size), _capacity(x._capacity), _allocator(x._allocator) {
 
         }
 
@@ -67,7 +71,7 @@ namespace ft {
         _node_base     _node;
         size_type      _size;
         size_type      _capacity;
-        allocator_type _allocator;
+        _node_allocator _allocator;
     };
 
 }
