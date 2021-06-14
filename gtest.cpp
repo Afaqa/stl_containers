@@ -63,9 +63,9 @@ std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
 }
 
 #define FT_DO_TEST(function) {\
-        /*function<int>();\
+        function<int>();\
         function<float>();\
-        function<std::string>();*/\
+        function<std::string>();\
         function<SomeStruct>();}
 
 template<typename T>
@@ -116,6 +116,45 @@ void testContainersEqual(T const& cont1, U const& cont2) {
 }
 
 template<typename T, typename U>
+void testListContainersEqual(T const& cont1, U const& cont2) {
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    std::cout << "Empty " << cont1.empty() << " == " << cont2.empty() << std::endl;
+    EXPECT_EQ(cont1.size(), cont2.size());
+    std::cout << "Size " << cont1.size() << " == " << cont2.size() << std::endl;
+    cont1.begin();
+    cont1.end();
+    cont1.begin() == cont1.end();
+    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
+//    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+    if (cont1.size() || cont2.size()) {
+        std::cout << "\ttest and output iterators:" << std::endl;
+        typename T::const_iterator it1 = cont1.begin();
+        typename U::const_iterator it2 = cont2.begin();
+        typename T::size_type i = 0;
+        while (it1 != cont1.end() && it2 != cont2.end()) {
+            printValues(i++, *it1, *it2);
+            EXPECT_EQ(*it1, *it2);
+            ++it1;
+            ++it2;
+        }
+        EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
+//        std::cout << "\ttest and output reverse iterators:" << std::endl;
+//        typename T::const_reverse_iterator rit1 = cont1.rbegin();
+//        typename U::const_reverse_iterator rit2 = cont2.rbegin();
+//        i = typename T::size_type();
+//        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+//            printValues(cont2.size() - i - 1, *rit1, *rit2);
+//            EXPECT_EQ(*rit1, *rit2);
+//            ++rit1;
+//            ++rit2;
+//        }
+//        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
+//        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
+//            std::cout << std::endl;
+    }
+}
+
+template<typename T, typename U>
 void testContainersEqualNoprint(T const& cont1, U const& cont2) {
     EXPECT_EQ(cont1.empty(), cont2.empty());
     EXPECT_EQ(cont1.size(), cont2.size());
@@ -152,6 +191,11 @@ void testEmptyContainersEqual(T const& cont1, U const& cont2) {
     EXPECT_EQ(&(cont1[0]), &(cont2[0]));
     EXPECT_EQ(&(*cont1.end()), &(*cont2.end()));
     testContainersEqual(cont1, cont2);
+}
+
+template<typename T, typename U>
+void testEmptyListContainersEqual(T const& cont1, U const& cont2) {
+    testListContainersEqual(cont1, cont2);
 }
 
 template<typename T>
@@ -1365,7 +1409,7 @@ void defaultListConstructorTest() {
     g_logcurrent = &g_logst;
     std::list<T> stv;
     g_logcurrent = NULL;
-    testEmptyContainersEqual(ftv, stv);
+    testEmptyListContainersEqual(ftv, stv);
 }
 
 template<typename T>
@@ -1373,11 +1417,11 @@ void zeroElementsListConstructorTest() {
     g_logcurrent = &std::cout;
     printTestName<T>("Constructor for 0 elements");
     g_logcurrent = &g_logft;
-    ft::vector<T> ftv(0);
+    ft::list<T> ftv(0);
     g_logcurrent = &g_logst;
-    std::vector<T> stv(0);
+    std::list<T> stv(0);
     g_logcurrent = NULL;
-    testEmptyContainersEqual(ftv, stv);
+    testEmptyListContainersEqual(ftv, stv);
 
 }
 
@@ -1387,12 +1431,12 @@ void twentyElementsListConstructorTest() {
     {
         printTestName<T>("Constructor for N elements");
         g_logcurrent = &g_logft;
-        ft::vector<T> ftv(20);
+        ft::list<T> ftv(20);
         g_logcurrent = &g_logst;
         {
-            std::vector<T> stv(20);
+            std::list<T> stv(20);
             g_logcurrent = &std::cout;
-            testContainersEqual(ftv, stv);
+            testListContainersEqual(ftv, stv);
             g_logcurrent = &g_logst;
         }
         g_logcurrent = &g_logft;
@@ -1408,12 +1452,12 @@ void twentyElementsWithDefaultValueListConstructorTest() {
         T value = getRandomValue<T>();
         {
             g_logcurrent = &g_logft;
-            ft::vector<T> ftv(20, value);
+            ft::list<T> ftv(20, value);
             g_logcurrent = &g_logst;
             {
-                std::vector<T> stv(20, value);
+                std::list<T> stv(20, value);
                 g_logcurrent = &std::cout;
-                testContainersEqual(ftv, stv);
+                testListContainersEqual(ftv, stv);
                 g_logcurrent = &g_logst;
             }
             g_logcurrent = &g_logft;
@@ -1431,10 +1475,10 @@ void iteratorListConstructorTest() {
     std::size_t numOfItems = rand() % 20 + 10;
     {
         g_logcurrent = &g_logft;
-        ft::vector<T> fiter;
+        ft::list<T> fiter;
         {
             g_logcurrent       = &g_logst;
-            std::vector<T>   siter;
+            std::list<T>   siter;
             for (std::size_t i = 0; i < numOfItems; ++i) {
                 g_logcurrent = &std::cout;
                 T value      = getRandomValue<T>();
@@ -1452,11 +1496,11 @@ void iteratorListConstructorTest() {
 
             {
                 g_logcurrent = &g_logft;
-                ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
+                ft::list<T> ftv(fiter.begin() + 2, fiter.end() - 3);
                 {
                     g_logcurrent = &g_logst;
-                    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
-                    testContainersEqual(ftv, stv);
+                    std::list<T> stv(siter.begin() + 2, siter.end() - 3);
+                    testListContainersEqual(ftv, stv);
                 }
                 g_logcurrent = &g_logft;
             }
@@ -1474,17 +1518,17 @@ void copyListConstructorTest() {
         printTestName<T>("Copy constructor for default container");
         {
             g_logcurrent = &g_logft;
-            ft::vector<T> ftv_o;
+            ft::list<T> ftv_o;
             {
                 g_logcurrent = &g_logst;
-                std::vector<T> stv_o;
+                std::list<T> stv_o;
                 {
                     g_logcurrent = &g_logft;
-                    ft::vector<T> ftv(ftv_o);
+                    ft::list<T> ftv(ftv_o);
                     {
                         g_logcurrent = &g_logst;
-                        std::vector<T> stv(stv_o);
-                        testEmptyContainersEqual(ftv, stv);
+                        std::list<T> stv(stv_o);
+                        testEmptyListContainersEqual(ftv, stv);
                     }
                     g_logcurrent = &g_logft;
                 }
@@ -1499,17 +1543,17 @@ void copyListConstructorTest() {
         printTestName<T>("Copy constructor for 0 elements");
         {
             g_logcurrent = &g_logft;
-            ft::vector<T> ftv_o(0);
+            ft::list<T> ftv_o(0);
             {
                 g_logcurrent = &g_logst;
-                std::vector<T> stv_o(0);
+                std::list<T> stv_o(0);
                 {
                     g_logcurrent = &g_logft;
-                    ft::vector<T> ftv(ftv_o);
+                    ft::list<T> ftv(ftv_o);
                     {
                         g_logcurrent = &g_logst;
-                        std::vector<T> stv(stv_o);
-                        testEmptyContainersEqual(ftv, stv);
+                        std::list<T> stv(stv_o);
+                        testEmptyListContainersEqual(ftv, stv);
                     }
                     g_logcurrent = &g_logft;
                 }
@@ -1524,17 +1568,17 @@ void copyListConstructorTest() {
         printTestName<T>("Copy constructor for N elements");
         {
             g_logcurrent = &g_logft;
-            ft::vector<T>  ftv_o(20);
+            ft::list<T>  ftv_o(20);
             {
                 g_logcurrent = &g_logst;
-                std::vector<T> stv_o(20);
+                std::list<T> stv_o(20);
                 {
                     g_logcurrent = &g_logft;
-                    ft::vector<T>  ftv(ftv_o);
+                    ft::list<T>  ftv(ftv_o);
                     {
                         g_logcurrent = &g_logst;
-                        std::vector<T> stv(stv_o);
-                        testContainersEqual(ftv, stv);
+                        std::list<T> stv(stv_o);
+                        testListContainersEqual(ftv, stv);
                     }
                     g_logcurrent = &g_logft;
                 }
@@ -1551,17 +1595,17 @@ void copyListConstructorTest() {
             T value = getRandomValue<T>();
             {
                 g_logcurrent = &g_logft;
-                ft::vector<T> ftv_o(20, value);
+                ft::list<T> ftv_o(20, value);
                 {
                     g_logcurrent = &g_logst;
-                    std::vector<T> stv_o(20, value);
+                    std::list<T> stv_o(20, value);
                     {
                         g_logcurrent = &g_logft;
-                        ft::vector<T> ftv(ftv_o);
+                        ft::list<T> ftv(ftv_o);
                         {
                             g_logcurrent = &g_logst;
-                            std::vector<T> stv(stv_o);
-                            testContainersEqual(ftv, stv);
+                            std::list<T> stv(stv_o);
+                            testListContainersEqual(ftv, stv);
                         }
                         g_logcurrent = &g_logft;
                     }
@@ -1580,10 +1624,10 @@ void copyListConstructorTest() {
         std::size_t numOfItems = rand() % 20 + 10;
         {
             g_logcurrent       = &g_logft;
-            ft::vector<T>    fiter;
+            ft::list<T>    fiter;
             {
                 g_logcurrent       = &g_logst;
-                std::vector<T>   siter;
+                std::list<T>   siter;
                 for (std::size_t i = 0; i < numOfItems; ++i) {
                     g_logcurrent = &std::cout;
                     T value = getRandomValue<T>();
@@ -1595,19 +1639,19 @@ void copyListConstructorTest() {
 
                 {
                     g_logcurrent = &g_logft;
-                    ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+                    ft::list<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
                     {
                         g_logcurrent = &g_logst;
-                        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+                        std::list<T> stv_o(siter.begin() + 2, siter.end() - 3);
 
                         {
                             g_logcurrent = &g_logft;
-                            ft::vector<T> ftv(ftv_o);
+                            ft::list<T> ftv(ftv_o);
                             {
                                 g_logcurrent = &g_logst;
-                                std::vector<T> stv(stv_o);
+                                std::list<T> stv(stv_o);
 
-                                testContainersEqual(ftv, stv);
+                                testListContainersEqual(ftv, stv);
                             }
                             g_logcurrent = &g_logft;
                         }
@@ -1681,10 +1725,10 @@ TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
 
 TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
 TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
-TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
-TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
-TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
-TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
+//TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
+//TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
+//TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
+//TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
