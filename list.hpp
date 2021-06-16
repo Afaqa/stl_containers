@@ -259,19 +259,22 @@ namespace ft {
         }
 
         template<class InputIterator>
-        void assign(InputIterator first, InputIterator last);
+        void assign(InputIterator first, InputIterator last) {
+            clear();
+            for (; first != last; ++first) {
+                push_back(*first);
+            }
+        }
 
-        void assign(size_type n, const value_type &val);
+        void assign(size_type n, const value_type &val) {
+            clear();
+            for (size_type i = 0; i < n; ++i) {
+                push_back(val);
+            }
+        }
 
         void push_front(const value_type &val) {
-            _node_type *prev = _allocator.allocate(1);
-            _allocator.construct(prev, _node_type());
-            prev->value = get_allocator().allocate(1);
-            get_allocator().construct(prev->value, val);
-            prev->next       = _node.next;
-            prev->prev       = &_node;
-            _node.next->prev = prev;
-            _node.next       = prev;
+            _make_new(&_node, _node.next, val);
             ++_size;
         }
 
@@ -287,14 +290,7 @@ namespace ft {
         }
 
         void push_back(const value_type &val) {
-            _node_type *prev = _allocator.allocate(1);
-            _allocator.construct(prev, _node_type());
-            prev->value = get_allocator().allocate(1);
-            get_allocator().construct(prev->value, val);
-            prev->next       = &_node;
-            prev->prev       = _node.prev;
-            _node.prev->next = prev;
-            _node.prev       = prev;
+            _make_new(_node.prev, &_node, val);
             ++_size;
         }
 
@@ -309,19 +305,54 @@ namespace ft {
             --_size;
         }
 
-        iterator insert(iterator position, const value_type &val);
+        iterator insert(iterator position, const value_type &val) {
+            _make_new(position->prev, position, val);
+            ++_size;
+        }
 
-        void insert(iterator position, size_type n, const value_type &val);
+        void insert(iterator position, size_type n, const value_type &val) {
+            while (n > 0) {
+                _make_new(position->prev, position, val);
+                --n;
+                ++_size;
+            }
+        }
 
         template<class InputIterator>
+        void insert(iterator position, InputIterator first, InputIterator last) {
+            for (; first != last; ++first) {
+                _make_new(position->prev, position, *first);
+                ++_size;
+            }
+        }
 
-        void insert(iterator position, InputIterator first, InputIterator last);
+        iterator erase(iterator position) {
+            _node_type current = _node->next;
+            for (iterator it = begin(); it != position; ++it)
+                current = current->next;
+            _delete_node(current);
+            --_size;
+            return ++position;
+        }
 
-        iterator erase(iterator position);
+        iterator erase(iterator first, iterator last) {
+            _node_type current = _node->next;
+            for (iterator it = begin(); it != position; ++it)
+                current = current->next;
+            _node_type todelete;
+            for (; first != last; ++first) {
+                todelete = current;
+                current = current->next;
+                _delete_node(todelete);
+                --_size;
+            }
+        }
 
-        iterator erase(iterator first, iterator last);
-
-        void swap(list &x);
+        void swap(list &x) {
+            ft::swap(_allocator, x._allocator);
+            ft::swap(_size, x._size);
+            ft::swap(_node, x._node);
+        }
 
         void resize(size_type n, value_type val = value_type()) {
             while (_size > n) {
@@ -358,7 +389,14 @@ namespace ft {
         template<class Compare>
         void sort(Compare comp);
 
-        void reverse();
+        void reverse() {
+            _node_type *current = _node->next;
+            for (;;current = current->prev) {
+                ft::swap(current->next, current->prev);
+                if (current == &_node)
+                    break;
+            }
+        }
 
         allocator_type get_allocator() const {
             return allocator_type(_allocator);
@@ -368,6 +406,27 @@ namespace ft {
         _node_type  _node;
         size_type   _size;
         _node_alloc _allocator;
+
+        _node_type *_make_new(_node_type *prev, _node_type *next, const_reference val = value_type()) {
+            _node_type *the_new = _allocator.allocate(1);
+            _allocator.construct(the_new, _node_type());
+            the_new->value = get_allocator().allocate(1);
+            get_allocator().construct(the_new->value, val);
+            the_new->prev = prev;
+            the_new->next = next;
+            prev->next = the_new;
+            next->prev = the_new;
+            return the_new;
+        }
+
+        void _delete_node(_node_type *node) {
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+            get_allocator().destroy(node->value);
+            get_allocator().deallocate(node->value, 1);
+            _allocator.destroy(_node);
+            _allocator.deallocate(_node, 1);
+        }
     };
 
     template<class T, class Alloc>
