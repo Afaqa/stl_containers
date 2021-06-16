@@ -90,6 +90,10 @@ void testContainersEqual(T const& cont1, U const& cont2) {
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
     if (cont1.size() || cont2.size()) {
+        EXPECT_EQ(cont1.front(), cont2.front());
+        std::cout << "front " << cont1.front() << " == " << cont2.front() << std::endl;
+        EXPECT_EQ(cont1.back(), cont2.back());
+        std::cout << "back " << cont1.back() << " == " << cont2.back() << std::endl;
         std::cout << "\ttest and output iterators:" << std::endl;
         typename T::const_iterator it1 = cont1.begin();
         typename U::const_iterator it2 = cont2.begin();
@@ -123,10 +127,13 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
     std::cout << "Size " << cont1.size() << " == " << cont2.size() << std::endl;
     cont1.begin();
     cont1.end();
-    cont1.begin() == cont1.end();
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
-//    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
     if (cont1.size() || cont2.size()) {
+        EXPECT_EQ(cont1.front(), cont2.front());
+        std::cout << "front " << cont1.front() << " == " << cont2.front() << std::endl;
+        EXPECT_EQ(cont1.back(), cont2.back());
+        std::cout << "back " << cont1.back() << " == " << cont2.back() << std::endl;
         std::cout << "\ttest and output iterators:" << std::endl;
         typename T::const_iterator it1 = cont1.begin();
         typename U::const_iterator it2 = cont2.begin();
@@ -138,19 +145,19 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
             ++it2;
         }
         EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
-//        std::cout << "\ttest and output reverse iterators:" << std::endl;
-//        typename T::const_reverse_iterator rit1 = cont1.rbegin();
-//        typename U::const_reverse_iterator rit2 = cont2.rbegin();
-//        i = typename T::size_type();
-//        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
-//            printValues(cont2.size() - i - 1, *rit1, *rit2);
-//            EXPECT_EQ(*rit1, *rit2);
-//            ++rit1;
-//            ++rit2;
-//        }
-//        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
-//        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
-//            std::cout << std::endl;
+        std::cout << "\ttest and output reverse iterators:" << std::endl;
+        typename T::const_reverse_iterator rit1 = cont1.rbegin();
+        typename U::const_reverse_iterator rit2 = cont2.rbegin();
+        i = typename T::size_type();
+        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+            printValues(cont2.size() - i - 1, *rit1, *rit2);
+            EXPECT_EQ(*rit1, *rit2);
+            ++rit1;
+            ++rit2;
+        }
+        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
+        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
+            std::cout << std::endl;
     }
 }
 
@@ -1496,10 +1503,18 @@ void iteratorListConstructorTest() {
 
             {
                 g_logcurrent = &g_logft;
-                ft::list<T> ftv(fiter.begin() + 2, fiter.end() - 3);
+                typename ft::list<T>::iterator lit = fiter.begin();
+                ft::advance(lit, 2);
+                typename ft::list<T>::iterator rit = fiter.begin();
+                ft::advance(rit, -3);
+                ft::list<T> ftv(lit, rit);
                 {
                     g_logcurrent = &g_logst;
-                    std::list<T> stv(siter.begin() + 2, siter.end() - 3);
+                    typename std::list<T>::iterator lsit = siter.begin();
+                    ft::advance(lsit, 2);
+                    typename std::list<T>::iterator rsit = siter.begin();
+                    ft::advance(rsit, -3);
+                    std::list<T> stv(lsit, rsit);
                     testListContainersEqual(ftv, stv);
                 }
                 g_logcurrent = &g_logft;
@@ -1639,10 +1654,18 @@ void copyListConstructorTest() {
 
                 {
                     g_logcurrent = &g_logft;
-                    ft::list<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+                    typename ft::list<T>::iterator lit = fiter.begin();
+                    ft::advance(lit, 2);
+                    typename ft::list<T>::iterator rit = fiter.begin();
+                    ft::advance(rit, -3);
+                    ft::list<T> ftv_o(lit, rit);
                     {
                         g_logcurrent = &g_logst;
-                        std::list<T> stv_o(siter.begin() + 2, siter.end() - 3);
+                        typename std::list<T>::iterator lsit = siter.begin();
+                        ft::advance(lsit, 2);
+                        typename std::list<T>::iterator rsit = siter.begin();
+                        ft::advance(rsit, -3);
+                        std::list<T> stv_o(lsit, rsit);
 
                         {
                             g_logcurrent = &g_logft;
@@ -1725,10 +1748,10 @@ TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
 
 TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
 TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
-//TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
-//TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
-//TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
-//TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
+TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
+TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
+TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
+TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
