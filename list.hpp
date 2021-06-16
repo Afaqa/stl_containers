@@ -327,7 +327,7 @@ namespace ft {
         }
 
         iterator erase(iterator position) {
-            _node_type current = _node->next;
+            _node_type current = _node.next;
             for (iterator it = begin(); it != position; ++it)
                 current = current->next;
             _delete_node(current);
@@ -336,8 +336,8 @@ namespace ft {
         }
 
         iterator erase(iterator first, iterator last) {
-            _node_type current = _node->next;
-            for (iterator it = begin(); it != position; ++it)
+            _node_type current = _node.next;
+            for (iterator it = begin(); it != first; ++it)
                 current = current->next;
             _node_type todelete;
             for (; first != last; ++first) {
@@ -369,28 +369,115 @@ namespace ft {
             }
         }
 
-        void splice(iterator position, list &x);
-        void splice(iterator position, list &x, iterator i);
-        void splice(iterator position, list &x, iterator first, iterator last);
+        void splice(iterator position, list &x) {
+            _node_type *node = _node.next;
+            for (iterator it = begin(); it != position; ++it)
+                node = node->next;
+            node->prev->next = x->_node.next;
+            x->_node.next->prev = node->prev;
+            node->prev = x->_node.prev;
+            x->_node.prev->next = node;
+            _size += x._size;
+            x->_size = 0;
+            x->_node.prev = x->_node.next = x->_node;
+        }
 
-        void remove(const value_type &val);
+        void splice(iterator position, list &x, iterator i) {
+            _node_type *node = _node.next;
+            for (iterator it = begin(); it != position; ++it)
+                node = node->next;
+            _node_type *xnode = x._node.next;
+            for (iterator xit = x.begin(); xit != i; ++xit)
+                xnode = xnode->next;
+            _connect_nodes(node, xnode, xnode);
+            --x._size;
+            ++_size;
+        }
+
+        void splice(iterator position, list &x, iterator first, iterator last) {
+            _node_type *node = _node.next;
+            for (iterator it = begin(); it != position; ++it)
+                node = node->next;
+            _node_type *x_left_node = x._node.next;
+            for (iterator xit = x.begin(); xit != first; ++xit)
+                x_left_node = x_left_node->next;
+            _node_type *x_right_node = x_left_node;
+            for (iterator xrit = first; first != last; ++xrit) {
+                x_right_node = x_right_node->next;
+                ++_size;
+                --x._size;
+            }
+            _connect_nodes(node, x_left_node, x_right_node);
+        }
+
+        void remove(const value_type &val) {
+            remove_if(EqualToValuePredicate<value_type, val>());
+        }
 
         template<class Predicate>
-        void remove_if(Predicate pred);
+        void remove_if(Predicate pred) {
+            for (_node_type *node = _node.next; node != _node; node = node->next) {
+                if (pred(*node->value)) {
+                    node = node->prev;
+                    _delete_node(node->next);
+                }
+            }
+        }
 
-        void unique();
+        void unique() {
+            unique(EqualToPredicate<value_type>());
+        }
+
         template<class BinaryPredicate>
-        void unique(BinaryPredicate binary_pred);
+        void unique(BinaryPredicate binary_pred) {
+            for (_node_type *node = _node.next->next; node != _node; node = node->next) {
+                if (binary_pred(*node->value, *node->prev->value)) {
+                    node = node->prev;
+                    _delete_node(node->next);
+                }
+            }
+        }
 
-        void merge(list &x);
+        void merge(list &x) {
+            return merge(x, LessThanPredicate<value_type>());
+        }
+
         template<class Compare>
-        void merge(list &x, Compare comp);
-        void sort();
+        void merge(list &x, Compare comp) {
+            if (&x == this)
+                return;
+            _node_type node = _node.next;
+            _node_type x_left_node = x.next;
+            _node_type x_right_node = x_left_node;
+            for (;node != _node; node = node->next) {
+                if (x_left_node == x._node)
+                    break;
+                if (comp(*x_left_node, *node)) {
+                    x_right_node = x_left_node->next;
+                    while (comp(*x_right_node, *node) && x_right_node != x._node) {
+                        x_right_node = x_right_node->next;
+                    }
+                    _connect_nodes(node, x_left_node, x_right_node->prev);
+                    x_left_node = x_right_node;
+                }
+            }
+            if (x_left_node != x._node)
+                _connect_nodes(node, x_left_node, x._node.prev);
+            _size += x._size;
+            x._size = 0;
+        }
+
+        void sort() {
+            sort(LessThanPredicate<value_type>());
+        }
+
         template<class Compare>
-        void sort(Compare comp);
+        void sort(Compare comp) {
+            _qsort(_node.next, _node.prev, comp, _size);
+        }
 
         void reverse() {
-            _node_type *current = _node->next;
+            _node_type *current = _node.next;
             for (;;current = current->prev) {
                 ft::swap(current->next, current->prev);
                 if (current == &_node)
@@ -427,6 +514,85 @@ namespace ft {
             _allocator.destroy(_node);
             _allocator.deallocate(_node, 1);
         }
+
+        // connect into (pre-)pos list nodes from left to right
+        // list a: ---[pos->prev] => [pos]---
+        // list b: ---[m] => [left] => ... => [right] => [n]---
+        // so list b will have connected ---[m] => [n]---
+        // and list a will have ---[pos->prev] => [left] ... [right] => [pos]
+        void _connect_nodes(_node_type *pos, _node_type *left, _node_type *right) {
+            left->prev->next = right->next;
+            right->next->prev = left->prev;
+            pos->prev->next = left;
+            left->prev = pos->prev;
+            right->next = pos;
+            pos->prev = right;
+        }
+
+/*
+algorithm quicksort(A, lo, hi) is
+    if lo < hi then
+        p := partition(A, lo, hi)
+        quicksort(A, lo, p)
+        quicksort(A, p + 1, hi)
+
+algorithm partition(A, lo, hi) is
+    pivot := A[ floor((hi + lo) / 2) ]
+    i := lo - 1
+    j := hi + 1
+    loop forever
+        do
+            i := i + 1
+        while A[i] < pivot
+        do
+            j := j - 1
+        while A[j] > pivot
+        if i ≥ j then
+            return j
+        swap A[i] with A[j]
+*/
+
+        template<class Compare>
+        void _qsort(_node_type *lo, _node_type *hi, Compare comp, size_type distance) {
+            if (distance < 2)
+                return;
+            _node_type *p = _qsort_partition(lo, hi, comp, distance - 1);
+            distance = 0;
+            for (_node_type *left = _node.next; left != p; left = left->next)
+                ++distance;
+            if (distance < 2)
+                return;
+            _qsort(lo, p, comp, distance - 1);
+            _qsort(p->next, hi, comp, _size - distance);
+        }
+
+        template<class Compare>
+        _node_type *_qsort_partition(_node_type *lo, _node_type *hi, Compare comp, size_type distance) {
+            _node_type *pivot = lo;
+            for (size_type dist = distance / 2; dist > 0; --dist) {
+                pivot = pivot->next;
+            }
+            _node_type *i = lo->prev;
+            _node_type *j = hi->next;
+            while (true) {
+                while (distance != 0) {
+                    i = i->next;
+                    distance--;
+                    if (comp(*i->value, *pivot->value))
+                        break;
+                }
+                while (distance != 0) {
+                    j = j->prev;
+                    distance--;
+                    if (!comp(*i->value, *pivot->value))
+                        break;
+                }
+                if (distance == 0)
+                    return j;
+                ft::swap(i->next, j->next);
+                ft::swap(i->prev, j->prev);
+            }
+        }
     };
 
     template<class T, class Alloc>
@@ -441,8 +607,11 @@ namespace ft {
     bool operator>(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
     template<class T, class Alloc>
     bool operator>=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+
     template<class T, class Alloc>
-    void swap(list<T, Alloc> &x, list<T, Alloc> &y);
+    void swap(list<T, Alloc> &x, list<T, Alloc> &y) {
+        x.swap(y);
+    }
 
 }
 

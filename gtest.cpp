@@ -1690,6 +1690,36 @@ void copyListConstructorTest() {
     }
 }
 
+bool compare_nocase (const std::string& first, const std::string& second)
+{
+    unsigned int i=0;
+    while ( (i<first.length()) && (i<second.length()) )
+    {
+        if (tolower(first[i])<tolower(second[i])) return true;
+        else if (tolower(first[i])>tolower(second[i])) return false;
+        ++i;
+    }
+    return ( first.length() < second.length() );
+}
+
+template<typename T>
+void sortExampleTest() {
+    printTestName<T>("Testing list sort as in cplusplus example");
+    ft::list<std::string> ftlist;
+    ftlist.push_back ("one");
+    ftlist.push_back ("two");
+    ftlist.push_back ("Three");
+    std::list<std::string> stdlist(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.reverse();
+    ftlist.sort();
+    stdlist.sort();
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.sort(compare_nocase);
+    stdlist.sort(compare_nocase);
+    testListContainersEqual(ftlist, stdlist);
+}
+
 /*** VECTOR TESTS ***/
 
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
@@ -1752,6 +1782,9 @@ TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListC
 TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
 TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
 TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
+
+
+TEST(ListSort, SortExample)  FT_DO_TEST(sortExampleTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
