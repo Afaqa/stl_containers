@@ -194,6 +194,7 @@ namespace ft {
             for (const_iterator it = x.begin(); it != x.end(); ++it) {
                 push_back(*it);
             }
+            return *this;
         }
 
         iterator begin() {
@@ -259,7 +260,8 @@ namespace ft {
         }
 
         template<class InputIterator>
-        void assign(InputIterator first, InputIterator last) {
+        void assign(InputIterator first,
+                    typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value, InputIterator>::type last) {
             clear();
             for (; first != last; ++first) {
                 push_back(*first);
@@ -285,7 +287,7 @@ namespace ft {
             get_allocator().destroy(next->value);
             get_allocator().deallocate(next->value, 1);
             _allocator.destroy(next);
-            _allocator.deallocate(next);
+            _allocator.deallocate(next, 1);
             --_size;
         }
 
@@ -301,7 +303,7 @@ namespace ft {
             get_allocator().destroy(prev->value);
             get_allocator().deallocate(prev->value, 1);
             _allocator.destroy(prev);
-            _allocator.deallocate(prev);
+            _allocator.deallocate(prev, 1);
             --_size;
         }
 
@@ -319,7 +321,8 @@ namespace ft {
         }
 
         template<class InputIterator>
-        void insert(iterator position, InputIterator first, InputIterator last) {
+        void insert(iterator position, InputIterator first,
+                    typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value, InputIterator>::type last) {
             for (; first != last; ++first) {
                 _make_new(position->prev, position, *first);
                 ++_size;
@@ -352,6 +355,10 @@ namespace ft {
             ft::swap(_allocator, x._allocator);
             ft::swap(_size, x._size);
             ft::swap(_node, x._node);
+            _node.next->prev = &_node;
+            _node.prev->next = &_node;
+            x._node.next->prev = &x._node;
+            x._node.prev->next = &x._node;
         }
 
         void resize(size_type n, value_type val = value_type()) {
@@ -473,7 +480,7 @@ namespace ft {
 
         template<class Compare>
         void sort(Compare comp) {
-            _qsort(_node.next, _node.prev, comp, _size);
+            _qsort(_node.next, _node.prev, comp);
         }
 
         void reverse() {
@@ -529,84 +536,75 @@ namespace ft {
             pos->prev = right;
         }
 
-/*
-algorithm quicksort(A, lo, hi) is
-    if lo < hi then
-        p := partition(A, lo, hi)
-        quicksort(A, lo, p)
-        quicksort(A, p + 1, hi)
-
-algorithm partition(A, lo, hi) is
-    pivot := A[ floor((hi + lo) / 2) ]
-    i := lo - 1
-    j := hi + 1
-    loop forever
-        do
-            i := i + 1
-        while A[i] < pivot
-        do
-            j := j - 1
-        while A[j] > pivot
-        if i ≥ j then
-            return j
-        swap A[i] with A[j]
-*/
-
         template<class Compare>
-        void _qsort(_node_type *lo, _node_type *hi, Compare comp, size_type distance) {
-            if (distance < 2)
-                return;
-            _node_type *p = _qsort_partition(lo, hi, comp, distance - 1);
-            distance = 0;
-            for (_node_type *left = _node.next; left != p; left = left->next)
-                ++distance;
-            if (distance < 2)
-                return;
-            _qsort(lo, p, comp, distance - 1);
-            _qsort(p->next, hi, comp, _size - distance);
+        void _qsort(_node_type *left, _node_type *right, Compare &comp) {
+            if (right != NULL && left != right && left != right->next) {
+                _node_type *p = _qsort_partition(left, right, comp);
+                _qsort(left, p->prev, comp);
+                _qsort(p->next, right, comp);
+            }
         }
 
         template<class Compare>
-        _node_type *_qsort_partition(_node_type *lo, _node_type *hi, Compare comp, size_type distance) {
-            _node_type *pivot = lo;
-            for (size_type dist = distance / 2; dist > 0; --dist) {
-                pivot = pivot->next;
-            }
-            _node_type *i = lo->prev;
-            _node_type *j = hi->next;
-            while (true) {
-                while (distance != 0) {
-                    i = i->next;
-                    distance--;
-                    if (comp(*i->value, *pivot->value))
-                        break;
+        _node_type *_qsort_partition(_node_type *left, _node_type *right, Compare &comp) {
+            const_reference pivot = *right->value;
+            _node_type *i = left->prev;
+            for (_node_type *j = left; j != right; j = j->next) {
+                if (comp(*j->value, pivot)) {
+                    i = i == &_node ? left : i->next;
+                    ft::swap(i->value, j->value);
                 }
-                while (distance != 0) {
-                    j = j->prev;
-                    distance--;
-                    if (!comp(*i->value, *pivot->value))
-                        break;
-                }
-                if (distance == 0)
-                    return j;
-                ft::swap(i->next, j->next);
-                ft::swap(i->prev, j->prev);
             }
+            i = i == &_node ? left : i->next;
+            ft::swap(i->value, right->value);
+            return i;
         }
     };
 
     template<class T, class Alloc>
-    bool operator==(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+    bool operator==(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
+        if (lhs.size() != rhs.size())
+            return false;
+        for (typename list<T, Alloc>::iterator lit = lhs.begin(), rit = rhs.begin;
+             lit != lhs.end(); ++lit, ++rit) {
+            if (*lit != *rit) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     template<class T, class Alloc>
-    bool operator!=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+    bool operator<(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
+        for (typename vector<T, Alloc>::iterator lit = lhs.begin(), rit = rhs.begin;
+             rit != rhs.end(); ++lit, ++rit) {
+            if (lit == lhs.end() || *lit < *rit)
+                return true;
+            if (*rit < *lit)
+                return false;
+        }
+        return false;
+    }
+
     template<class T, class Alloc>
-    bool operator<(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+    bool operator!=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
+        return !(lhs == rhs);
+    }
+
     template<class T, class Alloc>
-    bool operator<=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+    bool operator>(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
+        return rhs < lhs;
+    }
+
     template<class T, class Alloc>
-    bool operator>(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+    bool operator<=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
+        return !(rhs < lhs);
+    }
+
     template<class T, class Alloc>
-    bool operator>=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs);
+    bool operator>=(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
+        return  !(lhs < rhs);
+    }
 
     template<class T, class Alloc>
     void swap(list<T, Alloc> &x, list<T, Alloc> &y) {

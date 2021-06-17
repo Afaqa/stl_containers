@@ -34,27 +34,39 @@ struct SomeStruct {
     std::string name;
     float       number;
     SomeStruct() : name("empty"), number(15.51) {
+        if (!g_logcurrent)
+            return;
         (*g_logcurrent) << COLOR_RED "SomeStruct Default Constructor" COLOR_RESET << std::endl;
     }
     SomeStruct(std::string const& name, float number) : name(name), number(number) {
+        if (!g_logcurrent)
+            return;
         (*g_logcurrent) << COLOR_ORANGE "SomeStruct Values Constructor for name '" COLOR_CYAN << name << COLOR_ORANGE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
     SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {
+        if (!g_logcurrent)
+            return;
         (*g_logcurrent) << COLOR_PURPLE "SomeStruct Copy Constructor for name '" COLOR_CYAN << name << COLOR_PURPLE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
     SomeStruct(SomeStruct const&& other) : name(other.name), number(other.number) {
+        if (!g_logcurrent)
+            return;
         (*g_logcurrent) << COLOR_GREEN "SomeStruct Move Constructor for name '" COLOR_CYAN << name << COLOR_GREEN "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
     SomeStruct& operator=(SomeStruct const& other) {
         name = other.name;
         number = other.number;
-        (*g_logcurrent) << COLOR_BLUE "SomeStruct Assignation Operator for name '" COLOR_CYAN << name << COLOR_BLUE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+        if (g_logcurrent)
+            (*g_logcurrent) << COLOR_BLUE "SomeStruct Assignation Operator for name '" COLOR_CYAN << name << COLOR_BLUE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
         return *this;
     }
     ~SomeStruct() {
+        if (!g_logcurrent)
+            return;
         (*g_logcurrent) << COLOR_YELLOW "SomeStruct Destructor for name '" COLOR_CYAN << name << COLOR_YELLOW "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
     bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
+    bool operator<(SomeStruct const& other) const { return name < other.name; }
 };
 
 std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
@@ -70,11 +82,11 @@ std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
 
 template<typename T>
 void printValues(std::size_t id, T const& v1, T const& v2) {
-    std::cout << id << ": " << v1 << " == " << v2 << std::endl;
+    std::cout << id << ": " << v1 << COLOR_RED " == " COLOR_RESET << v2 << std::endl;
 }
 template<>
 void printValues(std::size_t id, std::string const& v1, std::string const& v2) {
-    std::cout << id << ": \"" << v1 << "\" == \"" << v2 << '"' << std::endl;
+    std::cout << id << ": \"" << v1 << '"' << COLOR_RED " == " COLOR_RESET << '"' << v2 << '"' << std::endl;
 }
 
 template<typename T, typename U>
@@ -121,25 +133,33 @@ void testContainersEqual(T const& cont1, U const& cont2) {
 
 template<typename T, typename U>
 void testListContainersEqual(T const& cont1, U const& cont2) {
+    const char *equals = COLOR_RED " == " COLOR_RESET;
     EXPECT_EQ(cont1.empty(), cont2.empty());
-    std::cout << "Empty " << cont1.empty() << " == " << cont2.empty() << std::endl;
+    std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
     EXPECT_EQ(cont1.size(), cont2.size());
-    std::cout << "Size " << cont1.size() << " == " << cont2.size() << std::endl;
+    std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
     cont1.begin();
     cont1.end();
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
     if (cont1.size() || cont2.size()) {
         EXPECT_EQ(cont1.front(), cont2.front());
-        std::cout << "front " << cont1.front() << " == " << cont2.front() << std::endl;
+        std::cout << "front " << cont1.front() << equals << cont2.front() << std::endl;
         EXPECT_EQ(cont1.back(), cont2.back());
-        std::cout << "back " << cont1.back() << " == " << cont2.back() << std::endl;
+        std::cout << "back " << cont1.back() << equals << cont2.back() << std::endl;
         std::cout << "\ttest and output iterators:" << std::endl;
         typename T::const_iterator it1 = cont1.begin();
         typename U::const_iterator it2 = cont2.begin();
         typename T::size_type i = 0;
         while (it1 != cont1.end() && it2 != cont2.end()) {
             printValues(i++, *it1, *it2);
+            ++it1;
+            ++it2;
+        }
+        it1 = cont1.begin();
+        it2 = cont2.begin();
+        i = 0;
+        while (it1 != cont1.end() && it2 != cont2.end()) {
             EXPECT_EQ(*it1, *it2);
             ++it1;
             ++it2;
@@ -154,6 +174,7 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
             EXPECT_EQ(*rit1, *rit2);
             ++rit1;
             ++rit2;
+            --i;
         }
         EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
         if (it1 != cont1.begin() || rit1 != cont1.rbegin())
@@ -1690,7 +1711,414 @@ void copyListConstructorTest() {
     }
 }
 
-bool compare_nocase (const std::string& first, const std::string& second)
+template<typename T>
+void listAssignationBothEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation operator of empty lists");
+
+    ft::list<T> ftv_o;
+    std::list<T> stv_o;
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationBothNotEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation operator of non empty lists");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+    }
+
+    ft::list<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+    std::list<T> stv_o(fiter.begin() + 2, fiter.end() - 3);
+    ft::list<T> ftv(fiter.rbegin(), fiter.rend() - 9);
+    std::list<T> stv(fiter.rbegin(), fiter.rend() - 9);
+
+    testListContainersEqual(ftv_o, stv_o);
+    testListContainersEqual(ftv, stv);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationToEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation operator to empty lists");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+    }
+
+    ft::list<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+    std::list<T> stv_o(fiter.begin() + 2, fiter.end() - 3);
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv_o, stv_o);
+    testListContainersEqual(ftv, stv);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFromEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation operator From empty lists");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+    }
+
+    ft::list<T> ftv_o;
+    std::list<T> stv_o;
+    ft::list<T> ftv(fiter.rbegin(), fiter.rend() - 9);
+    std::list<T> stv(fiter.rbegin(), fiter.rend() - 9);
+
+    testListContainersEqual(ftv_o, stv_o);
+    testListContainersEqual(ftv, stv);
+
+    ftv = ftv_o;
+    stv = stv_o;
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionBothEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function of empty lists");
+
+    ft::list<T> ftv_o;
+    std::list<T> stv_o;
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    ftv.assign(ftv_o.begin(), ftv_o.end());
+    stv.assign(stv_o.begin(), stv_o.end());
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionBothNotEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function of non empty lists");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+    }
+
+    ft::list<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+    std::list<T> stv_o(fiter.begin() + 2, fiter.end() - 3);
+    ft::list<T> ftv(fiter.rbegin(), fiter.rend() - 9);
+    std::list<T> stv(fiter.rbegin(), fiter.rend() - 9);
+
+    testListContainersEqual(ftv_o, stv_o);
+    testListContainersEqual(ftv, stv);
+
+    ftv.assign(ftv_o.begin(), ftv_o.end());
+    stv.assign(stv_o.begin(), stv_o.end());
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionToEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function to empty lists");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+    }
+
+    ft::list<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+    std::list<T> stv_o(fiter.begin() + 2, fiter.end() - 3);
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv_o, stv_o);
+    testListContainersEqual(ftv, stv);
+
+    ftv.assign(ftv_o.begin(), ftv_o.end());
+    stv.assign(stv_o.begin(), stv_o.end());
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionFromEmptyTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function From empty lists");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T> fiter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        fiter.push_back(value);
+    }
+
+    ft::list<T> ftv_o;
+    std::list<T> stv_o;
+    ft::list<T> ftv(fiter.rbegin(), fiter.rend() - 9);
+    std::list<T> stv(fiter.rbegin(), fiter.rend() - 9);
+
+    testListContainersEqual(ftv_o, stv_o);
+    testListContainersEqual(ftv, stv);
+
+    ftv.assign(ftv_o.begin(), ftv_o.end());
+    stv.assign(stv_o.begin(), stv_o.end());
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionSizeZeroTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function with size 0 and default value");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    ftv.assign(0, T());
+    stv.assign(0, T());
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionSizeZeroValTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function with size 0 and random value");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    T val = getRandomValue<T>();
+    ftv.assign(0, val);
+    stv.assign(0, val);
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionSizeNoValTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function with random size and default value");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    int size = rand() % 20 + 10;
+    ftv.assign(size, T());
+    stv.assign(size, T());
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listAssignationFunctionSizeValTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List Assignation function with random size and random value");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    int size = rand() % 20 + 10;
+    T val = getRandomValue<T>();
+    ftv.assign(size, val);
+    stv.assign(size, val);
+
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listPushPopFrontTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List push_front some values, then pop_front values until empty with middle checks");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+    int size = rand() % 20 + 20;
+    int i = 0;
+    for (; i < size / 2; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_front(val);
+        stv.push_front(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_front(val);
+        stv.push_front(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (i = 0; i < size / 3; ++i) {
+        ftv.pop_front();
+        stv.pop_front();
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        ftv.pop_front();
+        stv.pop_front();
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listPushPopBackTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List push_back some values, then pop_back values until empty with middle checks");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+    int size = rand() % 20 + 20;
+    int i = 0;
+    for (; i < size / 2; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (i = 0; i < size / 3; ++i) {
+        ftv.pop_back();
+        stv.pop_back();
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        ftv.pop_back();
+        stv.pop_back();
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listPushFrontPopBackTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List push_front some values, then pop_back values until empty with middle checks");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+    int size = rand() % 20 + 20;
+    int i = 0;
+    for (; i < size / 2; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_front(val);
+        stv.push_front(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_front(val);
+        stv.push_front(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (i = 0; i < size / 3; ++i) {
+        ftv.pop_back();
+        stv.pop_back();
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        ftv.pop_back();
+        stv.pop_back();
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listPushBackPopFrontTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List push_back some values, then pop_front values until empty with middle checks");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+    int size = rand() % 20 + 20;
+    int i = 0;
+    for (; i < size / 2; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+    for (i = 0; i < size / 3; ++i) {
+        ftv.pop_front();
+        stv.pop_front();
+    }
+    testListContainersEqual(ftv, stv);
+    for (; i < size; ++i) {
+        ftv.pop_front();
+        stv.pop_front();
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<class T>
+bool compare_nocase(const T& first, const T& second)
+{
+    return first < second;
+}
+
+template<>
+bool compare_nocase<std::string>(const std::string& first, const std::string& second)
 {
     unsigned int i=0;
     while ( (i<first.length()) && (i<second.length()) )
@@ -1705,18 +2133,18 @@ bool compare_nocase (const std::string& first, const std::string& second)
 template<typename T>
 void sortExampleTest() {
     printTestName<T>("Testing list sort as in cplusplus example");
-    ft::list<std::string> ftlist;
-    ftlist.push_back ("one");
-    ftlist.push_back ("two");
-    ftlist.push_back ("Three");
-    std::list<std::string> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < 12; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
     testListContainersEqual(ftlist, stdlist);
     ftlist.reverse();
     ftlist.sort();
     stdlist.sort();
     testListContainersEqual(ftlist, stdlist);
-    ftlist.sort(compare_nocase);
-    stdlist.sort(compare_nocase);
+    ftlist.sort(compare_nocase<T>);
+    stdlist.sort(compare_nocase<T>);
     testListContainersEqual(ftlist, stdlist);
 }
 
@@ -1783,8 +2211,56 @@ TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twe
 TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
 TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
 
+TEST(ListAssignation, ListAssignationBothEmpty) FT_DO_TEST(listAssignationBothEmptyTest)
+TEST(ListAssignation, ListAssignationBothNotEmpty) FT_DO_TEST(listAssignationBothNotEmptyTest)
+TEST(ListAssignation, ListAssignationToEmpty) FT_DO_TEST(listAssignationToEmptyTest)
+TEST(ListAssignation, ListAssignationFromEmpty) FT_DO_TEST(listAssignationFromEmptyTest)
+
+TEST(ListAssignationFunction, ListAssignationFunctionBothEmpty) FT_DO_TEST(listAssignationFunctionBothEmptyTest)
+TEST(ListAssignationFunction, ListAssignationFunctionBothNotEmpty) FT_DO_TEST(listAssignationFunctionBothNotEmptyTest)
+TEST(ListAssignationFunction, ListAssignationFunctionToEmpty) FT_DO_TEST(listAssignationFunctionToEmptyTest)
+TEST(ListAssignationFunction, ListAssignationFunctionFromEmpty) FT_DO_TEST(listAssignationFunctionFromEmptyTest)
+TEST(ListAssignationFunction, ListAssignationFunctionSizeZero) FT_DO_TEST(listAssignationFunctionSizeZeroTest)
+TEST(ListAssignationFunction, ListAssignationFunctionSizeZeroVal) FT_DO_TEST(listAssignationFunctionSizeZeroValTest)
+TEST(ListAssignationFunction, ListAssignationFunctionSizeNoVal) FT_DO_TEST(listAssignationFunctionSizeNoValTest)
+TEST(ListAssignationFunction, ListAssignationFunctionSizeVal) FT_DO_TEST(listAssignationFunctionSizeValTest)
+
+TEST(ListPushPop, ListPushPopFront) FT_DO_TEST(listPushPopFrontTest)
+TEST(ListPushPop, ListPushPopBack) FT_DO_TEST(listPushPopBackTest)
+TEST(ListPushPop, ListPushFrontPopBack) FT_DO_TEST(listPushFrontPopBackTest)
+TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
+
+//insert
+
+//erase
+
+//swap
+
+//resize
+
+//clear
+
+//splice
+
+//remove
+
+//remove_if
+
+//unique
+
+//merge
 
 TEST(ListSort, SortExample)  FT_DO_TEST(sortExampleTest)
+
+//reverse
+
+//compare
+
+//non-member swap
+
+/*** MAP TESTS ***/
+/*** STACK TESTS ***/
+/*** QUEUE TESTS ***/
 
 int main(int argc, char **argv) {
     srand(time(NULL));
