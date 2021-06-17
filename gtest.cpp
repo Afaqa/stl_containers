@@ -66,7 +66,11 @@ struct SomeStruct {
         (*g_logcurrent) << COLOR_YELLOW "SomeStruct Destructor for name '" COLOR_CYAN << name << COLOR_YELLOW "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
     bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
+    bool operator!=(SomeStruct const& other) const { return name == other.name && number == other.number; }
     bool operator<(SomeStruct const& other) const { return name < other.name; }
+    bool operator<=(SomeStruct const& other) const { return name <= other.name; }
+    bool operator>(SomeStruct const& other) const { return name > other.name; }
+    bool operator>=(SomeStruct const& other) const { return name >= other.name; }
 };
 
 std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
@@ -142,7 +146,7 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
     cont1.end();
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
-    if (cont1.size() || cont2.size()) {
+    if (cont1.size() && cont2.size()) {
         EXPECT_EQ(cont1.front(), cont2.front());
         std::cout << "front " << cont1.front() << equals << cont2.front() << std::endl;
         EXPECT_EQ(cont1.back(), cont2.back());
@@ -174,7 +178,7 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
             EXPECT_EQ(*rit1, *rit2);
             ++rit1;
             ++rit2;
-            --i;
+            ++i;
         }
         EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
         if (it1 != cont1.begin() || rit1 != cont1.rbegin())
@@ -2111,6 +2115,467 @@ void listPushBackPopFrontTest() {
     testListContainersEqual(ftv, stv);
 }
 
+template<typename T>
+void listInsertSingleValuesTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List inset single values into different positions");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    int size = rand() % 10 + 10;
+    ftv.insert(ftv.end(), T());
+    stv.insert(stv.end(), T());
+    ftv.insert(ftv.begin(), T());
+    stv.insert(stv.begin(), T());
+    for (int i = 2; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+
+    typename ft::list<T>::iterator fit;
+    typename std::list<T>::iterator sit;
+    for (int i = 0; i < 8; ++i) {
+        int position = rand() % (size + i + 1);
+        T value = getRandomValue<T>();
+        std::cerr << "Inserting value " << "\'" << value << "\'" << " into pos " << position << std::endl;
+        fit = ftv.begin();
+        ft::advance(fit, position);
+        typename ft::list<T>::iterator fret = ftv.insert(fit, value);
+        EXPECT_EQ(--fit, fret);
+        sit = stv.begin();
+        while (position--)
+            ++sit;
+        typename std::list<T>::iterator sret = stv.insert(sit, value);
+        EXPECT_EQ(--sit, sret);
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listInsertSeveralValuesTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List inset multiple values into different positions");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    int size = rand() % 10 + 10;
+    for (int i = 0; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+
+    typename ft::list<T>::iterator fit;
+    typename std::list<T>::iterator sit;
+    for (int i = 0; i < 8; ++i) {
+        int position = rand() % (size + i + 1);
+        int amount = rand() % 5 + 1;
+        T value = getRandomValue<T>();
+        std::cerr << "Inserting " << amount << " times value " << "\'" << value << "\'" << " into pos " << position << std::endl;
+        fit = ftv.begin();
+        ft::advance(fit, position);
+        ftv.insert(fit, amount, value);
+        sit = stv.begin();
+        while (position--)
+            ++sit;
+        stv.insert(sit, amount, value);
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listInsertIteratorPointedValuesTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List inset iterated data into different positions");
+
+    const int data_len = 20;
+    T data[data_len];
+    for (int i = 0; i < data_len; ++i) {
+        data[i] = getRandomValue<T>();
+    }
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    testListContainersEqual(ftv, stv);
+
+    int size = rand() % 10 + 10;
+    for (int i = 0; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+
+    typename ft::list<T>::iterator fit;
+    typename std::list<T>::iterator sit;
+    for (int i = 0; i < 8; ++i) {
+        int position = rand() % (size + i + 1);
+        int iter_start = rand() % data_len;
+        int iter_end = rand() % data_len;
+        if (iter_start > iter_end)
+            ft::swap(iter_start, iter_end);
+        fit = ftv.begin();
+        ft::advance(fit, position);
+        ftv.insert(fit, ft::input_iterator<T>(data + iter_start), ft::input_iterator<T>(data + iter_end));
+        sit = stv.begin();
+        while (position--)
+            ++sit;
+        stv.insert(sit, ft::input_iterator<T>(data + iter_start), ft::input_iterator<T>(data + iter_end));
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listEraseSingleValuesTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List erase single values from different positions");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    int size = rand() % 50 + 50;
+    for (int i = 0; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+
+    typename ft::list<T>::iterator fit;
+    typename std::list<T>::iterator sit;
+    for (int i = 0; i < 25; ++i) {
+        int position = rand() % (ftv.size() - 10);
+        fit = ftv.begin();
+        ft::advance(fit, position);
+        sit = stv.begin();
+        while (position--)
+            ++sit;
+        typename ft::list<T>::iterator ffin;
+        typename std::list<T>::iterator sfin;
+        typename ft::list<T>::iterator ffinpre = fit;
+        --ffinpre;
+        typename std::list<T>::iterator sfinpre = sit;
+        --sfinpre;
+        ffin = ftv.erase(fit);
+        sfin = stv.erase(sit);
+        EXPECT_EQ(ffin, ++ffinpre);
+        EXPECT_EQ(sfin, ++sfinpre);
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listEraseIteratorPointedValuesTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("List erase iterated data from different positions");
+
+    ft::list<T> ftv;
+    std::list<T> stv;
+
+    int size = rand() % 50 + 50;
+    for (int i = 0; i < size; ++i) {
+        T val = getRandomValue<T>();
+        ftv.push_back(val);
+        stv.push_back(val);
+    }
+    testListContainersEqual(ftv, stv);
+
+    typename ft::list<T>::iterator fitst;
+    typename ft::list<T>::iterator fiten;
+    typename std::list<T>::iterator sitst;
+    typename std::list<T>::iterator siten;
+    for (int i = 0; i < 4; ++i) {
+        int iter_start = rand() % (ftv.size() - 10);
+        int iter_end = rand() % 10;
+        fitst = ftv.begin();
+        ft::advance(fitst, iter_start);
+        fiten = fitst;
+        ft::advance(fiten, iter_end);
+        sitst = stv.begin();
+        while (iter_start--)
+            ++sitst;
+        siten = sitst;
+        while (iter_end--)
+            ++siten;
+        typename ft::list<T>::iterator ffin;
+        typename std::list<T>::iterator sfin;
+        typename ft::list<T>::iterator ffinpre = fitst;
+        ffinpre--;
+        typename std::list<T>::iterator sfinpre = sitst;
+        sfinpre--;
+        ffin = ftv.erase(fitst, fiten);
+        sfin = stv.erase(sitst, siten);
+        EXPECT_EQ(ffin, ++ffinpre);
+        EXPECT_EQ(sfin, ++sfinpre);
+    }
+    testListContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void listSwapTest() {
+    printTestName<T>("Testing list swap");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ftlist.swap(ftlist2);
+    stdlist.swap(stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listSwapLEmptyTest() {
+    printTestName<T>("Testing list swap");
+    ft::list<T> ftlist;
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ftlist.swap(ftlist2);
+    stdlist.swap(stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listSwapREmptyTest() {
+    printTestName<T>("Testing list swap");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ftlist.swap(ftlist2);
+    stdlist.swap(stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listSwapBothEmptyTest() {
+    printTestName<T>("Testing list swap");
+    ft::list<T> ftlist;
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ftlist.swap(ftlist2);
+    stdlist.swap(stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listNonMemberSwapTest() {
+    printTestName<T>("Testing list non-member swap");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ft::swap(ftlist, ftlist2);
+    std::swap(stdlist, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listNonMemberSwapLEmptyTest() {
+    printTestName<T>("Testing list non-member swap");
+    ft::list<T> ftlist;
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ft::swap(ftlist, ftlist2);
+    std::swap(stdlist, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listNonMemberSwapREmptyTest() {
+    printTestName<T>("Testing list non-member swap");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ft::swap(ftlist, ftlist2);
+    std::swap(stdlist, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listNonMemberSwapBothEmptyTest() {
+    printTestName<T>("Testing list non-member swap");
+    ft::list<T> ftlist;
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    ft::list<T> ftlist2;
+    std::list<T> stdlist2(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+    ft::swap(ftlist, ftlist2);
+    std::swap(stdlist, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+    testListContainersEqual(ftlist2, stdlist2);
+}
+
+template<typename T>
+void listResizeWithoutDefaultTest() {
+    printTestName<T>("Testing list resize without default value");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.resize(50);
+    stdlist.resize(50);
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.resize(12);
+    stdlist.resize(12);
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.resize(27);
+    stdlist.resize(27);
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.resize(0);
+    stdlist.resize(0);
+    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listResizeWithDefaultTest() {
+    printTestName<T>("Testing list resize with default value");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    T value = getRandomValue<T>();
+    ftlist.resize(50, value);
+    stdlist.resize(50, value);
+    testListContainersEqual(ftlist, stdlist);
+    value = getRandomValue<T>();
+    ftlist.resize(12, value);
+    stdlist.resize(12, value);
+    testListContainersEqual(ftlist, stdlist);
+    value = getRandomValue<T>();
+    ftlist.resize(27, value);
+    stdlist.resize(27, value);
+    testListContainersEqual(ftlist, stdlist);
+    value = getRandomValue<T>();
+    ftlist.resize(0, value);
+    stdlist.resize(0, value);
+    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listClearTest() {
+    printTestName<T>("Testing clear on empty and not empty list");
+    ft::list<T> ftlist;
+    for (std::size_t i = 0; i < rand() % 30; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.clear();
+    stdlist.clear();
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.clear();
+    stdlist.clear();
+    testListContainersEqual(ftlist, stdlist);
+}
+
+template<class T>
+bool mergeCompare(T first, T second) {
+    return first < second;
+}
+
+template<>
+bool mergeCompare<float>(float first, float second) {
+    return int(first) < int(second);
+}
+
+template<>
+bool mergeCompare<std::string>(std::string first, std::string second) {
+    return first[0] < second[0];
+}
+
+template<typename T>
+void listMergeTest() {
+    ft::list<T> flst, flst2;
+
+    int size = rand() % 20 + 10;
+    for (int i = 0; i < size; ++i) {
+        flst.push_back(getRandomValue<T>());
+    }
+    flst.sort();
+    std::list<T> slst(flst.begin(), flst.end());
+    size = rand() % 20 + 10;
+    for (int i = 0; i < size; ++i) {
+        flst2.push_back(getRandomValue<T>());
+    }
+    flst2.sort();
+    std::list<T> slst2(flst2.begin(), flst2.end());
+
+    flst.merge(flst2);
+    slst.merge(slst2);
+    testListContainersEqual(flst, slst);
+
+    T value = getRandomValue<T>();
+    flst2.push_back(value);
+    slst2.push_back(value);
+    flst.merge(flst2, mergeCompare<T>);
+    slst.merge(slst2, mergeCompare<T>);
+    testListContainersEqual(flst, slst);
+}
+
 template<class T>
 bool compare_nocase(const T& first, const T& second)
 {
@@ -2131,7 +2596,7 @@ bool compare_nocase<std::string>(const std::string& first, const std::string& se
 }
 
 template<typename T>
-void sortExampleTest() {
+void listSortExampleTest() {
     printTestName<T>("Testing list sort as in cplusplus example");
     ft::list<T> ftlist;
     for (std::size_t i = 0; i < 12; ++i) {
@@ -2146,6 +2611,274 @@ void sortExampleTest() {
     ftlist.sort(compare_nocase<T>);
     stdlist.sort(compare_nocase<T>);
     testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listReverseTest() {
+    printTestName<T>("Testing list reverse (empty and not empty)");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.reverse();
+    stdlist.reverse();
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.reverse();
+    stdlist.reverse();
+    testListContainersEqual(ftlist, stdlist);
+    ftlist.clear();
+    stdlist.clear();
+    ftlist.reverse();
+    stdlist.reverse();
+    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listCompareEqualsTest() {
+    printTestName<T>("Testing compare operator ==");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    // equal
+    ft::list<T> ftlisteq = ftlist;
+    std::list<T> stdlisteq = stdlist;
+    // less in size
+    ft::list<T> ftlistlt = ftlist;
+    ftlistlt.pop_back();
+    std::list<T> stdlistlt = stdlist;
+    stdlistlt.pop_back();
+    // less in element
+    T tmp;
+    do { tmp = getRandomValue<T>(); } while (tmp >= ftlist.back());
+    ft::list<T> ftlistlt2 = ftlist;
+    ftlistlt2.back() = tmp;
+    std::list<T> stdlistlt2 = stdlist;
+    stdlistlt2.back() = tmp;
+    // greater in size
+    ft::list<T> ftlistgt = ftlist;
+    ftlistgt.push_back(getRandomValue<T>());
+    std::list<T> stdlistgt = stdlist;
+    stdlistgt.push_back(getRandomValue<T>());
+    // greater in element
+    do { tmp = getRandomValue<T>(); } while (tmp <= ftlist.back());
+    ft::list<T> ftlistgt2 = ftlist;
+    ftlistgt2.back() = tmp;
+    std::list<T> stdlistgt2 = stdlist;
+    stdlistgt2.back() = tmp;
+    EXPECT_EQ(ftlist == ftlisteq, stdlist == stdlisteq);
+    EXPECT_EQ(ftlist == ftlistlt, stdlist == stdlistlt);
+    EXPECT_EQ(ftlist == ftlistlt2, stdlist == stdlistlt2);
+    EXPECT_EQ(ftlist == ftlistgt, stdlist == stdlistgt);
+    EXPECT_EQ(ftlist == ftlistgt2, stdlist == stdlistgt2);
+}
+
+template<typename T>
+void listCompareNotEqualsTest() {
+    printTestName<T>("Testing compare operator !=");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    // equal
+    ft::list<T> ftlisteq = ftlist;
+    std::list<T> stdlisteq = stdlist;
+    // less in size
+    ft::list<T> ftlistlt = ftlist;
+    ftlistlt.pop_back();
+    std::list<T> stdlistlt = stdlist;
+    stdlistlt.pop_back();
+    // less in element
+    T tmp;
+    do { tmp = getRandomValue<T>(); } while (tmp >= ftlist.back());
+    ft::list<T> ftlistlt2 = ftlist;
+    ftlistlt2.back() = tmp;
+    std::list<T> stdlistlt2 = stdlist;
+    stdlistlt2.back() = tmp;
+    // greater in size
+    ft::list<T> ftlistgt = ftlist;
+    ftlistgt.push_back(getRandomValue<T>());
+    std::list<T> stdlistgt = stdlist;
+    stdlistgt.push_back(getRandomValue<T>());
+    // greater in element
+    do { tmp = getRandomValue<T>(); } while (tmp <= ftlist.back());
+    ft::list<T> ftlistgt2 = ftlist;
+    ftlistgt2.back() = tmp;
+    std::list<T> stdlistgt2 = stdlist;
+    stdlistgt2.back() = tmp;
+    EXPECT_EQ(ftlist != ftlisteq, stdlist != stdlisteq);
+    EXPECT_EQ(ftlist != ftlistlt, stdlist != stdlistlt);
+    EXPECT_EQ(ftlist != ftlistlt2, stdlist != stdlistlt2);
+    EXPECT_EQ(ftlist != ftlistgt, stdlist != stdlistgt);
+    EXPECT_EQ(ftlist != ftlistgt2, stdlist != stdlistgt2);
+}
+
+template<typename T>
+void listCompareLessThanTest() {
+    printTestName<T>("Testing compare operator <");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    // equal
+    ft::list<T> ftlisteq = ftlist;
+    std::list<T> stdlisteq = stdlist;
+    // less in size
+    ft::list<T> ftlistlt = ftlist;
+    ftlistlt.pop_back();
+    std::list<T> stdlistlt = stdlist;
+    stdlistlt.pop_back();
+    // less in element
+    T tmp;
+    do { tmp = getRandomValue<T>(); } while (tmp >= ftlist.back());
+    ft::list<T> ftlistlt2 = ftlist;
+    ftlistlt2.back() = tmp;
+    std::list<T> stdlistlt2 = stdlist;
+    stdlistlt2.back() = tmp;
+    // greater in size
+    ft::list<T> ftlistgt = ftlist;
+    ftlistgt.push_back(getRandomValue<T>());
+    std::list<T> stdlistgt = stdlist;
+    stdlistgt.push_back(getRandomValue<T>());
+    // greater in element
+    do { tmp = getRandomValue<T>(); } while (tmp <= ftlist.back());
+    ft::list<T> ftlistgt2 = ftlist;
+    ftlistgt2.back() = tmp;
+    std::list<T> stdlistgt2 = stdlist;
+    stdlistgt2.back() = tmp;
+    EXPECT_EQ(ftlist < ftlisteq, stdlist < stdlisteq);
+    EXPECT_EQ(ftlist < ftlistlt, stdlist < stdlistlt);
+    EXPECT_EQ(ftlist < ftlistlt2, stdlist < stdlistlt2);
+    EXPECT_EQ(ftlist < ftlistgt, stdlist < stdlistgt);
+    EXPECT_EQ(ftlist < ftlistgt2, stdlist < stdlistgt2);
+}
+
+template<typename T>
+void listCompareGreaterThanTest() {
+    printTestName<T>("Testing compare operator >");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    // equal
+    ft::list<T> ftlisteq = ftlist;
+    std::list<T> stdlisteq = stdlist;
+    // less in size
+    ft::list<T> ftlistlt = ftlist;
+    ftlistlt.pop_back();
+    std::list<T> stdlistlt = stdlist;
+    stdlistlt.pop_back();
+    // less in element
+    T tmp;
+    do { tmp = getRandomValue<T>(); } while (tmp >= ftlist.back());
+    ft::list<T> ftlistlt2 = ftlist;
+    ftlistlt2.back() = tmp;
+    std::list<T> stdlistlt2 = stdlist;
+    stdlistlt2.back() = tmp;
+    // greater in size
+    ft::list<T> ftlistgt = ftlist;
+    ftlistgt.push_back(getRandomValue<T>());
+    std::list<T> stdlistgt = stdlist;
+    stdlistgt.push_back(getRandomValue<T>());
+    // greater in element
+    do { tmp = getRandomValue<T>(); } while (tmp <= ftlist.back());
+    ft::list<T> ftlistgt2 = ftlist;
+    ftlistgt2.back() = tmp;
+    std::list<T> stdlistgt2 = stdlist;
+    stdlistgt2.back() = tmp;
+    EXPECT_EQ(ftlist > ftlisteq, stdlist > stdlisteq);
+    EXPECT_EQ(ftlist > ftlistlt, stdlist > stdlistlt);
+    EXPECT_EQ(ftlist > ftlistlt2, stdlist > stdlistlt2);
+    EXPECT_EQ(ftlist > ftlistgt, stdlist > stdlistgt);
+    EXPECT_EQ(ftlist > ftlistgt2, stdlist > stdlistgt2);
+}
+
+template<typename T>
+void listCompareLTETest() {
+    printTestName<T>("Testing compare operator <=");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    // equal
+    ft::list<T> ftlisteq = ftlist;
+    std::list<T> stdlisteq = stdlist;
+    // less in size
+    ft::list<T> ftlistlt = ftlist;
+    ftlistlt.pop_back();
+    std::list<T> stdlistlt = stdlist;
+    stdlistlt.pop_back();
+    // less in element
+    T tmp;
+    do { tmp = getRandomValue<T>(); } while (tmp >= ftlist.back());
+    ft::list<T> ftlistlt2 = ftlist;
+    ftlistlt2.back() = tmp;
+    std::list<T> stdlistlt2 = stdlist;
+    stdlistlt2.back() = tmp;
+    // greater in size
+    ft::list<T> ftlistgt = ftlist;
+    ftlistgt.push_back(getRandomValue<T>());
+    std::list<T> stdlistgt = stdlist;
+    stdlistgt.push_back(getRandomValue<T>());
+    // greater in element
+    do { tmp = getRandomValue<T>(); } while (tmp <= ftlist.back());
+    ft::list<T> ftlistgt2 = ftlist;
+    ftlistgt2.back() = tmp;
+    std::list<T> stdlistgt2 = stdlist;
+    stdlistgt2.back() = tmp;
+    EXPECT_EQ(ftlist <= ftlisteq, stdlist <= stdlisteq);
+    EXPECT_EQ(ftlist <= ftlistlt, stdlist <= stdlistlt);
+    EXPECT_EQ(ftlist <= ftlistlt2, stdlist <= stdlistlt2);
+    EXPECT_EQ(ftlist <= ftlistgt, stdlist <= stdlistgt);
+    EXPECT_EQ(ftlist <= ftlistgt2, stdlist <= stdlistgt2);
+}
+
+template<typename T>
+void listCompareGTETest() {
+    printTestName<T>("Testing compare operator >=");
+    ft::list<T> ftlist;
+    for (int i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    // equal
+    ft::list<T> ftlisteq = ftlist;
+    std::list<T> stdlisteq = stdlist;
+    // less in size
+    ft::list<T> ftlistlt = ftlist;
+    ftlistlt.pop_back();
+    std::list<T> stdlistlt = stdlist;
+    stdlistlt.pop_back();
+    // less in element
+    T tmp;
+    do { tmp = getRandomValue<T>(); } while (tmp >= ftlist.back());
+    ft::list<T> ftlistlt2 = ftlist;
+    ftlistlt2.back() = tmp;
+    std::list<T> stdlistlt2 = stdlist;
+    stdlistlt2.back() = tmp;
+    // greater in size
+    ft::list<T> ftlistgt = ftlist;
+    ftlistgt.push_back(getRandomValue<T>());
+    std::list<T> stdlistgt = stdlist;
+    stdlistgt.push_back(getRandomValue<T>());
+    // greater in element
+    do { tmp = getRandomValue<T>(); } while (tmp <= ftlist.back());
+    ft::list<T> ftlistgt2 = ftlist;
+    ftlistgt2.back() = tmp;
+    std::list<T> stdlistgt2 = stdlist;
+    stdlistgt2.back() = tmp;
+    EXPECT_EQ(ftlist >= ftlisteq, stdlist >= stdlisteq);
+    EXPECT_EQ(ftlist >= ftlistlt, stdlist >= stdlistlt);
+    EXPECT_EQ(ftlist >= ftlistlt2, stdlist >= stdlistlt2);
+    EXPECT_EQ(ftlist >= ftlistgt, stdlist >= stdlistgt);
+    EXPECT_EQ(ftlist >= ftlistgt2, stdlist >= stdlistgt2);
 }
 
 /*** VECTOR TESTS ***/
@@ -2230,15 +2963,26 @@ TEST(ListPushPop, ListPushPopBack) FT_DO_TEST(listPushPopBackTest)
 TEST(ListPushPop, ListPushFrontPopBack) FT_DO_TEST(listPushFrontPopBackTest)
 TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
 
-//insert
+TEST(ListInsert, ListInsertSingleValues) FT_DO_TEST(listInsertSingleValuesTest)
+TEST(ListInsert, ListInsertSeveralValues) FT_DO_TEST(listInsertSeveralValuesTest)
+TEST(ListInsert, ListInsertIteratorPointedValues) FT_DO_TEST(listInsertIteratorPointedValuesTest)
 
-//erase
+TEST(ListErase, ListEraseSingleValues) FT_DO_TEST(listEraseSingleValuesTest)
+TEST(ListErase, ListEraseIteratorPointedValues) FT_DO_TEST(listEraseIteratorPointedValuesTest)
 
-//swap
+TEST(ListSwap, ListSwap) FT_DO_TEST(listSwapTest)
+TEST(ListSwap, ListSwapLEmpty) FT_DO_TEST(listSwapLEmptyTest)
+TEST(ListSwap, ListSwapREmpty) FT_DO_TEST(listSwapREmptyTest)
+TEST(ListSwap, ListSwapEmpty) FT_DO_TEST(listSwapBothEmptyTest)
+TEST(ListSwap, ListNonMemberSwap) FT_DO_TEST(listNonMemberSwapTest)
+TEST(ListSwap, ListNonMemberSwapLEmpty) FT_DO_TEST(listNonMemberSwapLEmptyTest)
+TEST(ListSwap, ListNonMemberSwapREmpty) FT_DO_TEST(listNonMemberSwapREmptyTest)
+TEST(ListSwap, ListNonMemberSwapEmpty) FT_DO_TEST(listNonMemberSwapBothEmptyTest)
 
-//resize
+TEST(ListResize, ListResizeWithoutDefault) FT_DO_TEST(listResizeWithoutDefaultTest)
+TEST(ListResize, ListResizeWithDefault) FT_DO_TEST(listResizeWithDefaultTest)
 
-//clear
+TEST(ListClear, ListClear) FT_DO_TEST(listClearTest)
 
 //splice
 
@@ -2248,15 +2992,18 @@ TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
 
 //unique
 
-//merge
+TEST(ListMerge, ListMerge)  FT_DO_TEST(listMergeTest)
 
-TEST(ListSort, SortExample)  FT_DO_TEST(sortExampleTest)
+TEST(ListSort, ListSortExample)  FT_DO_TEST(listSortExampleTest)
 
-//reverse
+TEST(ListReverse, ListReverse) FT_DO_TEST(listReverseTest)
 
-//compare
-
-//non-member swap
+TEST(ListCompareEquals, ListCompareEquals) FT_DO_TEST(listCompareEqualsTest)
+TEST(ListCompareNotEquals, ListCompareNotEquals) FT_DO_TEST(listCompareNotEqualsTest)
+TEST(ListCompareLessThan, ListCompareLessThan) FT_DO_TEST(listCompareLessThanTest)
+TEST(ListCompareGreaterThan, ListCompareGreaterThan) FT_DO_TEST(listCompareGreaterThanTest)
+TEST(ListCompareLTE, ListCompareLTE) FT_DO_TEST(listCompareLTETest)
+TEST(ListCompareGTE, ListCompareGTE) FT_DO_TEST(listCompareGTETest)
 
 /*** MAP TESTS ***/
 /*** STACK TESTS ***/

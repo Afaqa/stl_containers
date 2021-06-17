@@ -489,7 +489,7 @@ namespace ft {
     bool operator==(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
         if (x.size() != y.size())
             return false;
-        for (typename vector<T, Allocator>::iterator xit = x.begin(), yit = y.begin;
+        for (typename vector<T, Allocator>::const_iterator xit = x.begin(), yit = y.begin();
              xit != x.end(); ++xit, ++yit) {
             if (*xit != *yit) {
                 return false;
@@ -500,7 +500,7 @@ namespace ft {
 
     template<class T, class Allocator>
     bool operator<(const vector<T, Allocator> &x, const vector<T, Allocator> &y) {
-        for (typename vector<T, Allocator>::iterator xit = x.begin(), yit = y.begin;
+        for (typename vector<T, Allocator>::const_iterator xit = x.begin(), yit = y.begin();
              yit != y.end(); ++xit, ++yit) {
             if (xit == x.end() || *xit < *yit)
                 return true;

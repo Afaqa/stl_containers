@@ -308,13 +308,20 @@ namespace ft {
         }
 
         iterator insert(iterator position, const value_type &val) {
-            _make_new(position->prev, position, val);
+            _node_type *current = _node.next;
+            for (iterator it = begin(); it != position; ++it)
+                current = current->next;
+            _make_new(current->prev, current, val);
             ++_size;
+            return --position;
         }
 
         void insert(iterator position, size_type n, const value_type &val) {
+            _node_type *current = _node.next;
+            for (iterator it = begin(); it != position; ++it)
+                current = current->next;
             while (n > 0) {
-                _make_new(position->prev, position, val);
+                _make_new(current->prev, current, val);
                 --n;
                 ++_size;
             }
@@ -323,42 +330,47 @@ namespace ft {
         template<class InputIterator>
         void insert(iterator position, InputIterator first,
                     typename enable_if<is_valid_iterator_type<InputIterator, std::input_iterator_tag, pointer>::value, InputIterator>::type last) {
+            _node_type *current = _node.next;
+            for (iterator it = begin(); it != position; ++it)
+                current = current->next;
             for (; first != last; ++first) {
-                _make_new(position->prev, position, *first);
+                _make_new(current->prev, current, *first);
                 ++_size;
             }
         }
 
         iterator erase(iterator position) {
-            _node_type current = _node.next;
+            _node_type *current = _node.next;
             for (iterator it = begin(); it != position; ++it)
                 current = current->next;
+            iterator ret(current->next);
             _delete_node(current);
             --_size;
-            return ++position;
+            return ret;
         }
 
         iterator erase(iterator first, iterator last) {
-            _node_type current = _node.next;
+            _node_type *current = _node.next;
             for (iterator it = begin(); it != first; ++it)
                 current = current->next;
-            _node_type todelete;
+            _node_type *todelete;
             for (; first != last; ++first) {
                 todelete = current;
                 current = current->next;
                 _delete_node(todelete);
                 --_size;
             }
+            return iterator(current);
         }
 
         void swap(list &x) {
             ft::swap(_allocator, x._allocator);
             ft::swap(_size, x._size);
             ft::swap(_node, x._node);
-            _node.next->prev = &_node;
-            _node.prev->next = &_node;
-            x._node.next->prev = &x._node;
-            x._node.prev->next = &x._node;
+//            _node.next->prev = &_node;
+//            _node.prev->next = &_node;
+//            x._node.next->prev = &x._node;
+//            x._node.prev->next = &x._node;
         }
 
         void resize(size_type n, value_type val = value_type()) {
@@ -453,22 +465,22 @@ namespace ft {
         void merge(list &x, Compare comp) {
             if (&x == this)
                 return;
-            _node_type node = _node.next;
-            _node_type x_left_node = x.next;
-            _node_type x_right_node = x_left_node;
-            for (;node != _node; node = node->next) {
-                if (x_left_node == x._node)
+            _node_type *node = _node.next;
+            _node_type *x_left_node = x._node.next;
+            _node_type *x_right_node = x_left_node;
+            for (;node != &_node; node = node->next) {
+                if (x_left_node == &x._node)
                     break;
-                if (comp(*x_left_node, *node)) {
+                if (comp(*x_left_node->value, *node->value)) {
                     x_right_node = x_left_node->next;
-                    while (comp(*x_right_node, *node) && x_right_node != x._node) {
+                    while (x_right_node != &x._node && comp(*x_right_node->value, *node->value)) {
                         x_right_node = x_right_node->next;
                     }
                     _connect_nodes(node, x_left_node, x_right_node->prev);
                     x_left_node = x_right_node;
                 }
             }
-            if (x_left_node != x._node)
+            if (x_left_node != &x._node)
                 _connect_nodes(node, x_left_node, x._node.prev);
             _size += x._size;
             x._size = 0;
@@ -518,8 +530,8 @@ namespace ft {
             node->next->prev = node->prev;
             get_allocator().destroy(node->value);
             get_allocator().deallocate(node->value, 1);
-            _allocator.destroy(_node);
-            _allocator.deallocate(_node, 1);
+            _allocator.destroy(node);
+            _allocator.deallocate(node, 1);
         }
 
         // connect into (pre-)pos list nodes from left to right
@@ -565,7 +577,7 @@ namespace ft {
     bool operator==(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
         if (lhs.size() != rhs.size())
             return false;
-        for (typename list<T, Alloc>::iterator lit = lhs.begin(), rit = rhs.begin;
+        for (typename list<T, Alloc>::const_iterator lit = lhs.begin(), rit = rhs.begin();
              lit != lhs.end(); ++lit, ++rit) {
             if (*lit != *rit) {
                 return false;
@@ -576,7 +588,7 @@ namespace ft {
 
     template<class T, class Alloc>
     bool operator<(const list<T, Alloc> &lhs, const list<T, Alloc> &rhs) {
-        for (typename vector<T, Alloc>::iterator lit = lhs.begin(), rit = rhs.begin;
+        for (typename list<T, Alloc>::const_iterator lit = lhs.begin(), rit = rhs.begin();
              rit != rhs.end(); ++lit, ++rit) {
             if (lit == lhs.end() || *lit < *rit)
                 return true;
