@@ -455,11 +455,7 @@ namespace ft {
 
     template<class InputIterator>
     inline typename std::iterator_traits<InputIterator>::difference_type
-    distance(InputIterator first,
-             typename enable_if<is_same<typename std::iterator_traits<InputIterator>::iterator_category,
-                 std::input_iterator_tag>::value &&
-                                !is_same<typename std::iterator_traits<InputIterator>::iterator_category,
-                                    std::forward_iterator_tag>::value, InputIterator>::type last) {
+    _sub_distance(InputIterator first, InputIterator last, std::input_iterator_tag) {
         typename std::iterator_traits<InputIterator>::difference_type dist(0);
         for (; first != last; ++first)
             ++dist;
@@ -468,10 +464,14 @@ namespace ft {
 
     template<class RandomAccessIterator>
     inline typename std::iterator_traits<RandomAccessIterator>::difference_type
-    distance(RandomAccessIterator first,
-             typename enable_if<is_same<typename std::iterator_traits<RandomAccessIterator>::iterator_category,
-                 std::random_access_iterator_tag>::value, RandomAccessIterator>::type last) {
+    _sub_distance(RandomAccessIterator first, RandomAccessIterator last, std::random_access_iterator_tag) {
         return last - first;
+    }
+
+    template<class Iterator>
+    inline typename std::iterator_traits<Iterator>::difference_type
+    distance(Iterator first, Iterator last) {
+        return _sub_distance(first, last, typename std::iterator_traits<Iterator>::iterator_category());
     }
 }
 

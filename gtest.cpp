@@ -48,11 +48,6 @@ struct SomeStruct {
             return;
         (*g_logcurrent) << COLOR_PURPLE "SomeStruct Copy Constructor for name '" COLOR_CYAN << name << COLOR_PURPLE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
-    SomeStruct(SomeStruct const&& other) : name(other.name), number(other.number) {
-        if (!g_logcurrent)
-            return;
-        (*g_logcurrent) << COLOR_GREEN "SomeStruct Move Constructor for name '" COLOR_CYAN << name << COLOR_GREEN "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
-    }
     SomeStruct& operator=(SomeStruct const& other) {
         name = other.name;
         number = other.number;
@@ -63,7 +58,7 @@ struct SomeStruct {
     ~SomeStruct() {
         if (!g_logcurrent)
             return;
-        (*g_logcurrent) << COLOR_YELLOW "SomeStruct Destructor for name '" COLOR_CYAN << name << COLOR_YELLOW "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
+        (*g_logcurrent) << COLOR_YELLOW "SomeStruct Destructor for number " COLOR_CYAN << number << COLOR_RESET << std::endl;
     }
     bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
     bool operator!=(SomeStruct const& other) const { return name == other.name && number == other.number; }
@@ -1011,17 +1006,17 @@ void AssignFillMaxSizeTest() {
 
     testContainersEqual(ftv, stv);
 
-    bool err = false;
+    bool serr = false, ferr = serr;
     std::string fmsg = "success";
     std::string smsg = "success";
     T value = getRandomValue<T>();
     try {
         ftv.assign(ftv.max_size(), value);
-    } catch(std::exception& e) { fmsg = e.what(); err = true; }
+    } catch(std::exception& e) { fmsg = e.what(); ferr = true; }
     try {
         stv.assign(stv.max_size(), value);
-    } catch(std::exception& e) { smsg = e.what(); err = true; }
-
+    } catch(std::exception& e) { smsg = e.what(); serr = true; }
+    EXPECT_EQ(ferr, serr);
     EXPECT_EQ(fmsg, smsg);
     testContainersEqual(ftv, stv);
 }
@@ -2142,7 +2137,6 @@ void listInsertSingleValuesTest() {
     for (int i = 0; i < 8; ++i) {
         int position = rand() % (size + i + 1);
         T value = getRandomValue<T>();
-        std::cerr << "Inserting value " << "\'" << value << "\'" << " into pos " << position << std::endl;
         fit = ftv.begin();
         ft::advance(fit, position);
         typename ft::list<T>::iterator fret = ftv.insert(fit, value);
@@ -2180,7 +2174,6 @@ void listInsertSeveralValuesTest() {
         int position = rand() % (size + i + 1);
         int amount = rand() % 5 + 1;
         T value = getRandomValue<T>();
-        std::cerr << "Inserting " << amount << " times value " << "\'" << value << "\'" << " into pos " << position << std::endl;
         fit = ftv.begin();
         ft::advance(fit, position);
         ftv.insert(fit, amount, value);
@@ -2506,12 +2499,12 @@ void listResizeWithDefaultTest() {
     stdlist.resize(12, value);
     testListContainersEqual(ftlist, stdlist);
     value = getRandomValue<T>();
-    ftlist.resize(27, value);
-    stdlist.resize(27, value);
-    testListContainersEqual(ftlist, stdlist);
-    value = getRandomValue<T>();
     ftlist.resize(0, value);
     stdlist.resize(0, value);
+    testListContainersEqual(ftlist, stdlist);
+    value = getRandomValue<T>();
+    ftlist.resize(27, value);
+    stdlist.resize(27, value);
     testListContainersEqual(ftlist, stdlist);
 }
 
@@ -2530,6 +2523,357 @@ void listClearTest() {
     ftlist.clear();
     stdlist.clear();
     testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceBeginTest() {
+    printTestName<T>("Testing list splice full list into begin");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    typename ft::list<T>::iterator fit = ftlist.begin();
+    typename std::list<T>::iterator sit = stdlist.begin();
+    ftlist.splice(fit, ftlist2);
+    stdlist.splice(sit, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+//    ftlist.splice(fit, ftlist2);
+//    stdlist.splice(sit, stdlist2);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceEndTest() {
+    printTestName<T>("Testing list splice full list into end");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    typename ft::list<T>::iterator fit = ftlist.end();
+    typename std::list<T>::iterator sit = stdlist.end();
+    ftlist.splice(fit, ftlist2);
+    stdlist.splice(sit, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+//    ftlist.splice(fit, ftlist2);
+//    stdlist.splice(sit, stdlist2);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceRandomTest() {
+    printTestName<T>("Testing list splice full list into random position");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    int position = rand() % (ftlist.size() - 1) + 1;
+    typename ft::list<T>::iterator fit = ftlist.begin();
+    ft::advance(fit, position);
+    typename std::list<T>::iterator sit = stdlist.begin();
+    while (position--)
+        ++sit;
+    ftlist.splice(fit, ftlist2);
+    stdlist.splice(sit, stdlist2);
+    testListContainersEqual(ftlist, stdlist);
+//    ftlist.splice(fit, ftlist2);
+//    stdlist.splice(sit, stdlist2);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceOneBeginTest() {
+    printTestName<T>("Testing list splice one iterator of list into begin");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    // position where to place
+    typename ft::list<T>::iterator fit = ftlist.begin();
+    typename std::list<T>::iterator sit = stdlist.begin();
+    // position what to place
+    int x_pos = rand() % (ftlist.size() - 1);
+    typename ft::list<T>::iterator xfit = ftlist2.begin();
+    ft::advance(xfit, x_pos);
+    typename std::list<T>::iterator xsit = stdlist2.begin();
+    while (x_pos--)
+        ++xsit;
+    ftlist.splice(fit, ftlist2, xfit);
+    stdlist.splice(sit, stdlist2, xsit);
+    testListContainersEqual(ftlist, stdlist);
+//    // position what to place
+//    x_pos = rand() % (ftlist.size() - 1);
+//    xfit = ftlist2.begin();
+//    ft::advance(xfit, x_pos);
+//    xsit = stdlist2.begin();
+//    while (x_pos--)
+//        ++xsit;
+//    ftlist.splice(fit, ftlist2, xfit);
+//    stdlist.splice(sit, stdlist2, xsit);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceOneEndTest() {
+    printTestName<T>("Testing list splice one iterator of list into end");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    // position where to place
+    typename ft::list<T>::iterator fit = ftlist.end();
+    typename std::list<T>::iterator sit = stdlist.end();
+    // position what to place
+    int x_pos = rand() % (ftlist.size() - 1);
+    typename ft::list<T>::iterator xfit = ftlist2.begin();
+    ft::advance(xfit, x_pos);
+    typename std::list<T>::iterator xsit = stdlist2.begin();
+    while (x_pos--)
+        ++xsit;
+    ftlist.splice(fit, ftlist2, xfit);
+    stdlist.splice(sit, stdlist2, xsit);
+    testListContainersEqual(ftlist, stdlist);
+//    // position what to place
+//    x_pos = rand() % (ftlist.size() - 1);
+//    xfit = ftlist2.begin();
+//    ft::advance(xfit, x_pos);
+//    xsit = stdlist2.begin();
+//    while (x_pos--)
+//        ++xsit;
+//    ftlist.splice(fit, ftlist2, xfit);
+//    stdlist.splice(sit, stdlist2, xsit);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceOneRandomTest() {
+    printTestName<T>("Testing list splice one iterator of list into random position");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    // position where to place
+    int position = rand() % (ftlist.size() - 1) + 1;
+    typename ft::list<T>::iterator fit = ftlist.begin();
+    ft::advance(fit, position);
+    typename std::list<T>::iterator sit = stdlist.begin();
+    while (position--)
+        ++sit;
+    // position what to place
+    int x_pos = rand() % (ftlist2.size() - 1);
+    typename ft::list<T>::iterator xfit = ftlist2.begin();
+    ft::advance(xfit, x_pos);
+    typename std::list<T>::iterator xsit = stdlist2.begin();
+    while (x_pos--)
+        ++xsit;
+    ftlist.splice(fit, ftlist2, xfit);
+    stdlist.splice(sit, stdlist2, xsit);
+    testListContainersEqual(ftlist, stdlist);
+//    // position what to place
+//    x_pos = rand() % (ftlist.size() - 1);
+//    xfit = ftlist2.begin();
+//    ft::advance(xfit, x_pos);
+//    xsit = stdlist2.begin();
+//    while (x_pos--)
+//        ++xsit;
+//    ftlist.splice(fit, ftlist2, xfit);
+//    stdlist.splice(sit, stdlist2, xsit);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceIterBeginTest() {
+    printTestName<T>("Testing list splice iterator range of list into begin");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    // position where to place
+    typename ft::list<T>::iterator fit = ftlist.begin();
+    typename std::list<T>::iterator sit = stdlist.begin();
+    // position what to place (left end)
+    int x_pos_left = rand() % (ftlist2.size() - 2);
+    typename ft::list<T>::iterator xfitlft = ftlist2.begin();
+    ft::advance(xfitlft, x_pos_left);
+    typename std::list<T>::iterator xsitlft = stdlist2.begin();
+    for (int i = x_pos_left; i--;)
+        ++xsitlft;
+    // position what to place (right end)
+    int x_pos_right = rand() % (ftlist2.size() - x_pos_left - 1);
+    typename ft::list<T>::iterator xfitrht = xfitlft;
+    ft::advance(xfitrht, x_pos_right);
+    typename std::list<T>::iterator xsitrht = xsitlft;
+    for (int i = x_pos_right; i--;)
+        ++xsitrht;
+    ftlist.splice(fit, ftlist2, xfitlft, xfitrht);
+    stdlist.splice(sit, stdlist2, xsitlft, xsitrht);
+    testListContainersEqual(ftlist, stdlist);
+//    // position what to place (left end)
+//    x_pos_left = rand() % (ftlist.size() - 1);
+//    xfitlft = ftlist2.begin();
+//    ft::advance(xfitlft, x_pos_left);
+//    xsitlft = stdlist2.begin();
+//    for (int i = x_pos_left; i--;)
+//        ++xsitlft;
+//    // position what to place (right end)
+//    x_pos_right = rand() % (ftlist.size() - 1);
+//    xfitrht = ftlist2.begin();
+//    ft::advance(xfitrht, x_pos_right);
+//    xsitrht = stdlist2.begin();
+//    for (int i = x_pos_right; i--;)
+//        ++xsitrht;
+//    ftlist.splice(fit, ftlist2, xfitlft, xfitrht);
+//    stdlist.splice(sit, stdlist2, xsitlft, xsitrht);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceIterEndTest() {
+    printTestName<T>("Testing list splice iterator range of list into end");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    // position where to place
+    typename ft::list<T>::iterator fit = ftlist.end();
+    typename std::list<T>::iterator sit = stdlist.end();
+    // position what to place (left end)
+    int x_pos_left = rand() % (ftlist.size() - 1);
+    typename ft::list<T>::iterator xfitlft = ftlist2.begin();
+    ft::advance(xfitlft, x_pos_left);
+    typename std::list<T>::iterator xsitlft = stdlist2.begin();
+    while (x_pos_left--)
+        ++xsitlft;
+    // position what to place (right end)
+    int x_pos_right = rand() % (ftlist2.size() - 1);
+    typename ft::list<T>::iterator xfitrht = xfitlft;
+    ft::advance(xfitrht, x_pos_right);
+    typename std::list<T>::iterator xsitrht = xsitlft;
+    while (x_pos_right--)
+        ++xsitrht;
+    ftlist.splice(fit, ftlist2, xfitlft, xfitrht);
+    stdlist.splice(sit, stdlist2, xsitlft, xsitrht);
+    testListContainersEqual(ftlist, stdlist);
+//    // position what to place (left end)
+//    x_pos_left = rand() % (ftlist.size() - 1);
+//    xfitlft = ftlist2.begin();
+//    ft::advance(xfitlft, x_pos_left);
+//    xsitlft = stdlist2.begin();
+//    while (x_pos_left--)
+//        ++xsitlft;
+//    // position what to place (right end)
+//    x_pos_right = rand() % (ftlist.size() - 1);
+//    xfitrht = ftlist2.begin();
+//    ft::advance(xfitrht, x_pos_right);
+//    xsitrht = stdlist2.begin();
+//    while (x_pos_right--)
+//        ++xsitrht;
+//    ftlist.splice(fit, ftlist2, xfitlft, xfitrht);
+//    stdlist.splice(sit, stdlist2, xsitlft, xsitrht);
+//    testListContainersEqual(ftlist, stdlist);
+}
+
+template<typename T>
+void listSpliceIterRandomTest() {
+    printTestName<T>("Testing list splice iterator range of list into random position");
+    ft::list<T> ftlist;
+    ft::list<T> ftlist2;
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist.push_front(getRandomValue<T>());
+    }
+    for (std::size_t i = 0; i < rand() % 20 + 10; ++i) {
+        ftlist2.push_front(getRandomValue<T>());
+    }
+    std::list<T> stdlist(ftlist.begin(), ftlist.end());
+    std::list<T> stdlist2(ftlist2.begin(), ftlist2.end());
+    // position where to place
+    int position = rand() % (ftlist.size() - 1) + 1;
+    typename ft::list<T>::iterator fit = ftlist.begin();
+    ft::advance(fit, position);
+    typename std::list<T>::iterator sit = stdlist.begin();
+    while (position--)
+        ++sit;
+    // position what to place (left end)
+    int x_pos_left = rand() % (ftlist2.size() - 1);
+    typename ft::list<T>::iterator xfitlft = ftlist2.begin();
+    ft::advance(xfitlft, x_pos_left);
+    typename std::list<T>::iterator xsitlft = stdlist2.begin();
+    while (x_pos_left--)
+        ++xsitlft;
+    // position what to place (right end)
+    int x_pos_right = rand() % (ftlist2.size() - 1);
+    typename ft::list<T>::iterator xfitrht = xfitlft;
+    ft::advance(xfitrht, x_pos_right);
+    typename std::list<T>::iterator xsitrht = xsitlft;
+    while (x_pos_right--)
+        ++xsitrht;
+    ftlist.splice(fit, ftlist2, xfitlft, xfitrht);
+    stdlist.splice(sit, stdlist2, xsitlft, xsitrht);
+    testListContainersEqual(ftlist, stdlist);
+//    // position what to place (left end)
+//    x_pos_left = rand() % (ftlist.size() - 1);
+//    xfitlft = ftlist2.begin();
+//    ft::advance(xfitlft, x_pos_left);
+//    xsitlft = stdlist2.begin();
+//    while (x_pos_left--)
+//        ++xsitlft;
+//    // position what to place (right end)
+//    x_pos_right = rand() % (ftlist.size() - 1);
+//    xfitrht = ftlist2.begin();
+//    ft::advance(xfitrht, x_pos_right);
+//    xsitrht = stdlist2.begin();
+//    while (x_pos_right--)
+//        ++xsitrht;
+//    ftlist.splice(fit, ftlist2, xfitlft, xfitrht);
+//    stdlist.splice(sit, stdlist2, xsitlft, xsitrht);
+//    testListContainersEqual(ftlist, stdlist);
 }
 
 template<class T>
@@ -2984,7 +3328,15 @@ TEST(ListResize, ListResizeWithDefault) FT_DO_TEST(listResizeWithDefaultTest)
 
 TEST(ListClear, ListClear) FT_DO_TEST(listClearTest)
 
-//splice
+TEST(ListSplice, ListSpliceBegin) FT_DO_TEST(listSpliceBeginTest)
+TEST(ListSplice, ListSpliceEnd) FT_DO_TEST(listSpliceEndTest)
+TEST(ListSplice, ListSpliceRandom) FT_DO_TEST(listSpliceRandomTest)
+TEST(ListSplice, ListSpliceOneBegin) FT_DO_TEST(listSpliceOneBeginTest)
+TEST(ListSplice, ListSpliceOneEnd) FT_DO_TEST(listSpliceOneEndTest)
+TEST(ListSplice, ListSpliceOneRandom) FT_DO_TEST(listSpliceOneRandomTest)
+TEST(ListSplice, ListSpliceIterBegin) FT_DO_TEST(listSpliceIterBeginTest)
+TEST(ListSplice, ListSpliceIterEnd) FT_DO_TEST(listSpliceIterEndTest)
+TEST(ListSplice, ListSpliceIterRandom) FT_DO_TEST(listSpliceIterRandomTest)
 
 //remove
 

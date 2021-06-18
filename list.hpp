@@ -357,6 +357,7 @@ namespace ft {
             for (; first != last; ++first) {
                 todelete = current;
                 current = current->next;
+                --first;
                 _delete_node(todelete);
                 --_size;
             }
@@ -364,9 +365,10 @@ namespace ft {
         }
 
         void swap(list &x) {
-            ft::swap(_allocator, x._allocator);
-            ft::swap(_size, x._size);
-            ft::swap(_node, x._node);
+            ft::swap(*this, x);
+//            ft::swap(_allocator, x._allocator);
+//            ft::swap(_size, x._size);
+//            ft::swap(_node, x._node);
 //            _node.next->prev = &_node;
 //            _node.prev->next = &_node;
 //            x._node.next->prev = &x._node;
@@ -389,44 +391,29 @@ namespace ft {
         }
 
         void splice(iterator position, list &x) {
-            _node_type *node = _node.next;
-            for (iterator it = begin(); it != position; ++it)
-                node = node->next;
-            node->prev->next = x->_node.next;
-            x->_node.next->prev = node->prev;
-            node->prev = x->_node.prev;
-            x->_node.prev->next = node;
+            _node_type *node = _get_node(position, begin(), _node.next);
+            _connect_nodes(node, x._node.next, x._node.prev);
             _size += x._size;
-            x->_size = 0;
-            x->_node.prev = x->_node.next = x->_node;
+            x._size = 0;
         }
 
         void splice(iterator position, list &x, iterator i) {
-            _node_type *node = _node.next;
-            for (iterator it = begin(); it != position; ++it)
-                node = node->next;
-            _node_type *xnode = x._node.next;
-            for (iterator xit = x.begin(); xit != i; ++xit)
-                xnode = xnode->next;
+            _node_type *node = _get_node(position, begin(), _node.next);
+            _node_type *xnode = _get_node(i, x.begin(), x._node.next);
             _connect_nodes(node, xnode, xnode);
             --x._size;
             ++_size;
         }
 
         void splice(iterator position, list &x, iterator first, iterator last) {
-            _node_type *node = _node.next;
-            for (iterator it = begin(); it != position; ++it)
-                node = node->next;
-            _node_type *x_left_node = x._node.next;
-            for (iterator xit = x.begin(); xit != first; ++xit)
-                x_left_node = x_left_node->next;
-            _node_type *x_right_node = x_left_node;
-            for (iterator xrit = first; first != last; ++xrit) {
-                x_right_node = x_right_node->next;
-                ++_size;
-                --x._size;
-            }
+            _node_type *node = _get_node(position, begin(), _node.next);
+            _node_type *x_left_node = _get_node(first, x.begin(), x._node.next);
+            _node_type *x_right_node = _get_node(last, x.begin(), x._node.next);
+            x_right_node = x_right_node->prev;
+            size_type size = ft::distance(first, last);
             _connect_nodes(node, x_left_node, x_right_node);
+            _size += size;
+            x._size -= size;
         }
 
         void remove(const value_type &val) {
@@ -546,6 +533,12 @@ namespace ft {
             left->prev = pos->prev;
             right->next = pos;
             pos->prev = right;
+        }
+
+        _node_type *_get_node(iterator position, iterator start, _node_type *node) {
+            for (; start != position; ++start)
+                node = node->next;
+            return node;
         }
 
         template<class Compare>

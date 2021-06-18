@@ -63,7 +63,7 @@ namespace ft {
                    !is_same<typename std::iterator_traits<ForwardIterator>::iterator_category, std::input_iterator_tag>::value, ForwardIterator>::type last,
                const allocator_type &alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL),
                                                                  _capacity(0) {
-            difference_type n = distance(first, last);
+            difference_type n = ft::distance(first, last);
             if (n != 0) {
                 _allocate(n);
                 _construct_data(first, last);
@@ -100,7 +100,7 @@ namespace ft {
         template<class ForwardIterator>
         void assign(ForwardIterator first,
                     typename enable_if<is_valid_iterator_type<ForwardIterator, std::forward_iterator_tag, pointer>::value, ForwardIterator>::type last) {
-            size_type n = distance(first, last);
+            size_type n = ft::distance(first, last);
             if (n > _capacity) {
                 _delete_data();
                 _allocate(n);
