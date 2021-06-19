@@ -417,15 +417,16 @@ namespace ft {
         }
 
         void remove(const value_type &val) {
-            remove_if(EqualToValuePredicate<value_type, val>());
+            remove_if(EqualToValuePredicate<value_type>(val));
         }
 
         template<class Predicate>
         void remove_if(Predicate pred) {
-            for (_node_type *node = _node.next; node != _node; node = node->next) {
+            for (_node_type *node = _node.next; node != &_node; node = node->next) {
                 if (pred(*node->value)) {
                     node = node->prev;
                     _delete_node(node->next);
+                    --_size;
                 }
             }
         }
@@ -436,10 +437,11 @@ namespace ft {
 
         template<class BinaryPredicate>
         void unique(BinaryPredicate binary_pred) {
-            for (_node_type *node = _node.next->next; node != _node; node = node->next) {
-                if (binary_pred(*node->value, *node->prev->value)) {
+            for (_node_type *node = _node.next->next; node != &_node; node = node->next) {
+                if (binary_pred(*node->prev->value, *node->value)) {
                     node = node->prev;
                     _delete_node(node->next);
+                    --_size;
                 }
             }
         }
@@ -529,10 +531,12 @@ namespace ft {
         void _connect_nodes(_node_type *pos, _node_type *left, _node_type *right) {
             left->prev->next = right->next;
             right->next->prev = left->prev;
-            pos->prev->next = left;
+            if (left->value)
+                pos->prev->next = left;
             left->prev = pos->prev;
             right->next = pos;
-            pos->prev = right;
+            if (right->value)
+                pos->prev = right;
         }
 
         _node_type *_get_node(iterator position, iterator start, _node_type *node) {
@@ -572,7 +576,7 @@ namespace ft {
             return false;
         for (typename list<T, Alloc>::const_iterator lit = lhs.begin(), rit = rhs.begin();
              lit != lhs.end(); ++lit, ++rit) {
-            if (*lit != *rit) {
+            if (!(*lit == *rit)) {
                 return false;
             }
         }

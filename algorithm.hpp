@@ -19,12 +19,12 @@ namespace ft {
         }
     };
 
-    template<class Type, Type value>
+    template<class Type>
     class EqualToValuePredicate {
     public:
-        bool operator()(Type x) {
-            return x == value;
-        }
+        explicit EqualToValuePredicate(const Type &val) : value(val) {}
+        bool operator()(Type x) { return x == value; }
+        Type value;
     };
 
     template<typename T>
