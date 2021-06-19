@@ -2,6 +2,8 @@
 #include "vector.hpp"
 #include <list>
 #include "list.hpp"
+#include <map>
+#include "map.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 

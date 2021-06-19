@@ -4,24 +4,21 @@
 namespace ft {
 
     template<class Type>
-    class LessThanPredicate {
-    public:
-        bool operator()(Type x, Type y) {
+    struct LessThanPredicate {
+        bool operator()(const Type &x, const Type &y) {
             return x < y;
         }
     };
 
     template<class Type>
-    class EqualToPredicate {
-    public:
+    struct EqualToPredicate {
         bool operator()(Type x, Type y) {
             return x == y;
         }
     };
 
     template<class Type>
-    class EqualToValuePredicate {
-    public:
+    struct EqualToValuePredicate {
         explicit EqualToValuePredicate(const Type &val) : value(val) {}
         bool operator()(Type x) { return x == value; }
         Type value;
