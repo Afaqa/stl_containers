@@ -139,8 +139,6 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
     std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
     EXPECT_EQ(cont1.size(), cont2.size());
     std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
-    cont1.begin();
-    cont1.end();
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
     if (cont1.size() && cont2.size()) {
@@ -181,6 +179,53 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
         if (it1 != cont1.begin() || rit1 != cont1.rbegin())
             std::cout << std::endl;
     }
+}
+
+template<typename T, typename U>
+void testMapContainersEqual(T const& cont1, U const& cont2) {
+    const char *equals = COLOR_RED " == " COLOR_RESET;
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
+    EXPECT_EQ(cont1.size(), cont2.size());
+    std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
+//    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
+//    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+//    if (cont1.size() && cont2.size()) {
+//        std::cout << "\ttest and output iterators:" << std::endl;
+//        typename T::const_iterator it1 = cont1.begin();
+//        typename U::const_iterator it2 = cont2.begin();
+//        typename T::size_type i = 0;
+//        while (it1 != cont1.end() && it2 != cont2.end()) {
+//            printValues(i, it1->first, it2->first);
+//            printValues(i++, it1->second, it2->second);
+//            ++it1;
+//            ++it2;
+//        }
+//        it1 = cont1.begin();
+//        it2 = cont2.begin();
+//        i = 0;
+//        while (it1 != cont1.end() && it2 != cont2.end()) {
+//            EXPECT_EQ(*it1, *it2);
+//            ++it1;
+//            ++it2;
+//        }
+//        EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
+//        std::cout << "\ttest and output reverse iterators:" << std::endl;
+//        typename T::const_reverse_iterator rit1 = cont1.rbegin();
+//        typename U::const_reverse_iterator rit2 = cont2.rbegin();
+//        i = typename T::size_type();
+//        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+//            printValues(cont2.size() - i - 1, rit1->first, rit2->first);
+//            printValues(cont2.size() - i - 1, rit1->second, rit2->second);
+//            EXPECT_EQ(*rit1, *rit2);
+//            ++rit1;
+//            ++rit2;
+//            ++i;
+//        }
+//        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
+//        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
+//            std::cout << std::endl;
+//    }
 }
 
 template<typename T, typename U>
@@ -225,6 +270,11 @@ void testEmptyContainersEqual(T const& cont1, U const& cont2) {
 template<typename T, typename U>
 void testEmptyListContainersEqual(T const& cont1, U const& cont2) {
     testListContainersEqual(cont1, cont2);
+}
+
+template<typename T, typename U>
+void testEmptyMapContainersEqual(T const& cont1, U const& cont2) {
+    testMapContainersEqual(cont1, cont2);
 }
 
 template<typename T>
@@ -2735,7 +2785,7 @@ void listSpliceIterBeginTest() {
     typename ft::list<T>::iterator fit = ftlist.begin();
     typename std::list<T>::iterator sit = stdlist.begin();
     // position what to place (left end)
-    int x_pos_left = rand() % (ftlist2.size() - 2) + 1;
+    int x_pos_left = rand() % (ftlist2.size() - 9) + 1;
     typename ft::list<T>::iterator xfitlft = ftlist2.begin();
     ft::advance(xfitlft, x_pos_left);
     typename std::list<T>::iterator xsitlft = stdlist2.begin();
@@ -3442,144 +3492,300 @@ void listCompareGTETest() {
     EXPECT_EQ(ftlist >= ftlistgt2, stdlist >= stdlistgt2);
 }
 
+template<typename T>
+void defaultMapConstructorTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("Default constructor");
+    g_logcurrent = &g_logft;
+    ft::map<T, T> ftv;
+    g_logcurrent = &g_logst;
+    std::map<T, T> stv;
+    g_logcurrent = NULL;
+    testEmptyMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void iteratorMapConstructorTest() {
+    g_logcurrent = &std::cout;
+    printTestName<T>("Constructor for iterators begin and end");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    {
+        g_logcurrent = &g_logft;
+        ft::map<T, T> fiter;
+        {
+            g_logcurrent       = &g_logst;
+            std::map<T, T>   siter;
+            for (std::size_t i = 0; i < numOfItems; ++i) {
+                g_logcurrent = &std::cout;
+                T key = getRandomValue<T>();
+                T value      = getRandomValue<T>();
+                {
+                    g_logcurrent = &g_logft;
+                    fiter.insert(ft::make_pair(key, value));
+                    {
+                        g_logcurrent = &g_logst;
+                        siter.insert(std::make_pair(key, value));
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &std::cout;
+            }
+
+            {
+                g_logcurrent = &g_logft;
+                typename ft::map<T, T>::iterator lit = fiter.begin();
+                ft::advance(lit, 2);
+                typename ft::map<T, T>::iterator rit = fiter.begin();
+                ft::advance(rit, -3);
+                ft::map<T, T> ftv(lit, rit);
+                {
+                    g_logcurrent = &g_logst;
+                    typename std::map<T, T>::iterator lsit = siter.begin();
+                    ft::advance(lsit, 2);
+                    typename std::map<T, T>::iterator rsit = siter.begin();
+                    ft::advance(rsit, -3);
+                    std::map<T, T> stv(lsit, rsit);
+                    testMapContainersEqual(ftv, stv);
+                }
+                g_logcurrent = &g_logft;
+            }
+            g_logcurrent = &g_logst;
+        }
+        g_logcurrent = &g_logft;
+    }
+    g_logcurrent = NULL;
+}
+
+template<typename T>
+void copyMapConstructorTest() {
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for default container");
+        {
+            g_logcurrent = &g_logft;
+            ft::map<T, T> ftv_o;
+            {
+                g_logcurrent = &g_logst;
+                std::map<T, T> stv_o;
+                {
+                    g_logcurrent = &g_logft;
+                    ft::map<T, T> ftv(ftv_o);
+                    {
+                        g_logcurrent = &g_logst;
+                        std::map<T, T> stv(stv_o);
+                        testEmptyMapContainersEqual(ftv, stv);
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
+    }
+    {
+        g_logcurrent = &std::cout;
+        printTestName<T>("Copy constructor for iterators begin and end");
+
+        std::size_t numOfItems = rand() % 20 + 10;
+        {
+            g_logcurrent       = &g_logft;
+            ft::map<T, T>    fiter;
+            {
+                g_logcurrent       = &g_logst;
+                std::map<T, T>   siter;
+                for (std::size_t i = 0; i < numOfItems; ++i) {
+                    g_logcurrent = &std::cout;
+                    T key = getRandomValue<T>();
+                    T value = getRandomValue<T>();
+                    g_logcurrent = &g_logft;
+                    fiter.insert(ft::make_pair(key, value));
+                    g_logcurrent = &g_logst;
+                    siter.insert(std::make_pair(key, value));
+                }
+
+                {
+                    g_logcurrent = &g_logft;
+                    typename ft::map<T, T>::iterator lit = fiter.begin();
+                    ft::advance(lit, 2);
+                    typename ft::map<T, T>::iterator rit = fiter.begin();
+                    ft::advance(rit, -3);
+                    ft::map<T, T> ftv_o(lit, rit);
+                    {
+                        g_logcurrent = &g_logst;
+                        typename std::map<T, T>::iterator lsit = siter.begin();
+                        ft::advance(lsit, 2);
+                        typename std::map<T, T>::iterator rsit = siter.begin();
+                        ft::advance(rsit, -3);
+                        std::map<T, T> stv_o(lsit, rsit);
+
+                        {
+                            g_logcurrent = &g_logft;
+                            ft::map<T, T> ftv(ftv_o);
+                            {
+                                g_logcurrent = &g_logst;
+                                std::map<T, T> stv(stv_o);
+
+                                testMapContainersEqual(ftv, stv);
+                            }
+                            g_logcurrent = &g_logft;
+                        }
+                        g_logcurrent = &g_logst;
+                    }
+                    g_logcurrent = &g_logft;
+                }
+                g_logcurrent = &g_logst;
+            }
+            g_logcurrent = &g_logft;
+        }
+        g_logcurrent = NULL;
+    }
+}
+
 /*** VECTOR TESTS ***/
 
-TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
-TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
-TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
-TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
-TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
-TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
-
-TEST(VectorAssignation, AssignationOperatorToMoreCap) FT_DO_TEST(assignationOperatorToMoreCapTest)
-TEST(VectorAssignation, AssignationOperatorToMoreSize) FT_DO_TEST(assignationOperatorToMoreSizeTest)
-TEST(VectorAssignation, AssignationOperatorToLess) FT_DO_TEST(assignationOperatorToLessTest)
-TEST(VectorAssignation, AssignationOperatorToSame) FT_DO_TEST(assignationOperatorToSameTest)
-
-TEST(VectorCapacity, ResizeLess) FT_DO_TEST(resizeLessTest)
-TEST(VectorCapacity, ResizeMore) FT_DO_TEST(resizeMoreTest)
-TEST(VectorCapacity, ResizeSame) FT_DO_TEST(resizeSameTest)
-
-TEST(VectorCapacity, ReserveLess) FT_DO_TEST(reserveLessTest)
-TEST(VectorCapacity, ReserveMore) FT_DO_TEST(reserveMoreTest)
-TEST(VectorCapacity, ReserveSame) FT_DO_TEST(reserveSameTest)
-TEST(VectorCapacity, ReserveGreaterThanMax) FT_DO_TEST(reserveGreaterThanMaxTest)
-
-TEST(VectorElementAccess, operatorBracketsAccess) FT_DO_TEST(OperatorBracketsAccessTest)
-TEST(VectorElementAccess, functionAt) FT_DO_TEST(FunctionAtTest)
-TEST(VectorElementAccess, functionFront) FT_DO_TEST(FunctionFrontTest)
-TEST(VectorElementAccess, functionBack) FT_DO_TEST(FunctionBackTest)
-
-TEST(VectorAssign, assignFillLess) FT_DO_TEST(AssignFillLessTest)
-TEST(VectorAssign, assignFillBetweenSizeCap) FT_DO_TEST(AssignFillBetweenSizeCapTest)
-TEST(VectorAssign, assignFillMore) FT_DO_TEST(AssignFillMoreTest)
-TEST(VectorAssign, assignFillMaxSize) FT_DO_TEST(AssignFillMaxSizeTest)
-TEST(VectorAssign, assignFillMoreThanMax) FT_DO_TEST(AssignFillMoreThanMaxTest)
-TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
-
-TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
-TEST(VectorPopBack, popBack) FT_DO_TEST(PopBackTest)
-
-TEST(VectorSwap, swap) FT_DO_TEST(SwapTest)
-TEST(VectorSwap, swapOneEmpty) FT_DO_TEST(SwapOneEmptyTest)
-TEST(VectorSwap, swapOneCleared) FT_DO_TEST(SwapOneClearedTest)
-TEST(VectorSwap, swapEmpty) FT_DO_TEST(SwapEmptyTest)
-TEST(VectorSwap, swapCleared) FT_DO_TEST(SwapClearedTest)
-
-TEST(VectorClear, clear) FT_DO_TEST(ClearTest)
-TEST(VectorClear, clearEmpty) FT_DO_TEST(ClearEmptyTest)
-TEST(VectorClear, clearDouble) FT_DO_TEST(ClearDoubleTest)
-
-TEST(VectorInsert, insert) FT_DO_TEST(InsertTest)
-TEST(VectorInsert, insertMultiple) FT_DO_TEST(InsertMultipleTest)
-TEST(VectorInsert, insertRange) FT_DO_TEST(InsertRangeTest)
-TEST(VectorErase, erase) FT_DO_TEST(EraseTest)
-TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
-
-/*** LIST TESTS ***/
-
-TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
-TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
-TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
-TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
-TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
-TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
-
-TEST(ListAssignation, ListAssignationBothEmpty) FT_DO_TEST(listAssignationBothEmptyTest)
-TEST(ListAssignation, ListAssignationBothNotEmpty) FT_DO_TEST(listAssignationBothNotEmptyTest)
-TEST(ListAssignation, ListAssignationToEmpty) FT_DO_TEST(listAssignationToEmptyTest)
-TEST(ListAssignation, ListAssignationFromEmpty) FT_DO_TEST(listAssignationFromEmptyTest)
-
-TEST(ListAssignationFunction, ListAssignationFunctionBothEmpty) FT_DO_TEST(listAssignationFunctionBothEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionBothNotEmpty) FT_DO_TEST(listAssignationFunctionBothNotEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionToEmpty) FT_DO_TEST(listAssignationFunctionToEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionFromEmpty) FT_DO_TEST(listAssignationFunctionFromEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeZero) FT_DO_TEST(listAssignationFunctionSizeZeroTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeZeroVal) FT_DO_TEST(listAssignationFunctionSizeZeroValTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeNoVal) FT_DO_TEST(listAssignationFunctionSizeNoValTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeVal) FT_DO_TEST(listAssignationFunctionSizeValTest)
-
-TEST(ListPushPop, ListPushPopFront) FT_DO_TEST(listPushPopFrontTest)
-TEST(ListPushPop, ListPushPopBack) FT_DO_TEST(listPushPopBackTest)
-TEST(ListPushPop, ListPushFrontPopBack) FT_DO_TEST(listPushFrontPopBackTest)
-TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
-
-TEST(ListInsert, ListInsertSingleValues) FT_DO_TEST(listInsertSingleValuesTest)
-TEST(ListInsert, ListInsertSeveralValues) FT_DO_TEST(listInsertSeveralValuesTest)
-TEST(ListInsert, ListInsertIteratorPointedValues) FT_DO_TEST(listInsertIteratorPointedValuesTest)
-
-TEST(ListErase, ListEraseSingleValues) FT_DO_TEST(listEraseSingleValuesTest)
-TEST(ListErase, ListEraseIteratorPointedValues) FT_DO_TEST(listEraseIteratorPointedValuesTest)
-
-TEST(ListSwap, ListSwap) FT_DO_TEST(listSwapTest)
-TEST(ListSwap, ListSwapLEmpty) FT_DO_TEST(listSwapLEmptyTest)
-TEST(ListSwap, ListSwapREmpty) FT_DO_TEST(listSwapREmptyTest)
-TEST(ListSwap, ListSwapEmpty) FT_DO_TEST(listSwapBothEmptyTest)
-TEST(ListSwap, ListNonMemberSwap) FT_DO_TEST(listNonMemberSwapTest)
-TEST(ListSwap, ListNonMemberSwapLEmpty) FT_DO_TEST(listNonMemberSwapLEmptyTest)
-TEST(ListSwap, ListNonMemberSwapREmpty) FT_DO_TEST(listNonMemberSwapREmptyTest)
-TEST(ListSwap, ListNonMemberSwapEmpty) FT_DO_TEST(listNonMemberSwapBothEmptyTest)
-
-TEST(ListResize, ListResizeWithoutDefault) FT_DO_TEST(listResizeWithoutDefaultTest)
-TEST(ListResize, ListResizeWithDefault) FT_DO_TEST(listResizeWithDefaultTest)
-
-TEST(ListClear, ListClear) FT_DO_TEST(listClearTest)
-
-TEST(ListSplice, ListSpliceBegin) FT_DO_TEST(listSpliceBeginTest)
-TEST(ListSplice, ListSpliceEnd) FT_DO_TEST(listSpliceEndTest)
-TEST(ListSplice, ListSpliceRandom) FT_DO_TEST(listSpliceRandomTest)
-TEST(ListSplice, ListSpliceOneBegin) FT_DO_TEST(listSpliceOneBeginTest)
-TEST(ListSplice, ListSpliceOneEnd) FT_DO_TEST(listSpliceOneEndTest)
-TEST(ListSplice, ListSpliceOneRandom) FT_DO_TEST(listSpliceOneRandomTest)
-TEST(ListSplice, ListSpliceIterBegin) FT_DO_TEST(listSpliceIterBeginTest)
-TEST(ListSplice, ListSpliceIterEnd) FT_DO_TEST(listSpliceIterEndTest)
-TEST(ListSplice, ListSpliceIterRandom) FT_DO_TEST(listSpliceIterRandomTest)
-
-TEST(ListRemove, ListRemoveNotRandom) FT_DO_TEST(listRemoveNotRandomTest)
-TEST(ListRemove, ListRemove) FT_DO_TEST(listRemoveTest)
-TEST(ListRemove, ListRemoveAll) FT_DO_TEST(listRemoveAllTest)
-TEST(ListRemove, ListRemoveAllSame) FT_DO_TEST(listRemoveAllSameTest)
-TEST(ListRemove, ListRemoveIf) FT_DO_TEST(listRemoveIfTest)
-
-TEST(ListUnique, ListUnique) FT_DO_TEST(listUniqueTest)
-TEST(ListUnique, ListUniqueSorted) FT_DO_TEST(listUniqueSortedTest)
-TEST(ListUnique, ListUniqueCompare) FT_DO_TEST(listUniqueCompareTest)
-TEST(ListUnique, ListUniqueSortedCompare) FT_DO_TEST(listUniqueSortedCompareTest)
-
-TEST(ListMerge, ListMerge)  FT_DO_TEST(listMergeTest)
-
-TEST(ListSort, ListSortExample)  FT_DO_TEST(listSortExampleTest)
-
-TEST(ListReverse, ListReverse) FT_DO_TEST(listReverseTest)
-
-TEST(ListCompare, ListCompareEquals) FT_DO_TEST(listCompareEqualsTest)
-TEST(ListCompare, ListCompareNotEquals) FT_DO_TEST(listCompareNotEqualsTest)
-TEST(ListCompare, ListCompareLessThan) FT_DO_TEST(listCompareLessThanTest)
-TEST(ListCompare, ListCompareGreaterThan) FT_DO_TEST(listCompareGreaterThanTest)
-TEST(ListCompare, ListCompareLTE) FT_DO_TEST(listCompareLTETest)
-TEST(ListCompare, ListCompareGTE) FT_DO_TEST(listCompareGTETest)
+//TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
+//TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
+//TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
+//TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
+//TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
+//TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
+//
+//TEST(VectorAssignation, AssignationOperatorToMoreCap) FT_DO_TEST(assignationOperatorToMoreCapTest)
+//TEST(VectorAssignation, AssignationOperatorToMoreSize) FT_DO_TEST(assignationOperatorToMoreSizeTest)
+//TEST(VectorAssignation, AssignationOperatorToLess) FT_DO_TEST(assignationOperatorToLessTest)
+//TEST(VectorAssignation, AssignationOperatorToSame) FT_DO_TEST(assignationOperatorToSameTest)
+//
+//TEST(VectorCapacity, ResizeLess) FT_DO_TEST(resizeLessTest)
+//TEST(VectorCapacity, ResizeMore) FT_DO_TEST(resizeMoreTest)
+//TEST(VectorCapacity, ResizeSame) FT_DO_TEST(resizeSameTest)
+//
+//TEST(VectorCapacity, ReserveLess) FT_DO_TEST(reserveLessTest)
+//TEST(VectorCapacity, ReserveMore) FT_DO_TEST(reserveMoreTest)
+//TEST(VectorCapacity, ReserveSame) FT_DO_TEST(reserveSameTest)
+//TEST(VectorCapacity, ReserveGreaterThanMax) FT_DO_TEST(reserveGreaterThanMaxTest)
+//
+//TEST(VectorElementAccess, operatorBracketsAccess) FT_DO_TEST(OperatorBracketsAccessTest)
+//TEST(VectorElementAccess, functionAt) FT_DO_TEST(FunctionAtTest)
+//TEST(VectorElementAccess, functionFront) FT_DO_TEST(FunctionFrontTest)
+//TEST(VectorElementAccess, functionBack) FT_DO_TEST(FunctionBackTest)
+//
+//TEST(VectorAssign, assignFillLess) FT_DO_TEST(AssignFillLessTest)
+//TEST(VectorAssign, assignFillBetweenSizeCap) FT_DO_TEST(AssignFillBetweenSizeCapTest)
+//TEST(VectorAssign, assignFillMore) FT_DO_TEST(AssignFillMoreTest)
+//TEST(VectorAssign, assignFillMaxSize) FT_DO_TEST(AssignFillMaxSizeTest)
+//TEST(VectorAssign, assignFillMoreThanMax) FT_DO_TEST(AssignFillMoreThanMaxTest)
+//TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
+//
+//TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
+//TEST(VectorPopBack, popBack) FT_DO_TEST(PopBackTest)
+//
+//TEST(VectorSwap, swap) FT_DO_TEST(SwapTest)
+//TEST(VectorSwap, swapOneEmpty) FT_DO_TEST(SwapOneEmptyTest)
+//TEST(VectorSwap, swapOneCleared) FT_DO_TEST(SwapOneClearedTest)
+//TEST(VectorSwap, swapEmpty) FT_DO_TEST(SwapEmptyTest)
+//TEST(VectorSwap, swapCleared) FT_DO_TEST(SwapClearedTest)
+//
+//TEST(VectorClear, clear) FT_DO_TEST(ClearTest)
+//TEST(VectorClear, clearEmpty) FT_DO_TEST(ClearEmptyTest)
+//TEST(VectorClear, clearDouble) FT_DO_TEST(ClearDoubleTest)
+//
+//TEST(VectorInsert, insert) FT_DO_TEST(InsertTest)
+//TEST(VectorInsert, insertMultiple) FT_DO_TEST(InsertMultipleTest)
+//TEST(VectorInsert, insertRange) FT_DO_TEST(InsertRangeTest)
+//TEST(VectorErase, erase) FT_DO_TEST(EraseTest)
+//TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
+//
+///*** LIST TESTS ***/
+//
+//TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
+//TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
+//TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
+//TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
+//TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
+//TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
+//
+//TEST(ListAssignation, ListAssignationBothEmpty) FT_DO_TEST(listAssignationBothEmptyTest)
+//TEST(ListAssignation, ListAssignationBothNotEmpty) FT_DO_TEST(listAssignationBothNotEmptyTest)
+//TEST(ListAssignation, ListAssignationToEmpty) FT_DO_TEST(listAssignationToEmptyTest)
+//TEST(ListAssignation, ListAssignationFromEmpty) FT_DO_TEST(listAssignationFromEmptyTest)
+//
+//TEST(ListAssignationFunction, ListAssignationFunctionBothEmpty) FT_DO_TEST(listAssignationFunctionBothEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionBothNotEmpty) FT_DO_TEST(listAssignationFunctionBothNotEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionToEmpty) FT_DO_TEST(listAssignationFunctionToEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionFromEmpty) FT_DO_TEST(listAssignationFunctionFromEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeZero) FT_DO_TEST(listAssignationFunctionSizeZeroTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeZeroVal) FT_DO_TEST(listAssignationFunctionSizeZeroValTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeNoVal) FT_DO_TEST(listAssignationFunctionSizeNoValTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeVal) FT_DO_TEST(listAssignationFunctionSizeValTest)
+//
+//TEST(ListPushPop, ListPushPopFront) FT_DO_TEST(listPushPopFrontTest)
+//TEST(ListPushPop, ListPushPopBack) FT_DO_TEST(listPushPopBackTest)
+//TEST(ListPushPop, ListPushFrontPopBack) FT_DO_TEST(listPushFrontPopBackTest)
+//TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
+//
+//TEST(ListInsert, ListInsertSingleValues) FT_DO_TEST(listInsertSingleValuesTest)
+//TEST(ListInsert, ListInsertSeveralValues) FT_DO_TEST(listInsertSeveralValuesTest)
+//TEST(ListInsert, ListInsertIteratorPointedValues) FT_DO_TEST(listInsertIteratorPointedValuesTest)
+//
+//TEST(ListErase, ListEraseSingleValues) FT_DO_TEST(listEraseSingleValuesTest)
+//TEST(ListErase, ListEraseIteratorPointedValues) FT_DO_TEST(listEraseIteratorPointedValuesTest)
+//
+//TEST(ListSwap, ListSwap) FT_DO_TEST(listSwapTest)
+//TEST(ListSwap, ListSwapLEmpty) FT_DO_TEST(listSwapLEmptyTest)
+//TEST(ListSwap, ListSwapREmpty) FT_DO_TEST(listSwapREmptyTest)
+//TEST(ListSwap, ListSwapEmpty) FT_DO_TEST(listSwapBothEmptyTest)
+//TEST(ListSwap, ListNonMemberSwap) FT_DO_TEST(listNonMemberSwapTest)
+//TEST(ListSwap, ListNonMemberSwapLEmpty) FT_DO_TEST(listNonMemberSwapLEmptyTest)
+//TEST(ListSwap, ListNonMemberSwapREmpty) FT_DO_TEST(listNonMemberSwapREmptyTest)
+//TEST(ListSwap, ListNonMemberSwapEmpty) FT_DO_TEST(listNonMemberSwapBothEmptyTest)
+//
+//TEST(ListResize, ListResizeWithoutDefault) FT_DO_TEST(listResizeWithoutDefaultTest)
+//TEST(ListResize, ListResizeWithDefault) FT_DO_TEST(listResizeWithDefaultTest)
+//
+//TEST(ListClear, ListClear) FT_DO_TEST(listClearTest)
+//
+//TEST(ListSplice, ListSpliceBegin) FT_DO_TEST(listSpliceBeginTest)
+//TEST(ListSplice, ListSpliceEnd) FT_DO_TEST(listSpliceEndTest)
+//TEST(ListSplice, ListSpliceRandom) FT_DO_TEST(listSpliceRandomTest)
+//TEST(ListSplice, ListSpliceOneBegin) FT_DO_TEST(listSpliceOneBeginTest)
+//TEST(ListSplice, ListSpliceOneEnd) FT_DO_TEST(listSpliceOneEndTest)
+//TEST(ListSplice, ListSpliceOneRandom) FT_DO_TEST(listSpliceOneRandomTest)
+//TEST(ListSplice, ListSpliceIterBegin) FT_DO_TEST(listSpliceIterBeginTest)
+//TEST(ListSplice, ListSpliceIterEnd) FT_DO_TEST(listSpliceIterEndTest)
+//TEST(ListSplice, ListSpliceIterRandom) FT_DO_TEST(listSpliceIterRandomTest)
+//
+//TEST(ListRemove, ListRemoveNotRandom) FT_DO_TEST(listRemoveNotRandomTest)
+//TEST(ListRemove, ListRemove) FT_DO_TEST(listRemoveTest)
+//TEST(ListRemove, ListRemoveAll) FT_DO_TEST(listRemoveAllTest)
+//TEST(ListRemove, ListRemoveAllSame) FT_DO_TEST(listRemoveAllSameTest)
+//TEST(ListRemove, ListRemoveIf) FT_DO_TEST(listRemoveIfTest)
+//
+//TEST(ListUnique, ListUnique) FT_DO_TEST(listUniqueTest)
+//TEST(ListUnique, ListUniqueSorted) FT_DO_TEST(listUniqueSortedTest)
+//TEST(ListUnique, ListUniqueCompare) FT_DO_TEST(listUniqueCompareTest)
+//TEST(ListUnique, ListUniqueSortedCompare) FT_DO_TEST(listUniqueSortedCompareTest)
+//
+//TEST(ListMerge, ListMerge)  FT_DO_TEST(listMergeTest)
+//
+//TEST(ListSort, ListSortExample)  FT_DO_TEST(listSortExampleTest)
+//
+//TEST(ListReverse, ListReverse) FT_DO_TEST(listReverseTest)
+//
+//TEST(ListCompare, ListCompareEquals) FT_DO_TEST(listCompareEqualsTest)
+//TEST(ListCompare, ListCompareNotEquals) FT_DO_TEST(listCompareNotEqualsTest)
+//TEST(ListCompare, ListCompareLessThan) FT_DO_TEST(listCompareLessThanTest)
+//TEST(ListCompare, ListCompareGreaterThan) FT_DO_TEST(listCompareGreaterThanTest)
+//TEST(ListCompare, ListCompareLTE) FT_DO_TEST(listCompareLTETest)
+//TEST(ListCompare, ListCompareGTE) FT_DO_TEST(listCompareGTETest)
 
 /*** MAP TESTS ***/
+
+TEST(MapConstructors, DefaultConstructor) FT_DO_TEST(defaultMapConstructorTest)
+TEST(MapConstructors, IteratorConstructor)  FT_DO_TEST(iteratorMapConstructorTest)
+TEST(MapConstructors, CopyConstructor)  FT_DO_TEST(copyMapConstructorTest)
+
 /*** STACK TESTS ***/
 /*** QUEUE TESTS ***/
 
