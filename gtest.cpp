@@ -3536,14 +3536,14 @@ void iteratorMapConstructorTest() {
                 g_logcurrent = &g_logft;
                 typename ft::map<T, T>::iterator lit = fiter.begin();
                 ft::advance(lit, 2);
-                typename ft::map<T, T>::iterator rit = fiter.begin();
+                typename ft::map<T, T>::iterator rit = fiter.end();
                 ft::advance(rit, -3);
                 ft::map<T, T> ftv(lit, rit);
                 {
                     g_logcurrent = &g_logst;
                     typename std::map<T, T>::iterator lsit = siter.begin();
                     ft::advance(lsit, 2);
-                    typename std::map<T, T>::iterator rsit = siter.begin();
+                    typename std::map<T, T>::iterator rsit = siter.end();
                     ft::advance(rsit, -3);
                     std::map<T, T> stv(lsit, rsit);
                     testMapContainersEqual(ftv, stv);
@@ -3609,14 +3609,14 @@ void copyMapConstructorTest() {
                     g_logcurrent = &g_logft;
                     typename ft::map<T, T>::iterator lit = fiter.begin();
                     ft::advance(lit, 2);
-                    typename ft::map<T, T>::iterator rit = fiter.begin();
+                    typename ft::map<T, T>::iterator rit = fiter.end();
                     ft::advance(rit, -3);
                     ft::map<T, T> ftv_o(lit, rit);
                     {
                         g_logcurrent = &g_logst;
                         typename std::map<T, T>::iterator lsit = siter.begin();
                         ft::advance(lsit, 2);
-                        typename std::map<T, T>::iterator rsit = siter.begin();
+                        typename std::map<T, T>::iterator rsit = siter.end();
                         ft::advance(rsit, -3);
                         std::map<T, T> stv_o(lsit, rsit);
 
