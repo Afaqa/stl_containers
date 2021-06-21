@@ -2,6 +2,8 @@
 #include "vector.hpp"
 #include <list>
 #include "list.hpp"
+#include <stack>
+#include "stack.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 
@@ -3579,6 +3581,37 @@ TEST(ListCompare, ListCompareGTE) FT_DO_TEST(listCompareGTETest)
 
 /*** MAP TESTS ***/
 /*** STACK TESTS ***/
+
+TEST(StackConstructor, StackEmptyConstructor) FT_DO_TEST(stackEmptyConstructorTest)
+TEST(StackConstructor, StackListConstructor) FT_DO_TEST(stackListConstructorTest)
+TEST(StackConstructor, StackVectorConstructor) FT_DO_TEST(stackVectorConstructorTest)
+
+TEST(StackEmpty, StackEmpty) FT_DO_TEST(stackEmptyTest)
+TEST(StackEmpty, StackEmptyList) FT_DO_TEST(stackEmptyListTest)
+TEST(StackEmpty, StackEmptyVector) FT_DO_TEST(stackEmptyVectorTest)
+
+TEST(StackSize, StackSize) FT_DO_TEST(stackSizeTest)
+TEST(StackSize, StackSizeList) FT_DO_TEST(stackSizeListTest)
+TEST(StackSize, StackSizeVector) FT_DO_TEST(stackSizeVectorTest)
+
+TEST(StackTop, StackTopList) FT_DO_TEST(stackTopListTest)
+TEST(StackTop, StackTopVector) FT_DO_TEST(stackTopVectorTest)
+
+TEST(StackPush, StackPush) FT_DO_TEST(stackPushTest)
+TEST(StackPush, StackPushList) FT_DO_TEST(stackPushListTest)
+TEST(StackPush, StackPushVector) FT_DO_TEST(stackPushVectorTest)
+
+TEST(StackPop, StackPop) FT_DO_TEST(stackPopTest)
+TEST(StackPop, StackPopList) FT_DO_TEST(stackPopListTest)
+TEST(StackPop, StackPopVector) FT_DO_TEST(stackPopVectorTest)
+
+TEST(StackCompare, StackCompareEquals) FT_DO_TEST(stackCompareEqualsTest)
+TEST(StackCompare, StackCompareNotEquals) FT_DO_TEST(stackCompareNotEqualsTest)
+TEST(StackCompare, StackCompareLessThan) FT_DO_TEST(stackCompareLessThanTest)
+TEST(StackCompare, StackCompareGreaterThan) FT_DO_TEST(stackCompareGreaterThanTest)
+TEST(StackCompare, StackCompareLTE) FT_DO_TEST(stackCompareLTETest)
+TEST(StackCompare, StackCompareGTE) FT_DO_TEST(stackCompareGTETest)
+
 /*** QUEUE TESTS ***/
 
 int main(int argc, char **argv) {
