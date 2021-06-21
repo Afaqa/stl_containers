@@ -4,6 +4,8 @@
 #include "list.hpp"
 #include <stack>
 #include "stack.hpp"
+#include <queue>
+#include "queue.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 
@@ -3613,6 +3615,39 @@ TEST(StackCompare, StackCompareLTE) FT_DO_TEST(stackCompareLTETest)
 TEST(StackCompare, StackCompareGTE) FT_DO_TEST(stackCompareGTETest)
 
 /*** QUEUE TESTS ***/
+
+TEST(QueueConstructor, QueueEmptyConstructor) FT_DO_TEST(queueEmptyConstructorTest)
+TEST(QueueConstructor, QueueListConstructor) FT_DO_TEST(queueListConstructorTest)
+TEST(QueueConstructor, QueueVectorConstructor) FT_DO_TEST(queueVectorConstructorTest)
+
+TEST(QueueEmpty, QueueEmpty) FT_DO_TEST(queueEmptyTest)
+TEST(QueueEmpty, QueueEmptyList) FT_DO_TEST(queueEmptyListTest)
+TEST(QueueEmpty, QueueEmptyVector) FT_DO_TEST(queueEmptyVectorTest)
+
+TEST(QueueSize, QueueSize) FT_DO_TEST(queueSizeTest)
+TEST(QueueSize, QueueSizeList) FT_DO_TEST(queueSizeListTest)
+TEST(QueueSize, QueueSizeVector) FT_DO_TEST(queueSizeVectorTest)
+
+TEST(QueueFront, QueueFrontList) FT_DO_TEST(queueFrontListTest)
+TEST(QueueFront, QueueFrontVector) FT_DO_TEST(queueFrontVectorTest)
+
+TEST(QueueBack, QueueBackList) FT_DO_TEST(queueBackListTest)
+TEST(QueueBack, QueueBackVector) FT_DO_TEST(queueBackVectorTest)
+
+TEST(QueuePush, QueuePush) FT_DO_TEST(queuePushTest)
+TEST(QueuePush, QueuePushList) FT_DO_TEST(queuePushListTest)
+TEST(QueuePush, QueuePushVector) FT_DO_TEST(queuePushVectorTest)
+
+TEST(QueuePop, QueuePop) FT_DO_TEST(queuePopTest)
+TEST(QueuePop, QueuePopList) FT_DO_TEST(queuePopListTest)
+TEST(QueuePop, QueuePopVector) FT_DO_TEST(queuePopVectorTest)
+
+TEST(QueueCompare, QueueCompareEquals) FT_DO_TEST(queueCompareEqualsTest)
+TEST(QueueCompare, QueueCompareNotEquals) FT_DO_TEST(queueCompareNotEqualsTest)
+TEST(QueueCompare, QueueCompareLessThan) FT_DO_TEST(queueCompareLessThanTest)
+TEST(QueueCompare, QueueCompareGreaterThan) FT_DO_TEST(queueCompareGreaterThanTest)
+TEST(QueueCompare, QueueCompareLTE) FT_DO_TEST(queueCompareLTETest)
+TEST(QueueCompare, QueueCompareGTE) FT_DO_TEST(queueCompareGTETest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
