@@ -3531,6 +3531,7 @@ void iteratorMapConstructorTest() {
                 }
                 g_logcurrent = &std::cout;
             }
+            fiter.print_map();
 
             {
                 g_logcurrent = &g_logft;
