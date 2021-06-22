@@ -181,6 +181,30 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
     }
 }
 
+namespace ft {
+    template<class T1, class T2>
+    bool operator==(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
+    template<class T1, class T2>
+    bool operator!=(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return !(lhs == rhs); }
+
+    template<class T1, class T2>
+    bool operator<(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) {
+        return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second);
+    }
+
+    template<class T1, class T2>
+    bool operator<=(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return !(rhs < lhs); }
+
+    template<class T1, class T2>
+    bool operator>(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return rhs < lhs; }
+
+    template<class T1, class T2>
+    bool operator>=(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return !(lhs < rhs); }
+}
+
 template<typename T, typename U>
 void testMapContainersEqual(T const& cont1, U const& cont2) {
     const char *equals = COLOR_RED " == " COLOR_RESET;
@@ -188,44 +212,46 @@ void testMapContainersEqual(T const& cont1, U const& cont2) {
     std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
     EXPECT_EQ(cont1.size(), cont2.size());
     std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
-//    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
-//    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
-//    if (cont1.size() && cont2.size()) {
-//        std::cout << "\ttest and output iterators:" << std::endl;
-//        typename T::const_iterator it1 = cont1.begin();
-//        typename U::const_iterator it2 = cont2.begin();
-//        typename T::size_type i = 0;
-//        while (it1 != cont1.end() && it2 != cont2.end()) {
-//            printValues(i, it1->first, it2->first);
-//            printValues(i++, it1->second, it2->second);
-//            ++it1;
-//            ++it2;
-//        }
-//        it1 = cont1.begin();
-//        it2 = cont2.begin();
-//        i = 0;
-//        while (it1 != cont1.end() && it2 != cont2.end()) {
-//            EXPECT_EQ(*it1, *it2);
-//            ++it1;
-//            ++it2;
-//        }
-//        EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
-//        std::cout << "\ttest and output reverse iterators:" << std::endl;
-//        typename T::const_reverse_iterator rit1 = cont1.rbegin();
-//        typename U::const_reverse_iterator rit2 = cont2.rbegin();
-//        i = typename T::size_type();
-//        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
-//            printValues(cont2.size() - i - 1, rit1->first, rit2->first);
-//            printValues(cont2.size() - i - 1, rit1->second, rit2->second);
-//            EXPECT_EQ(*rit1, *rit2);
-//            ++rit1;
-//            ++rit2;
-//            ++i;
-//        }
-//        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
-//        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
-//            std::cout << std::endl;
-//    }
+    std::cout << "FT  max size: " << cont1.max_size() << std::endl;
+    std::cout << "STD max size: " << cont2.max_size() << std::endl;
+    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
+    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+    if (cont1.size() && cont2.size()) {
+        std::cout << "\ttest and output iterators:" << std::endl;
+        typename T::const_iterator it1 = cont1.begin();
+        typename U::const_iterator it2 = cont2.begin();
+        typename T::size_type i = 0;
+        while (it1 != cont1.end() && it2 != cont2.end()) {
+            printValues(i, it1->first, it2->first);
+            printValues(i++, it1->second, it2->second);
+            ++it1;
+            ++it2;
+        }
+        it1 = cont1.begin();
+        it2 = cont2.begin();
+        i = 0;
+        while (it1 != cont1.end() && it2 != cont2.end()) {
+            EXPECT_EQ(*it1, *it2);
+            ++it1;
+            ++it2;
+        }
+        EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
+        std::cout << "\ttest and output reverse iterators:" << std::endl;
+        typename T::const_reverse_iterator rit1 = cont1.rbegin();
+        typename U::const_reverse_iterator rit2 = cont2.rbegin();
+        i = typename T::size_type();
+        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+            printValues(cont2.size() - i - 1, rit1->first, rit2->first);
+            printValues(cont2.size() - i - 1, rit1->second, rit2->second);
+            EXPECT_EQ(*rit1, *rit2);
+            ++rit1;
+            ++rit2;
+            ++i;
+        }
+        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
+        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
+            std::cout << std::endl;
+    }
 }
 
 template<typename T, typename U>
@@ -313,7 +339,8 @@ T getRandomValue();
 
 template<>
 int getRandomValue<int>() {
-    return rand() % 10101010 - rand() % 5050505;
+//    return rand() % 10101010 - rand() % 5050505;
+    return rand() % 10000;
 }
 
 template<>

@@ -206,7 +206,7 @@ namespace ft {
 
         reference operator*() { return *_data; }
 
-        pointer operator->() { return _data->get_pointer(); }
+        pointer operator->() { return _data.get_pointer(); }
 
     private:
         iterator_value _data;
@@ -490,7 +490,11 @@ namespace ft {
             return _tree.size;
         }
 
-        size_type max_size() const;
+        size_type max_size() const {
+            return min<size_type>(_allocator.max_size(), min<size_type>(
+                std::numeric_limits<size_type>::max() / (sizeof(value_type) + sizeof(_node_type)),
+                std::numeric_limits<difference_type>::max()));
+        }
         mapped_type &operator[](const key_type &k);
 
         pair<iterator, bool> insert(const value_type &val) {
@@ -634,6 +638,7 @@ namespace ft {
                 ++_tree.size;
                 return make_pair(node, true);
             }
+
             if (_tree.has_right(node) && node->left && node->left->is_red() && node->right->is_red())
                 node->flip_color();
 
@@ -657,10 +662,11 @@ namespace ft {
             if (!inserted.first->parent)
                 inserted.first->parent = node;
 
-            if (_tree.has_right(node) && node->left && node->right->is_red() && !node->left->is_red())
+            if (_tree.has_right(node) && node->right->is_red())
                 node = node->rotate_left();
             if (node->left && node->left->left && node->left->is_red() && node->left->left->is_red())
                 node = node->rotate_right();
+
             return inserted;
         }
 
