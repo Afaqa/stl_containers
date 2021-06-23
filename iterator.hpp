@@ -26,12 +26,11 @@ namespace ft {
 
         template<class Iter>
         reverse_iterator(const reverse_iterator<Iter> &rev_it) : _data(rev_it.base()) {
-
+            --_data;
         }
 
         iterator_type base() const {
-            iterator_type next = _data;
-            return ++next;
+            return _data;
         }
 
         reference operator*() const {

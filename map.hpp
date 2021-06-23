@@ -152,14 +152,14 @@ namespace ft {
         typedef typename allocator_type::template rebind<_node_type>::other _node_allocator;
 
         struct _value_compare {
+            _value_compare(key_compare c) : comp(c) {}
+
             bool operator()(const value_type &x, const value_type &y) const {
                 return comp(x.first, y.first);
             }
 
         private:
             key_compare comp;
-
-            _value_compare(key_compare c) : comp(c) {}
         };
 
         struct _tree_node {
@@ -228,6 +228,16 @@ namespace ft {
 
             _tree() : head(), size(), start(), end() {}
 
+            _tree(const _tree &x) : head(x.head), size(x.size), start(x.start), end(x.end) {}
+
+            _tree &operator=(const _tree &x) {
+                head = x.head;
+                size = x.size;
+                start = x.start;
+                end = x.end;
+                return *this;
+            }
+
             void update_range() {
                 start = true_empty() ? head : _lowest_node();
             }
@@ -238,6 +248,25 @@ namespace ft {
 
             bool has_right(_node_type *node) const {
                 return node->right && node->right != end;
+            }
+
+            _node_type *move_red_left(_node_type *node) {
+                node->flip_color();
+                if (has_right(node) && node->right->left && node->right->left->is_red()) {
+                    node->right = node->right->rotate_right();
+                    node = node->rotate_left();
+                    node->flip_color();
+                }
+                return node;
+            }
+
+            _node_type *move_red_right(_node_type *node) {
+                node->flip_color();
+                if (node->left && node->left->left && node->left->left->is_red()) {
+                    node = node->rotate_right();
+                    node->flip_color();
+                }
+                return node;
             }
 
         private:
@@ -252,6 +281,8 @@ namespace ft {
         class map_iterator_value {
         public:
             typedef typename _node_type::value_type value_type;
+
+            map_iterator_value() : _tree() {}
 
             map_iterator_value(_node_type *data, const _tree_type *tree) : _data(data), _tree(tree) {}
 
@@ -341,12 +372,7 @@ namespace ft {
 
         map(const map &x) : _kcomp(x._kcomp), _tree(), _allocator(x._allocator) {
             _init_tree();
-            int i = 0;
-
             for (const_iterator it = x.begin(); it != x.end(); ++it) {
-                std::cout << _tree.size << ": " << &*it << std::endl;
-                if (i++ > x.size() + 2)
-                    throw std::runtime_error("Size already identical!");
                 insert(*it);
             }
         }
@@ -358,9 +384,11 @@ namespace ft {
 
         map &operator=(const map &x) {
             clear();
+            _kcomp = x._kcomp;
             for (const_iterator it = x.begin(); it != x.end(); ++it) {
                 insert(*it);
             }
+            return *this;
         }
 
         iterator begin() {
@@ -437,9 +465,9 @@ namespace ft {
 
         iterator insert(iterator position, const value_type &val) {
             _node_type *pos = _find_node(position->first);
-            if (pos && !_kcomp(pos->value->first, val.first) && !_kcomp(val.first, pos->value->first)) {
+            if (pos && _equal(val.first, pos)) {
                 pos->value->second = val.second;
-                return iterator(pos);
+                return iterator(_make_iterator(pos));
             }
             return insert(val).first;
         }
@@ -451,12 +479,28 @@ namespace ft {
             }
         }
 
-        void erase(iterator position);
-        size_type erase(const key_type &k);
-        void erase(iterator first, iterator last);
+        void erase(iterator position) {
+            if (position != end()) {
+                erase(position->first);
+            }
+        }
+
+        size_type erase(const key_type &k) {
+            size_type presize = size();
+            _delete(_tree.head, k);
+            return size() - presize;
+        }
+
+        void erase(iterator first, iterator last) {
+            for (; first != last; ++first) {
+                erase(first->first);
+            }
+        }
 
         void swap(map &x) {
-            ft::swap(*this, x);
+            ft::swap(_allocator, x._allocator);
+            ft::swap(_kcomp, x._kcomp);
+            ft::swap(_tree, x._tree);
         }
 
         void clear() {
@@ -478,12 +522,12 @@ namespace ft {
 
         iterator find(const key_type &k) {
             _node_type *node = _find_node(k);
-            return node ? iterator(node) : end();
+            return node ? _make_iterator(node) : end();
         }
 
         const_iterator find(const key_type &k) const {
             _node_type *node = _find_node(k);
-            return node ? const_iterator(node) : end();
+            return node ? _make_iterator(node) : end();
         }
 
         size_type count(const key_type &k) const {
@@ -569,6 +613,18 @@ namespace ft {
             _allocator.deallocate(_tree.end, 1);
         }
 
+        inline bool _less(const key_type &key, _node_type *node) const {
+            return _kcomp(key, node->value->first);
+        }
+
+        inline bool _more(const key_type &key, _node_type *node) const {
+            return _kcomp(node->value->first, key);
+        }
+
+        inline bool _equal(const key_type &key, _node_type *node) const {
+            return !_less(key, node) && !_more(key, node);
+        }
+
         const_iterator _make_iterator(_node_type *node) const {
             return const_iterator(map_iterator_value(node, &_tree));
         }
@@ -586,11 +642,9 @@ namespace ft {
             while (current) {
                 if (_is_end(current))
                     return NULL;
-                bool less = _kcomp(key, current->value->first);
-                bool more = _kcomp(current->value->first, key);
-                if (!less && !more)
+                if (_equal(key, current))
                     break;
-                else if (less)
+                else if (_less(key, current))
                     current = current->left;
                 else
                     current = current->right;
@@ -600,25 +654,20 @@ namespace ft {
 
         _node_type *_find_node_not_less(const key_type &key) const {
             _node_type *current = _tree.start;
-            bool       less     = _kcomp(key, current->value->first);
-            bool       more     = _kcomp(current->value->first, key);
-            if (less) {
-                while (less && current && !_is_end(current)) {
+            if (_less(key, current)) {
+                while (current && !_is_end(current) && _less(key, current)) {
                     current = current->right;
-                    less    = _kcomp(key, current->value->first);
                 }
                 if (!current || _is_end(current))
                     return NULL;
             }
-            else if (more) {
-                while (more && current && !_is_end(current)) {
+            else if (_mode(key, current)) {
+                while (current && !_is_end(current) && _mode(key, current)) {
                     current = current->left;
-                    more    = _kcomp(current->value->first, key);
                 }
-                less = _kcomp(key, current->value->first);
                 if (!current || _is_end(current))
                     return NULL;
-                else if (less)
+                else if (_less(key, current))
                     return current->parent;
             }
             return current;
@@ -626,30 +675,118 @@ namespace ft {
 
         _node_type *_find_node_more(const key_type &key) const {
             _node_type *current = _tree.start;
-            bool       less     = _kcomp(key, current->value->first);
-            bool       more     = _kcomp(current->value->first, key);
-            if (less) {
-                while (less && current && !_is_end(current)) {
+            if (_less(key, current)) {
+                while (current && !_is_end(current) && _less(key, current)) {
                     current = current->right;
-                    less    = _kcomp(key, current->value->first);
                 }
-                more = _kcomp(current->value->first, key);
                 if (!current || _is_end(current))
                     return NULL;
-                else if (!more)
+                else if (!_more(key, current))
                     return _tree.has_right(current) ? current->right : NULL;
             }
-            else if (more) {
-                while (more && current && !_is_end(current)) {
+            else if (_more(key, current)) {
+                while (current && !_is_end(current) && _more(key, current)) {
                     current = current->left;
-                    more    = _kcomp(current->value->first, key);
                 }
                 if (!current || _is_end(current))
                     return NULL;
-                else
-                    return current->parent;
+                return current->parent;
             }
             return current;
+        }
+
+        _node_type *_delete_min(_node_type *node) {
+            if (!node->left) {
+                node->parent->left = NULL;
+                _delete_node(node);
+                return NULL;
+            }
+            if (node->left && node->left->left && !node->left->is_red() && !node->left->left->is_red())
+                _tree.move_red_left(node);
+            node->left = _delete_min(node->left);
+
+            if (_tree.has_right(node) && node->right->is_red())
+                node = node->rotate_left();
+            if (node->left && node->left->left && node->left->is_red() && node->left->left->is_red())
+                node = node->rotate_right();
+            if (_tree.has_right(node) && node->left && node->left->is_red() && node->right->is_red())
+                node->flip_color();
+            return node;
+        }
+
+        void _swap_nodes(_node_type *a, _node_type *b) {
+            // set a's parent left or right pointer to b
+            if (a->parent) {
+                if (a->parent->left == a)
+                    a->parent->left = b;
+                else
+                    a->parent->right = b;
+            }
+            // set b's parent left or right pointer to a
+            if (b->parent) {
+                if (b->parent->left == b)
+                    b->parent->left = a;
+                else
+                    b->parent->right = a;
+            }
+            // set a's children parent pointer to b
+            if (a->left) a->left->parent   = b;
+            if (a->right) a->right->parent = b;
+            // set b's children parent pointer to a
+            if (b->left) b->left->parent   = a;
+            if (b->right) b->right->parent = a;
+            // swap children and parent pointers of a and b
+            ft::swap(b->left, a->left);
+            ft::swap(b->right, a->right);
+            ft::swap(b->parent, a->parent);
+        }
+
+        _node_type *_delete(_node_type *current, const key_type &key) {
+            if (!current)
+                return NULL; // todo check leak
+            else if (_less(key, current)) {
+                if (current->left && current->left->left && !current->left->is_red() && !current->left->left->is_red())
+                    _tree.move_red_left(current);
+                current->left = _delete(current->left, key);
+            }
+            else {
+                if (current->left && current->left->is_red())
+                    current = current->rotate_right();
+                if (!_tree.has_right(current) && _equal(key, current))
+                    return NULL;
+                if (_tree.has_right(current) && current->right->left && !current->right->is_red() &&
+                    !current->right->is_red())
+                    _tree.move_red_right(current);
+                if (_equal(key, current) && current->right) {
+                    _node_type *min = _get_min(current->right);
+//                    _swap_nodes(current, min);
+                    ft::swap(current->value, min->value);
+                    current->right = _delete_min(current->right);
+                }
+                else
+                    current->right = _delete(current->right, key);
+            }
+            if (_tree.has_right(current) && current->right->is_red())
+                current = current->rotate_left();
+            if (current->left && current->left->left && current->left->is_red() && current->left->left->is_red())
+                current = current->rotate_right();
+            if (_tree.has_right(current) && current->left && current->left->is_red() && current->right->is_red())
+                current->flip_color();
+            return current;
+        }
+
+        _node_type *_get_min(_node_type *node) const {
+            while (node->left)
+                node = node->left;
+            return node;
+        }
+
+        void _delete_node(_node_type *node) {
+            get_allocator().destroy(node->value);
+            get_allocator().deallocate(node->value, 1);
+            _allocator.destroy(node);
+            _allocator.deallocate(node, 1);
+            --_tree.size;
         }
 
         void _clear_node(_node_type *node) {
@@ -657,8 +794,7 @@ namespace ft {
                 _clear_node(node->left);
             if (_tree.has_right(node))
                 _clear_node(node->right);
-            _allocator.destroy(node);
-            _allocator.deallocate(node, 1);
+            _delete_node(node);
         }
 
         bool _is_end(_node_type *node) const {
@@ -676,10 +812,9 @@ namespace ft {
             if (_tree.has_right(node) && node->left && node->left->is_red() && node->right->is_red())
                 node->flip_color();
 
-            bool less = _is_end(node) || _kcomp(val.first, node->value->first);
-            bool more = !_is_end(node) && _kcomp(node->value->first, val.first);
+            bool less = _is_end(node) || _less(val.first, node);
+            bool more = !_is_end(node) && _more(val.first, node);
             if (!less && !more) {
-                node->value->second = val.second;
                 inserted = make_pair(node, false);
             }
             else if (less) {
