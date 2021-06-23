@@ -3442,6 +3442,50 @@ void listCompareGTETest() {
     EXPECT_EQ(ftlist >= ftlistgt2, stdlist >= stdlistgt2);
 }
 
+template<typename T>
+void stackEmptyConstructorTest() {
+    printTestName<T>("Stack empty constructor");
+
+    ft::stack<T> ftv;
+    std::stack<T> stv;
+}
+
+template<typename T>
+void stackListConstructorTest() {
+    printTestName<T>("Stack constructor from list");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::list<T>  flst;
+    std::list<T> slst;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        g_logcurrent = &std::cout;
+        T value      = getRandomValue<T>();
+        flst.push_back(value);
+        slst.push_back(value);
+    }
+
+    ft::stack<T,ft::list<T>> ftv(flst);
+    std::stack<T,std::list<T>> stv(slst);
+}
+
+template<typename T>
+void stackVectorConstructorTest() {
+    printTestName<T>("Stack constructor from vector");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T>  fvec;
+    std::vector<T> svec;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        g_logcurrent = &std::cout;
+        T value      = getRandomValue<T>();
+        fvec.push_back(value);
+        svec.push_back(value);
+    }
+
+    ft::stack<T,ft::list<T>> ftv(fvec);
+    std::stack<T,std::list<T>> stv(svec);
+}
+
 /*** VECTOR TESTS ***/
 
 TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
