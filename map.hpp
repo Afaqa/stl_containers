@@ -57,6 +57,12 @@ namespace ft {
     bool operator>=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs) { return !(lhs < rhs); }
 
     template<class T1, class T2>
+    std::ostream &operator<<(std::ostream &o, const pair<T1, T2> &p) {
+        o << '(' << p.first << ", " << p.second << ')';
+        return o;
+    }
+
+    template<class T1, class T2>
     pair<T1, T2> make_pair(T1 x, T2 y) {
         return pair<T1, T2>(x, y);
     }
@@ -487,7 +493,8 @@ namespace ft {
 
         size_type erase(const key_type &k) {
             size_type presize = size();
-            _delete(_tree.head, k);
+            _tree.head = _delete(_tree.head, k);
+            _tree.update_range();
             return size() - presize;
         }
 
@@ -563,7 +570,9 @@ namespace ft {
         }
 
         void print_map() {
+            std::cout << "--- map: ---" << std::endl;
             _do_print(_tree.head);
+            std::cout << "--- :fin ---" << std::endl;
         }
 
         void _do_print(_node_type *node, int indent = 0) {
@@ -698,8 +707,13 @@ namespace ft {
         _node_type *_delete_min(_node_type *node) {
             if (!node->left) {
                 node->parent->left = NULL;
+                _node_type *ret = NULL;
+                if (node->right) {
+                    ret = node->right;
+                    ret->parent = node->parent;
+                }
                 _delete_node(node);
-                return NULL;
+                return ret;
             }
             if (node->left && node->left->left && !node->left->is_red() && !node->left->left->is_red())
                 _tree.move_red_left(node);
@@ -744,24 +758,50 @@ namespace ft {
         _node_type *_delete(_node_type *current, const key_type &key) {
             if (!current)
                 return NULL; // todo check leak
-            else if (_less(key, current)) {
-                if (current->left && current->left->left && !current->left->is_red() && !current->left->left->is_red())
-                    _tree.move_red_left(current);
+            else if (_less(key, current) && current->left) {
+                if (current->left->left && !current->left->is_red() && !current->left->left->is_red())
+                    current = _tree.move_red_left(current);
                 current->left = _delete(current->left, key);
             }
             else {
                 if (current->left && current->left->is_red())
                     current = current->rotate_right();
-                if (!_tree.has_right(current) && _equal(key, current))
-                    return NULL;
+                if (!_tree.has_right(current) && _equal(key, current)) {
+                    // delete the node, connect node->left, dont lose _tree.end
+                    print_map();
+
+                    if (current->parent->left != current) {
+                        current->parent->right = current->left;
+                        if (current->right && current->left) {
+                            _node_type *tmp = current->left;
+                            while (tmp->right)
+                                tmp = tmp->right;
+                            tmp->right = _tree.end;
+                            _tree.end->parent = tmp;
+                        }
+                    }
+                    if (current->left)
+                        current->left->parent = current->parent;
+                    _node_type *ret = current->left;
+                    _delete_node(current);
+                    return ret;
+                }
                 if (_tree.has_right(current) && current->right->left && !current->right->is_red() &&
-                    !current->right->is_red())
-                    _tree.move_red_right(current);
+                    !current->right->left->is_red())
+                    current = _tree.move_red_right(current);
                 if (_equal(key, current) && current->right) {
                     _node_type *min = _get_min(current->right);
 //                    _swap_nodes(current, min);
                     ft::swap(current->value, min->value);
-                    current->right = _delete_min(current->right);
+                    if (min == current->right) {
+                        current->right = min->right;
+                    }
+                    else {
+                        min->parent->left = min->right;
+                    }
+                    if (min->right)
+                        min->right->parent = min->parent;
+                    _delete_node(min);
                 }
                 else
                     current->right = _delete(current->right, key);

@@ -26,7 +26,6 @@ namespace ft {
 
         template<class Iter>
         reverse_iterator(const reverse_iterator<Iter> &rev_it) : _data(rev_it.base()) {
-            --_data;
         }
 
         iterator_type base() const {
@@ -83,7 +82,7 @@ namespace ft {
         }
 
         reference operator[] (difference_type n) const {
-            return _data[-n];
+            return *(*this + n);
         }
 
     private:

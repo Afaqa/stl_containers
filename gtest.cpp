@@ -2429,7 +2429,7 @@ void listSpliceIterBeginTest() {
     for (int i = x_pos_left; i--;)
         ++xsitlft;
     // position what to place (right end)
-    int x_pos_right = rand() % (ftlist2.size() - x_pos_left - 1) + 1;
+    int x_pos_right = rand() % (ftlist2.size() - x_pos_left - 3) + 1;
     typename ft::list<T>::iterator xfitrht = xfitlft;
     ft::advance(xfitrht, x_pos_right);
     typename std::list<T>::iterator xsitrht = xsitlft;
@@ -3429,12 +3429,17 @@ void mapEraseKeyTest() {
     for (std::size_t i = 0; i < numOfItems; ++i) {
         T key = getRandomValue<T>();
         T value      = getRandomValue<T>();
+        std::cout << key << std::endl;
         ftv.insert(ft::make_pair(key, value));
         stv.insert(std::make_pair(key, value));
     }
 
+    ftv.print_map();
+    std::cout << "erase start: " << ftv.begin()->first << std::endl;
     ftv.erase(ftv.begin());
     stv.erase(stv.begin());
+    ftv.print_map();
+    testMapContainersEqual(ftv, stv);
 
     typename ft::map<T,T>::iterator fit;
     typename std::map<T,T>::iterator sit;
@@ -3442,12 +3447,43 @@ void mapEraseKeyTest() {
         int pos = rand() % stv.size();
         sit = stv.begin();
         std::advance(sit, pos);
+        std::cout << "erase " << sit->first << std::endl;
         ftv.erase(sit->first);
         stv.erase(sit->first);
+        ftv.print_map();
     }
-    ftv.print_map();
     testMapContainersEqual(ftv, stv);
 }
+
+//template<>
+//void mapEraseKeyTest<int>() {
+//    printTestName<int>("Testing map erase by key");
+//    int arr[] = {
+//        3148,
+//        3900,
+//        651,
+//        5269,
+//        2430,
+//        1593,
+//        3869,
+//        9360,
+//        5946,
+//        9606
+//    };
+//
+//    std::size_t numOfItems = rand() % 1 + 10;
+//    ft::map<int, int> ftv;
+//    for (int i = 0; i < sizeof(arr)/sizeof(arr[0]); ++i) {
+//        ftv.insert(ft::make_pair(arr[i], arr[i]));
+//    }
+//    int delarr[] = {651, 5946, 3869, 9606, 1593};
+//    for (int i = 0; i < sizeof(delarr)/sizeof(delarr[0]); ++i) {
+//        ftv.erase(delarr[i]);
+//    }
+//    ftv.print_map();
+//    ftv.erase(3148);
+//    ftv.print_map();
+//}
 
 template<typename T>
 void mapEraseIteratorsTest() {
