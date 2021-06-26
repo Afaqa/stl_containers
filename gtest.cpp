@@ -38,11 +38,11 @@ struct SomeStruct {
     }
     ~SomeStruct() {}
     bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
-    bool operator!=(SomeStruct const& other) const { return name == other.name && number == other.number; }
-    bool operator<(SomeStruct const& other) const { return name < other.name; }
-    bool operator<=(SomeStruct const& other) const { return name <= other.name; }
-    bool operator>(SomeStruct const& other) const { return name > other.name; }
-    bool operator>=(SomeStruct const& other) const { return name >= other.name; }
+    bool operator!=(SomeStruct const& other) const { return !(*this == other); }
+    bool operator<(SomeStruct const& other) const { return name < other.name || (!(other.name < name) && number < other.number); }
+    bool operator<=(SomeStruct const& other) const { return !(other < *this); }
+    bool operator>(SomeStruct const& other) const { return other < *this; }
+    bool operator>=(SomeStruct const& other) const { return !(*this < other); }
 };
 
 std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
@@ -3455,36 +3455,6 @@ void mapEraseKeyTest() {
     testMapContainersEqual(ftv, stv);
 }
 
-//template<>
-//void mapEraseKeyTest<int>() {
-//    printTestName<int>("Testing map erase by key");
-//    int arr[] = {
-//        3148,
-//        3900,
-//        651,
-//        5269,
-//        2430,
-//        1593,
-//        3869,
-//        9360,
-//        5946,
-//        9606
-//    };
-//
-//    std::size_t numOfItems = rand() % 1 + 10;
-//    ft::map<int, int> ftv;
-//    for (int i = 0; i < sizeof(arr)/sizeof(arr[0]); ++i) {
-//        ftv.insert(ft::make_pair(arr[i], arr[i]));
-//    }
-//    int delarr[] = {651, 5946, 3869, 9606, 1593};
-//    for (int i = 0; i < sizeof(delarr)/sizeof(delarr[0]); ++i) {
-//        ftv.erase(delarr[i]);
-//    }
-//    ftv.print_map();
-//    ftv.erase(3148);
-//    ftv.print_map();
-//}
-
 template<typename T>
 void mapEraseIteratorsTest() {
     printTestName<T>("Testing map erase iterators range");
@@ -3509,12 +3479,15 @@ void mapEraseIteratorsTest() {
     std::advance(sit, pos);
     typename ft::map<T,T>::iterator fen = fit;
     typename std::map<T,T>::iterator sen = sit;
-    pos = rand() % (ftv.size() - pos);
-    ft::advance(fen, pos);
-    std::advance(sen, pos);
+    int pos1 = rand() % (ftv.size() - pos);
+    ft::advance(fen, pos1);
+    std::advance(sen, pos1);
 
+    std::cout << "delete range " << pos << '-' << pos1 << std::endl;
+    ftv.print_map();
     ftv.erase(fit, fen);
     stv.erase(sit, sen);
+    ftv.print_map();
     testMapContainersEqual(ftv, stv);
 }
 
@@ -3948,9 +3921,9 @@ TEST(MapOperatorSquare, OperSqtestCmp) {
 TEST(MapInsert, InsertHint)  FT_DO_TEST(mapInsertHintTest)
 TEST(MapInsert, InsertIterators)  FT_DO_TEST(mapInsertIteratorsTest)
 
-//TEST(MapErase, EraseSingle)  FT_DO_TEST(mapEraseSingleTest)
+TEST(MapErase, EraseSingle)  FT_DO_TEST(mapEraseSingleTest)
 TEST(MapErase, EraseKey)  FT_DO_TEST(mapEraseKeyTest)
-//TEST(MapErase, EraseIterators)  FT_DO_TEST(mapEraseIteratorsTest)
+TEST(MapErase, EraseIterators)  FT_DO_TEST(mapEraseIteratorsTest)
 
 TEST(MapSwap, SwapEmpty)  FT_DO_TEST(mapSwapEmptyTest)
 TEST(MapSwap, SwapOneEmpty)  FT_DO_TEST(mapSwapOneEmptyTest)

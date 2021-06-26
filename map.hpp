@@ -486,9 +486,7 @@ namespace ft {
         }
 
         void erase(iterator position) {
-            if (position != end()) {
-                erase(position->first);
-            }
+            erase(position->first);
         }
 
         size_type erase(const key_type &k) {
@@ -499,8 +497,10 @@ namespace ft {
         }
 
         void erase(iterator first, iterator last) {
-            for (; first != last; ++first) {
-                erase(first->first);
+            while (first != last) {
+                iterator tmp = first;
+                ++first;
+                erase(tmp->first);
             }
         }
 
@@ -729,15 +729,23 @@ namespace ft {
         }
 
         void _swap_nodes(_node_type *a, _node_type *b) {
-            // set a's parent left or right pointer to b
-            if (a->parent) {
+            // swap children and parent pointers of a and b
+            ft::swap(b->left, a->left);
+            ft::swap(b->right, a->right);
+            ft::swap(b->parent, a->parent);
+            // swap parent left or right pointers
+            if (a->parent && b->parent) {
+                _node_type *&a_par_node = a->parent->left == a ? a->parent->left : a->parent->right;
+                _node_type *&b_par_node = b->parent->left == b ? b->parent->left : b->parent->right;
+                ft::swap(a_par_node, b_par_node);
+            }
+            else if (a->parent) {
                 if (a->parent->left == a)
                     a->parent->left = b;
                 else
                     a->parent->right = b;
             }
-            // set b's parent left or right pointer to a
-            if (b->parent) {
+            else if (b->parent) {
                 if (b->parent->left == b)
                     b->parent->left = a;
                 else
@@ -749,10 +757,13 @@ namespace ft {
             // set b's children parent pointer to a
             if (b->left) b->left->parent   = a;
             if (b->right) b->right->parent = a;
-            // swap children and parent pointers of a and b
-            ft::swap(b->left, a->left);
-            ft::swap(b->right, a->right);
-            ft::swap(b->parent, a->parent);
+            // fix possible errors
+            if (b->left == b) b->left = a;
+            if (b->right == b) b->right = a;
+            if (b->parent == b) b->parent = a;
+            if (a->left == a) a->left = b;
+            if (a->right == a) a->right = b;
+            if (a->parent == a) a->parent = b;
         }
 
         _node_type *_delete(_node_type *current, const key_type &key) {
@@ -768,10 +779,10 @@ namespace ft {
                     current = current->rotate_right();
                 if (!_tree.has_right(current) && _equal(key, current)) {
                     // delete the node, connect node->left, dont lose _tree.end
-                    print_map();
+//                    print_map();
 
-                    if (current->parent->left != current) {
-                        current->parent->right = current->left;
+                    if (current->parent && current->parent->left != current) {
+//                        current->parent->right = current->left;
                         if (current->right && current->left) {
                             _node_type *tmp = current->left;
                             while (tmp->right)
@@ -780,9 +791,13 @@ namespace ft {
                             _tree.end->parent = tmp;
                         }
                     }
+                    _node_type *ret = current->left;
                     if (current->left)
                         current->left->parent = current->parent;
-                    _node_type *ret = current->left;
+                    else if (current->right) {
+                        ret = current->right;
+                        ret->parent = current->parent;
+                    }
                     _delete_node(current);
                     return ret;
                 }
@@ -790,9 +805,15 @@ namespace ft {
                     !current->right->left->is_red())
                     current = _tree.move_red_right(current);
                 if (_equal(key, current) && current->right) {
+                    print_map();
                     _node_type *min = _get_min(current->right);
-//                    _swap_nodes(current, min);
-                    ft::swap(current->value, min->value);
+                    if (min == current->right) {
+                        _swap_relative_nodes(current, min);
+                    }
+                    else
+                        _swap_nodes(current, min); // todo when min == current->right -- both become self parents
+//                    ft::swap(current->value, min->value);
+                    ft::swap(current, min);
                     if (min == current->right) {
                         current->right = min->right;
                     }
@@ -801,6 +822,7 @@ namespace ft {
                     }
                     if (min->right)
                         min->right->parent = min->parent;
+                    print_map();
                     _delete_node(min);
                 }
                 else
