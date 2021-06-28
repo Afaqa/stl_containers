@@ -6,6 +6,8 @@
 #include "map.hpp"
 #include <stack>
 #include "stack.hpp"
+#include <queue>
+#include "queue.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 
@@ -239,6 +241,34 @@ void testStackContainersEqual(T const& cont1, U const& cont2) {
         while (!contlft.empty() && !contrht.empty()) {
             typename T::value_type a = contlft.top();
             typename T::value_type b = contrht.top();
+            contlft.pop();
+            contrht.pop();
+            printValues(i++, a, b);
+            EXPECT_EQ(a, b);
+        }
+        EXPECT_EQ(contlft.size(), contrht.size());
+    }
+}
+
+template<typename T, typename U>
+void testQueueContainersEqual(T const& cont1, U const& cont2) {
+    const char *equals = COLOR_RED " == " COLOR_RESET;
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
+    EXPECT_EQ(cont1.size(), cont2.size());
+    std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
+    if (cont1.size() && cont2.size()) {
+        std::cout << "Front " << cont1.front() << equals << cont2.front() << std::endl;
+        EXPECT_EQ(cont1.front(), cont2.front());
+        std::cout << "Back " << cont1.front() << equals << cont2.front() << std::endl;
+        EXPECT_EQ(cont1. back(), cont2.back());
+        std::cout << "\ttest and output values:" << std::endl;
+        T contlft = cont1;
+        U contrht = cont2;
+        typename T::size_type i = 0;
+        while (!contlft.empty() && !contrht.empty()) {
+            typename T::value_type a = contlft.front();
+            typename T::value_type b = contrht.front();
             contlft.pop();
             contrht.pop();
             printValues(i++, a, b);
@@ -4490,6 +4520,243 @@ void stackCompareOperatorsTest() {
     EXPECT_EQ(ftdata <= ftmore, stdata <= stmore);
 }
 
+template<typename T>
+void queueEmptyConstructorTest() {
+    printTestName<T>("Queue empty constructor");
+
+    ft::queue<T> ftv;
+    std::queue<T> stv;
+    testQueueContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void queueListConstructorTest() {
+    printTestName<T>("Queue constructor from list");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::list<T>  flst;
+    std::list<T> slst;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value      = getRandomValue<T>();
+        flst.push_back(value);
+        slst.push_back(value);
+    }
+
+    ft::queue<T,ft::list<T>> ftv(flst);
+    std::queue<T,std::list<T>> stv(slst);
+    testQueueContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void queueEmptyListTest() {
+    printTestName<T>("Queue test empty when list");
+
+    ft::queue<T,ft::list<T>> ftv;
+    std::queue<T,std::list<T>> stv;
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    T value = getRandomValue<T>();
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+void queueSizeListTest() {
+    printTestName<T>("Queue test size when list");
+
+    int num;
+    ft::queue<T,ft::list<T>> ftv;
+    std::queue<T,std::list<T>> stv;
+    EXPECT_EQ(ftv.size(), stv.size());
+    T value = getRandomValue<T>();
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 % (ftv.size() - 5) + 1;
+    for (int i = 0; i < num; ++i) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    while (!ftv.empty() || !stv.empty()) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+}
+
+template<typename T>
+void queuePushPopListTest() {
+    printTestName<T>("Queue test push and pop when list");
+
+    std::size_t numOfItems = rand() % 50 + 50;
+    ft::queue<T,ft::list<T>> ftv;
+    std::queue<T,std::list<T>> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push(value);
+        stv.push(value);
+        EXPECT_EQ(ftv.size(), stv.size());
+    }
+
+    while (!ftv.empty() && !stv.empty()) {
+        T a = ftv.back();
+        T b = stv.back();
+        ftv.pop();
+        stv.pop();
+        EXPECT_EQ(ftv.size(), stv.size());
+        EXPECT_EQ(a, b);
+    }
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+std::pair<T*,int> getQueueCompareData() {
+    T *data = new T[5];
+    data[0] = 5;
+    data[1] = 32;
+    data[2] = 15;
+    data[3] = 420;
+    data[4] = 32;
+    return std::pair<T*, int>(data, 5);
+}
+
+template<>
+std::pair<std::string*,int> getQueueCompareData<std::string>() {
+    std::string *data = new std::string[4];
+    data[0] = "a";
+    data[2] = "asf";
+    data[3] = "vas";
+    return std::pair<std::string*, int>(data, 3);
+}
+
+template<>
+std::pair<SomeStruct*,int> getQueueCompareData<SomeStruct>() {
+    SomeStruct *data = new SomeStruct[3];
+    data[0] = {"a", 4};
+    data[1] = {"asf", 17};
+    data[2] = {"vas", 22};
+    return std::pair<SomeStruct*, int>(data, 3);
+}
+
+template<typename T>
+std::pair<T*,int> getQueueCompareLess() {
+    T *data = new T[4];
+    data[0] = 5;
+    data[1] = 32;
+    data[2] = 15;
+    data[3] = 420;
+    return std::pair<T*, int>(data, 4);
+}
+
+template<>
+std::pair<std::string*,int> getQueueCompareLess<std::string>() {
+    std::string *data = new std::string[4];
+    data[0] = "a";
+    data[1] = "asd";
+    data[2] = "vas";
+    return std::pair<std::string*, int>(data, 3);
+}
+
+template<>
+std::pair<SomeStruct*,int> getQueueCompareLess<SomeStruct>() {
+    SomeStruct *data = new SomeStruct[3];
+    data[0] = {"a", 4};
+    data[1] = {"as", 13};
+    data[2] = {"vas", 22};
+    return std::pair<SomeStruct*, int>(data, 3);
+}
+
+template<typename T>
+std::pair<T*,int> getQueueCompareMore() {
+    T *data = new T[5];
+    data[0] = 5;
+    data[1] = 32;
+    data[2] = 15;
+    data[3] = 421;
+    data[4] = 32;
+    return std::pair<T*, int>(data, 5);
+}
+
+template<>
+std::pair<std::string*,int> getQueueCompareMore<std::string>() {
+    std::string *data = new std::string[5];
+    data[0] = "a";
+    data[1] = "asf";
+    data[2] = "vas";
+    data[3] = "ff";
+    return std::pair<std::string*, int>(data, 4);
+}
+
+template<>
+std::pair<SomeStruct*,int> getQueueCompareMore<SomeStruct>() {
+    SomeStruct *data = new SomeStruct[3];
+    data[0] = {"b", 5};
+    data[1] = {"asf", 17};
+    data[2] = {"vas", 22};
+    return std::pair<SomeStruct*, int>(data, 3);
+}
+
+template<typename T>
+void queueCompareOperatorsTest() {
+    printTestName<T>("Testing queue compare operators");
+
+    std::pair<T*,int> data = getQueueCompareData<T>();
+    std::pair<T*,int> less = getQueueCompareLess<T>();
+    std::pair<T*,int> more = getQueueCompareMore<T>();
+
+    ft::queue<T,ft::list<T> > ftdata;
+    std::queue<T,ft::list<T> > stdata;
+    for (int i = 0; i < data.second; ++i) {
+        ftdata.push(data.first[i]);
+        stdata.push(data.first[i]);
+    }
+    delete [] data.first;
+
+    ft::queue<T,ft::list<T> > ftless;
+    std::queue<T,ft::list<T> > stless;
+    for (int i = 0; i < less.second; ++i) {
+        ftless.push(less.first[i]);
+        stless.push(less.first[i]);
+    }
+    delete [] less.first;
+
+    ft::queue<T,ft::list<T> > ftmore;
+    std::queue<T,ft::list<T> > stmore;
+    for (int i = 0; i < more.second; ++i) {
+        ftmore.push(more.first[i]);
+        stmore.push(more.first[i]);
+    }
+    delete [] more.first;
+
+    EXPECT_EQ(ftdata == ftdata, stdata == stdata);
+    EXPECT_EQ(ftdata != ftless, stdata != stless);
+    EXPECT_EQ(ftdata > ftless, stdata > stless);
+    EXPECT_EQ(ftdata < ftmore, stdata < stmore);
+    EXPECT_EQ(ftdata <= ftdata, stdata <= stdata);
+    EXPECT_EQ(ftdata >= ftdata, stdata >= stdata);
+    EXPECT_EQ(ftdata >= ftless, stdata >= stless);
+    EXPECT_EQ(ftdata <= ftmore, stdata <= stmore);
+}
+
 /*** VECTOR TESTS ***/
 
 //TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
@@ -4746,6 +5013,17 @@ TEST(StackPush, StackPushPopVector) FT_DO_TEST(stackPushPopVectorTest)
 TEST(StackCompare, StackCompareEquals) FT_DO_TEST(stackCompareOperatorsTest)
 
 /*** QUEUE TESTS ***/
+
+TEST(QueueConstructor, QueueEmptyConstructor) FT_DO_TEST(queueEmptyConstructorTest)
+TEST(QueueConstructor, QueueListConstructor) FT_DO_TEST(queueListConstructorTest)
+
+TEST(QueueEmpty, QueueEmptyList) FT_DO_TEST(queueEmptyListTest)
+
+TEST(QueueSize, QueueSizeList) FT_DO_TEST(queueSizeListTest)
+
+TEST(QueuePushPop, QueuePushPopList) FT_DO_TEST(queuePushPopListTest)
+
+TEST(QueueCompare, QueueCompareOperators) FT_DO_TEST(queueCompareOperatorsTest)
 
 int main(int argc, char **argv) {
     srand(time(NULL));
