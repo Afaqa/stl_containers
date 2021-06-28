@@ -2,6 +2,8 @@
 #include "vector.hpp"
 #include <list>
 #include "list.hpp"
+#include <map>
+#include "map.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 
@@ -23,49 +25,24 @@
 #define COLOR_WHITE	"\033[1;37m"
 #define COLOR_RESET	"\033[0m"
 
-#define LOG_FT "ft.out"
-#define LOG_ST "std.out"
-
-std::ofstream g_logft(LOG_FT);
-std::ofstream g_logst(LOG_ST);
-std::ostream *g_logcurrent = NULL;
-
 struct SomeStruct {
     std::string name;
     float       number;
-    SomeStruct() : name("empty"), number(15.51) {
-        if (!g_logcurrent)
-            return;
-        (*g_logcurrent) << COLOR_RED "SomeStruct Default Constructor" COLOR_RESET << std::endl;
-    }
-    SomeStruct(std::string const& name, float number) : name(name), number(number) {
-        if (!g_logcurrent)
-            return;
-        (*g_logcurrent) << COLOR_ORANGE "SomeStruct Values Constructor for name '" COLOR_CYAN << name << COLOR_ORANGE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
-    }
-    SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {
-        if (!g_logcurrent)
-            return;
-        (*g_logcurrent) << COLOR_PURPLE "SomeStruct Copy Constructor for name '" COLOR_CYAN << name << COLOR_PURPLE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
-    }
+    SomeStruct() : name("empty"), number(15.51) {}
+    SomeStruct(std::string const& name, float number) : name(name), number(number) {}
+    SomeStruct(SomeStruct const& other) : name(other.name), number(other.number) {}
     SomeStruct& operator=(SomeStruct const& other) {
         name = other.name;
         number = other.number;
-        if (g_logcurrent)
-            (*g_logcurrent) << COLOR_BLUE "SomeStruct Assignation Operator for name '" COLOR_CYAN << name << COLOR_BLUE "', number " COLOR_CYAN << number << COLOR_RESET << std::endl;
         return *this;
     }
-    ~SomeStruct() {
-        if (!g_logcurrent)
-            return;
-        (*g_logcurrent) << COLOR_YELLOW "SomeStruct Destructor for number " COLOR_CYAN << number << COLOR_RESET << std::endl;
-    }
+    ~SomeStruct() {}
     bool operator==(SomeStruct const& other) const { return name == other.name && number == other.number; }
-    bool operator!=(SomeStruct const& other) const { return name == other.name && number == other.number; }
-    bool operator<(SomeStruct const& other) const { return name < other.name; }
-    bool operator<=(SomeStruct const& other) const { return name <= other.name; }
-    bool operator>(SomeStruct const& other) const { return name > other.name; }
-    bool operator>=(SomeStruct const& other) const { return name >= other.name; }
+    bool operator!=(SomeStruct const& other) const { return !(*this == other); }
+    bool operator<(SomeStruct const& other) const { return name < other.name || (!(other.name < name) && number < other.number); }
+    bool operator<=(SomeStruct const& other) const { return !(other < *this); }
+    bool operator>(SomeStruct const& other) const { return other < *this; }
+    bool operator>=(SomeStruct const& other) const { return !(*this < other); }
 };
 
 std::ostream& operator<<(std::ostream& o, SomeStruct const& value) {
@@ -137,8 +114,6 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
     std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
     EXPECT_EQ(cont1.size(), cont2.size());
     std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
-    cont1.begin();
-    cont1.end();
     EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
     EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
     if (cont1.size() && cont2.size()) {
@@ -170,6 +145,70 @@ void testListContainersEqual(T const& cont1, U const& cont2) {
         i = typename T::size_type();
         while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
             printValues(cont2.size() - i - 1, *rit1, *rit2);
+            EXPECT_EQ(*rit1, *rit2);
+            ++rit1;
+            ++rit2;
+            ++i;
+        }
+        EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
+        if (it1 != cont1.begin() || rit1 != cont1.rbegin())
+            std::cout << std::endl;
+    }
+}
+
+namespace ft {
+    template<class T1, class T2>
+    bool operator==(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
+    template<class T1, class T2>
+    bool operator!=(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return !(lhs == rhs); }
+
+    template<class T1, class T2>
+    bool operator<(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) {
+        return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second);
+    }
+
+    template<class T1, class T2>
+    bool operator<=(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return !(rhs < lhs); }
+
+    template<class T1, class T2>
+    bool operator>(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return rhs < lhs; }
+
+    template<class T1, class T2>
+    bool operator>=(const ft::pair<T1, T2> &lhs, const std::pair<T1, T2> &rhs) { return !(lhs < rhs); }
+}
+
+template<typename T, typename U>
+void testMapContainersEqual(T const& cont1, U const& cont2) {
+    const char *equals = COLOR_RED " == " COLOR_RESET;
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
+    EXPECT_EQ(cont1.size(), cont2.size());
+    std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
+    EXPECT_EQ(cont1.begin() == cont1.end(), cont2.begin() == cont2.end());
+    EXPECT_EQ(cont1.rbegin() == cont1.rend(), cont2.rbegin() == cont2.rend());
+    if (cont1.size() && cont2.size()) {
+        std::cout << "\ttest and output iterators:" << std::endl;
+        typename T::const_iterator it1 = cont1.begin();
+        typename U::const_iterator it2 = cont2.begin();
+        typename T::size_type i = 0;
+        while (it1 != cont1.end() && it2 != cont2.end()) {
+            printValues(i, it1->first, it2->first);
+            printValues(i++, it1->second, it2->second);
+            EXPECT_EQ(*it1, *it2);
+            ++it1;
+            ++it2;
+        }
+        EXPECT_EQ(it1 == cont1.end(), it2 == cont2.end());
+        std::cout << "\ttest and output reverse iterators:" << std::endl;
+        typename T::const_reverse_iterator rit1 = cont1.rbegin();
+        typename U::const_reverse_iterator rit2 = cont2.rbegin();
+        i = typename T::size_type();
+        while (rit1 != cont1.rend() && rit2 != cont2.rend()) {
+            printValues(cont2.size() - i - 1, rit1->first, rit2->first);
+            printValues(cont2.size() - i - 1, rit1->second, rit2->second);
             EXPECT_EQ(*rit1, *rit2);
             ++rit1;
             ++rit2;
@@ -220,40 +259,27 @@ void testEmptyContainersEqual(T const& cont1, U const& cont2) {
     testContainersEqual(cont1, cont2);
 }
 
-template<typename T, typename U>
-void testEmptyListContainersEqual(T const& cont1, U const& cont2) {
-    testListContainersEqual(cont1, cont2);
-}
-
 template<typename T>
 void printTestName(std::string const& name);
 
 template<>
 void printTestName<int>(std::string const& name) {
     std::cout << name << " <int>" << std::endl;
-    g_logft << name << " <int>" << std::endl;
-    g_logst << name << " <int>" << std::endl;
 }
 
 template<>
 void printTestName<float>(std::string const& name) {
     std::cout << name << " <float>" << std::endl;
-    g_logft << name << " <float>" << std::endl;
-    g_logst << name << " <float>" << std::endl;
 }
 
 template<>
 void printTestName<std::string>(std::string const& name) {
     std::cout << name << " <std::string>" << std::endl;
-    g_logft << name << " <std::string>" << std::endl;
-    g_logst << name << " <std::string>" << std::endl;
 }
 
 template<>
 void printTestName<SomeStruct>(std::string const& name) {
     std::cout << name << " <SomeStruct>" << std::endl;
-    g_logft << name << " <SomeStruct>" << std::endl;
-    g_logst << name << " <SomeStruct>" << std::endl;
 }
 
 template<typename T>
@@ -261,7 +287,8 @@ T getRandomValue();
 
 template<>
 int getRandomValue<int>() {
-    return rand() % 10101010 - rand() % 5050505;
+//    return rand() % 10101010 - rand() % 5050505;
+    return rand() % 10000;
 }
 
 template<>
@@ -287,274 +314,115 @@ SomeStruct getRandomValue<SomeStruct>() {
 
 template<typename T>
 void defaultConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Default constructor");
-    g_logcurrent = &g_logft;
     ft::vector<T> ftv;
-    g_logcurrent = &g_logst;
     std::vector<T> stv;
-    g_logcurrent = NULL;
     testEmptyContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void zeroElementsConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for 0 elements");
-    g_logcurrent = &g_logft;
     ft::vector<T> ftv(0);
-    g_logcurrent = &g_logst;
     std::vector<T> stv(0);
-    g_logcurrent = NULL;
     testEmptyContainersEqual(ftv, stv);
 
 }
 
 template<typename T>
 void twentyElementsConstructorTest() {
-    g_logcurrent = &std::cout;
-    {
-        printTestName<T>("Constructor for N elements");
-        g_logcurrent = &g_logft;
-        ft::vector<T> ftv(20);
-        g_logcurrent = &g_logst;
-        {
-            std::vector<T> stv(20);
-            g_logcurrent = &std::cout;
-            testContainersEqual(ftv, stv);
-            g_logcurrent = &g_logst;
-        }
-        g_logcurrent = &g_logft;
-    }
-    g_logcurrent = NULL;
+    printTestName<T>("Constructor for N elements");
+    ft::vector<T> ftv(20);
+    std::vector<T> stv(20);
+    testContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void twentyElementsWithDefaultValueConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for N elements with value");
-    {
-        T value = getRandomValue<T>();
-        {
-            g_logcurrent = &g_logft;
-            ft::vector<T> ftv(20, value);
-            g_logcurrent = &g_logst;
-            {
-                std::vector<T> stv(20, value);
-                g_logcurrent = &std::cout;
-                testContainersEqual(ftv, stv);
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = &std::cout;
-    }
-    g_logcurrent = NULL;
+    T value = getRandomValue<T>();
+    ft::vector<T> ftv(20, value);
+    std::vector<T> stv(20, value);
+    testContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void iteratorConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for iterators begin and end");
 
     std::size_t numOfItems = rand() % 20 + 10;
-    {
-        g_logcurrent = &g_logft;
-        ft::vector<T> fiter;
-        {
-            g_logcurrent       = &g_logst;
-            std::vector<T>   siter;
-            for (std::size_t i = 0; i < numOfItems; ++i) {
-                g_logcurrent = &std::cout;
-                T value      = getRandomValue<T>();
-                {
-                    g_logcurrent = &g_logft;
-                    fiter.push_back(value);
-                    {
-                        g_logcurrent = &g_logst;
-                        siter.push_back(value);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &std::cout;
-            }
-
-            {
-                g_logcurrent = &g_logft;
-                ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
-                {
-                    g_logcurrent = &g_logst;
-                    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
-                    testContainersEqual(ftv, stv);
-                }
-                g_logcurrent = &g_logft;
-            }
-            g_logcurrent = &g_logst;
-        }
-        g_logcurrent = &g_logft;
+    ft::vector<T> fiter;
+    std::vector<T>   siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value      = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
     }
-    g_logcurrent = NULL;
+
+    ft::vector<T> ftv(fiter.begin() + 2, fiter.end() - 3);
+    std::vector<T> stv(siter.begin() + 2, siter.end() - 3);
+    testContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void copyConstructorTest() {
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for default container");
-        {
-            g_logcurrent = &g_logft;
-            ft::vector<T> ftv_o;
-            {
-                g_logcurrent = &g_logst;
-                std::vector<T> stv_o;
-                {
-                    g_logcurrent = &g_logft;
-                    ft::vector<T> ftv(ftv_o);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::vector<T> stv(stv_o);
-                        testEmptyContainersEqual(ftv, stv);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = NULL;
+        ft::vector<T> ftv_o;
+        std::vector<T> stv_o;
+        ft::vector<T> ftv(ftv_o);
+        std::vector<T> stv(stv_o);
+        testEmptyContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for 0 elements");
-        {
-            g_logcurrent = &g_logft;
-            ft::vector<T> ftv_o(0);
-            {
-                g_logcurrent = &g_logst;
-                std::vector<T> stv_o(0);
-                {
-                    g_logcurrent = &g_logft;
-                    ft::vector<T> ftv(ftv_o);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::vector<T> stv(stv_o);
-                        testEmptyContainersEqual(ftv, stv);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = NULL;
+        ft::vector<T> ftv_o(0);
+        std::vector<T> stv_o(0);
+        ft::vector<T> ftv(ftv_o);
+        std::vector<T> stv(stv_o);
+        testEmptyContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for N elements");
-        {
-            g_logcurrent = &g_logft;
-            ft::vector<T>  ftv_o(20);
-            {
-                g_logcurrent = &g_logst;
-                std::vector<T> stv_o(20);
-                {
-                    g_logcurrent = &g_logft;
-                    ft::vector<T>  ftv(ftv_o);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::vector<T> stv(stv_o);
-                        testContainersEqual(ftv, stv);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = NULL;
+        ft::vector<T>  ftv_o(20);
+        std::vector<T> stv_o(20);
+        ft::vector<T>  ftv(ftv_o);
+        std::vector<T> stv(stv_o);
+        testContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for N elements with value");
-        {
-            T value = getRandomValue<T>();
-            {
-                g_logcurrent = &g_logft;
-                ft::vector<T> ftv_o(20, value);
-                {
-                    g_logcurrent = &g_logst;
-                    std::vector<T> stv_o(20, value);
-                    {
-                        g_logcurrent = &g_logft;
-                        ft::vector<T> ftv(ftv_o);
-                        {
-                            g_logcurrent = &g_logst;
-                            std::vector<T> stv(stv_o);
-                            testContainersEqual(ftv, stv);
-                        }
-                        g_logcurrent = &g_logft;
-                    }
-                    g_logcurrent = &g_logst;
-                }
-                g_logcurrent = &g_logft;
-            }
-            g_logcurrent = &std::cout;
-        }
-        g_logcurrent = NULL;
+        T value = getRandomValue<T>();
+        ft::vector<T> ftv_o(20, value);
+        std::vector<T> stv_o(20, value);
+        ft::vector<T> ftv(ftv_o);
+        std::vector<T> stv(stv_o);
+        testContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for iterators begin and end");
 
         std::size_t numOfItems = rand() % 20 + 10;
-        {
-            g_logcurrent       = &g_logft;
-            ft::vector<T>    fiter;
-            {
-                g_logcurrent       = &g_logst;
-                std::vector<T>   siter;
-                for (std::size_t i = 0; i < numOfItems; ++i) {
-                    g_logcurrent = &std::cout;
-                    T value = getRandomValue<T>();
-                    g_logcurrent = &g_logft;
-                    fiter.push_back(value);
-                    g_logcurrent = &g_logst;
-                    siter.push_back(value);
-                }
-
-                {
-                    g_logcurrent = &g_logft;
-                    ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
-
-                        {
-                            g_logcurrent = &g_logft;
-                            ft::vector<T> ftv(ftv_o);
-                            {
-                                g_logcurrent = &g_logst;
-                                std::vector<T> stv(stv_o);
-
-                                testContainersEqual(ftv, stv);
-                            }
-                            g_logcurrent = &g_logft;
-                        }
-                        g_logcurrent = &g_logst;
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
+        ft::vector<T>    fiter;
+        std::vector<T>   siter;
+        for (std::size_t i = 0; i < numOfItems; ++i) {
+            T value = getRandomValue<T>();
+            fiter.push_back(value);
+            siter.push_back(value);
         }
-        g_logcurrent = NULL;
+
+        ft::vector<T> ftv_o(fiter.begin() + 2, fiter.end() - 3);
+        std::vector<T> stv_o(siter.begin() + 2, siter.end() - 3);
+
+        ft::vector<T> ftv(ftv_o);
+        std::vector<T> stv(stv_o);
+
+        testContainersEqual(ftv, stv);
     }
 }
 
 template<typename T>
 void assignationOperatorToMoreCapTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Assignation operator to the bigger capacity");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1429,290 +1297,131 @@ void EraseRangeTest() {
 
 template<typename T>
 void defaultListConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Default constructor");
-    g_logcurrent = &g_logft;
     ft::list<T> ftv;
-    g_logcurrent = &g_logst;
     std::list<T> stv;
-    g_logcurrent = NULL;
-    testEmptyListContainersEqual(ftv, stv);
+    testListContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void zeroElementsListConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for 0 elements");
-    g_logcurrent = &g_logft;
     ft::list<T> ftv(0);
-    g_logcurrent = &g_logst;
     std::list<T> stv(0);
-    g_logcurrent = NULL;
-    testEmptyListContainersEqual(ftv, stv);
+    testListContainersEqual(ftv, stv);
 
 }
 
 template<typename T>
 void twentyElementsListConstructorTest() {
-    g_logcurrent = &std::cout;
-    {
-        printTestName<T>("Constructor for N elements");
-        g_logcurrent = &g_logft;
-        ft::list<T> ftv(20);
-        g_logcurrent = &g_logst;
-        {
-            std::list<T> stv(20);
-            g_logcurrent = &std::cout;
-            testListContainersEqual(ftv, stv);
-            g_logcurrent = &g_logst;
-        }
-        g_logcurrent = &g_logft;
-    }
-    g_logcurrent = NULL;
+    printTestName<T>("Constructor for N elements");
+    ft::list<T> ftv(20);
+    std::list<T> stv(20);
+    testListContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void twentyElementsWithDefaultValueListConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for N elements with value");
-    {
-        T value = getRandomValue<T>();
-        {
-            g_logcurrent = &g_logft;
-            ft::list<T> ftv(20, value);
-            g_logcurrent = &g_logst;
-            {
-                std::list<T> stv(20, value);
-                g_logcurrent = &std::cout;
-                testListContainersEqual(ftv, stv);
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = &std::cout;
-    }
-    g_logcurrent = NULL;
+    T value = getRandomValue<T>();
+    ft::list<T> ftv(20, value);
+    std::list<T> stv(20, value);
+    testListContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void iteratorListConstructorTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("Constructor for iterators begin and end");
 
     std::size_t numOfItems = rand() % 20 + 10;
-    {
-        g_logcurrent = &g_logft;
-        ft::list<T> fiter;
-        {
-            g_logcurrent       = &g_logst;
-            std::list<T>   siter;
-            for (std::size_t i = 0; i < numOfItems; ++i) {
-                g_logcurrent = &std::cout;
-                T value      = getRandomValue<T>();
-                {
-                    g_logcurrent = &g_logft;
-                    fiter.push_back(value);
-                    {
-                        g_logcurrent = &g_logst;
-                        siter.push_back(value);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &std::cout;
-            }
-
-            {
-                g_logcurrent = &g_logft;
-                typename ft::list<T>::iterator lit = fiter.begin();
-                ft::advance(lit, 2);
-                typename ft::list<T>::iterator rit = fiter.begin();
-                ft::advance(rit, -3);
-                ft::list<T> ftv(lit, rit);
-                {
-                    g_logcurrent = &g_logst;
-                    typename std::list<T>::iterator lsit = siter.begin();
-                    ft::advance(lsit, 2);
-                    typename std::list<T>::iterator rsit = siter.begin();
-                    ft::advance(rsit, -3);
-                    std::list<T> stv(lsit, rsit);
-                    testListContainersEqual(ftv, stv);
-                }
-                g_logcurrent = &g_logft;
-            }
-            g_logcurrent = &g_logst;
-        }
-        g_logcurrent = &g_logft;
+    ft::list<T> fiter;
+    std::list<T>   siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value      = getRandomValue<T>();
+        fiter.push_back(value);
+        siter.push_back(value);
     }
-    g_logcurrent = NULL;
+
+    typename ft::list<T>::iterator lit = fiter.begin();
+    ft::advance(lit, 2);
+    typename ft::list<T>::iterator rit = fiter.begin();
+    ft::advance(rit, -3);
+    ft::list<T> ftv(lit, rit);
+    typename std::list<T>::iterator lsit = siter.begin();
+    ft::advance(lsit, 2);
+    typename std::list<T>::iterator rsit = siter.begin();
+    ft::advance(rsit, -3);
+    std::list<T> stv(lsit, rsit);
+    testListContainersEqual(ftv, stv);
 }
 
 template<typename T>
 void copyListConstructorTest() {
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for default container");
-        {
-            g_logcurrent = &g_logft;
-            ft::list<T> ftv_o;
-            {
-                g_logcurrent = &g_logst;
-                std::list<T> stv_o;
-                {
-                    g_logcurrent = &g_logft;
-                    ft::list<T> ftv(ftv_o);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::list<T> stv(stv_o);
-                        testEmptyListContainersEqual(ftv, stv);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = NULL;
+        ft::list<T> ftv_o;
+        std::list<T> stv_o;
+        ft::list<T> ftv(ftv_o);
+        std::list<T> stv(stv_o);
+        testListContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for 0 elements");
-        {
-            g_logcurrent = &g_logft;
-            ft::list<T> ftv_o(0);
-            {
-                g_logcurrent = &g_logst;
-                std::list<T> stv_o(0);
-                {
-                    g_logcurrent = &g_logft;
-                    ft::list<T> ftv(ftv_o);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::list<T> stv(stv_o);
-                        testEmptyListContainersEqual(ftv, stv);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = NULL;
+        ft::list<T> ftv_o(0);
+        std::list<T> stv_o(0);
+        ft::list<T> ftv(ftv_o);
+        std::list<T> stv(stv_o);
+        testListContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for N elements");
-        {
-            g_logcurrent = &g_logft;
-            ft::list<T>  ftv_o(20);
-            {
-                g_logcurrent = &g_logst;
-                std::list<T> stv_o(20);
-                {
-                    g_logcurrent = &g_logft;
-                    ft::list<T>  ftv(ftv_o);
-                    {
-                        g_logcurrent = &g_logst;
-                        std::list<T> stv(stv_o);
-                        testListContainersEqual(ftv, stv);
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
-        }
-        g_logcurrent = NULL;
+        ft::list<T>  ftv_o(20);
+        std::list<T> stv_o(20);
+        ft::list<T>  ftv(ftv_o);
+        std::list<T> stv(stv_o);
+        testListContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for N elements with value");
-        {
-            T value = getRandomValue<T>();
-            {
-                g_logcurrent = &g_logft;
-                ft::list<T> ftv_o(20, value);
-                {
-                    g_logcurrent = &g_logst;
-                    std::list<T> stv_o(20, value);
-                    {
-                        g_logcurrent = &g_logft;
-                        ft::list<T> ftv(ftv_o);
-                        {
-                            g_logcurrent = &g_logst;
-                            std::list<T> stv(stv_o);
-                            testListContainersEqual(ftv, stv);
-                        }
-                        g_logcurrent = &g_logft;
-                    }
-                    g_logcurrent = &g_logst;
-                }
-                g_logcurrent = &g_logft;
-            }
-            g_logcurrent = &std::cout;
-        }
-        g_logcurrent = NULL;
+        T value = getRandomValue<T>();
+        ft::list<T> ftv_o(20, value);
+        std::list<T> stv_o(20, value);
+        ft::list<T> ftv(ftv_o);
+        std::list<T> stv(stv_o);
+        testListContainersEqual(ftv, stv);
     }
     {
-        g_logcurrent = &std::cout;
         printTestName<T>("Copy constructor for iterators begin and end");
 
         std::size_t numOfItems = rand() % 20 + 10;
-        {
-            g_logcurrent       = &g_logft;
-            ft::list<T>    fiter;
-            {
-                g_logcurrent       = &g_logst;
-                std::list<T>   siter;
-                for (std::size_t i = 0; i < numOfItems; ++i) {
-                    g_logcurrent = &std::cout;
-                    T value = getRandomValue<T>();
-                    g_logcurrent = &g_logft;
-                    fiter.push_back(value);
-                    g_logcurrent = &g_logst;
-                    siter.push_back(value);
-                }
-
-                {
-                    g_logcurrent = &g_logft;
-                    typename ft::list<T>::iterator lit = fiter.begin();
-                    ft::advance(lit, 2);
-                    typename ft::list<T>::iterator rit = fiter.begin();
-                    ft::advance(rit, -3);
-                    ft::list<T> ftv_o(lit, rit);
-                    {
-                        g_logcurrent = &g_logst;
-                        typename std::list<T>::iterator lsit = siter.begin();
-                        ft::advance(lsit, 2);
-                        typename std::list<T>::iterator rsit = siter.begin();
-                        ft::advance(rsit, -3);
-                        std::list<T> stv_o(lsit, rsit);
-
-                        {
-                            g_logcurrent = &g_logft;
-                            ft::list<T> ftv(ftv_o);
-                            {
-                                g_logcurrent = &g_logst;
-                                std::list<T> stv(stv_o);
-
-                                testListContainersEqual(ftv, stv);
-                            }
-                            g_logcurrent = &g_logft;
-                        }
-                        g_logcurrent = &g_logst;
-                    }
-                    g_logcurrent = &g_logft;
-                }
-                g_logcurrent = &g_logst;
-            }
-            g_logcurrent = &g_logft;
+        ft::list<T>    fiter;
+        std::list<T>   siter;
+        for (std::size_t i = 0; i < numOfItems; ++i) {
+            T value = getRandomValue<T>();
+            fiter.push_back(value);
+            siter.push_back(value);
         }
-        g_logcurrent = NULL;
+
+        typename ft::list<T>::iterator lit = fiter.begin();
+        ft::advance(lit, 2);
+        typename ft::list<T>::iterator rit = fiter.begin();
+        ft::advance(rit, -3);
+        ft::list<T> ftv_o(lit, rit);
+        typename std::list<T>::iterator lsit = siter.begin();
+        ft::advance(lsit, 2);
+        typename std::list<T>::iterator rsit = siter.begin();
+        ft::advance(rsit, -3);
+        std::list<T> stv_o(lsit, rsit);
+
+        ft::list<T> ftv(ftv_o);
+        std::list<T> stv(stv_o);
+
+        testListContainersEqual(ftv, stv);
     }
 }
 
 template<typename T>
 void listAssignationBothEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation operator of empty lists");
 
     ft::list<T> ftv_o;
@@ -1730,7 +1439,6 @@ void listAssignationBothEmptyTest() {
 
 template<typename T>
 void listAssignationBothNotEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation operator of non empty lists");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1756,7 +1464,6 @@ void listAssignationBothNotEmptyTest() {
 
 template<typename T>
 void listAssignationToEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation operator to empty lists");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1782,7 +1489,6 @@ void listAssignationToEmptyTest() {
 
 template<typename T>
 void listAssignationFromEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation operator From empty lists");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1808,7 +1514,6 @@ void listAssignationFromEmptyTest() {
 
 template<typename T>
 void listAssignationFunctionBothEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function of empty lists");
 
     ft::list<T> ftv_o;
@@ -1826,7 +1531,6 @@ void listAssignationFunctionBothEmptyTest() {
 
 template<typename T>
 void listAssignationFunctionBothNotEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function of non empty lists");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1852,7 +1556,6 @@ void listAssignationFunctionBothNotEmptyTest() {
 
 template<typename T>
 void listAssignationFunctionToEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function to empty lists");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1878,7 +1581,6 @@ void listAssignationFunctionToEmptyTest() {
 
 template<typename T>
 void listAssignationFunctionFromEmptyTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function From empty lists");
 
     std::size_t numOfItems = rand() % 20 + 10;
@@ -1904,7 +1606,6 @@ void listAssignationFunctionFromEmptyTest() {
 
 template<typename T>
 void listAssignationFunctionSizeZeroTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function with size 0 and default value");
 
     ft::list<T> ftv;
@@ -1920,7 +1621,6 @@ void listAssignationFunctionSizeZeroTest() {
 
 template<typename T>
 void listAssignationFunctionSizeZeroValTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function with size 0 and random value");
 
     ft::list<T> ftv;
@@ -1937,7 +1637,6 @@ void listAssignationFunctionSizeZeroValTest() {
 
 template<typename T>
 void listAssignationFunctionSizeNoValTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function with random size and default value");
 
     ft::list<T> ftv;
@@ -1954,7 +1653,6 @@ void listAssignationFunctionSizeNoValTest() {
 
 template<typename T>
 void listAssignationFunctionSizeValTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List Assignation function with random size and random value");
 
     ft::list<T> ftv;
@@ -1972,7 +1670,6 @@ void listAssignationFunctionSizeValTest() {
 
 template<typename T>
 void listPushPopFrontTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List push_front some values, then pop_front values until empty with middle checks");
 
     ft::list<T> ftv;
@@ -2007,7 +1704,6 @@ void listPushPopFrontTest() {
 
 template<typename T>
 void listPushPopBackTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List push_back some values, then pop_back values until empty with middle checks");
 
     ft::list<T> ftv;
@@ -2042,7 +1738,6 @@ void listPushPopBackTest() {
 
 template<typename T>
 void listPushFrontPopBackTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List push_front some values, then pop_back values until empty with middle checks");
 
     ft::list<T> ftv;
@@ -2077,7 +1772,6 @@ void listPushFrontPopBackTest() {
 
 template<typename T>
 void listPushBackPopFrontTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List push_back some values, then pop_front values until empty with middle checks");
 
     ft::list<T> ftv;
@@ -2112,7 +1806,6 @@ void listPushBackPopFrontTest() {
 
 template<typename T>
 void listInsertSingleValuesTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List inset single values into different positions");
 
     ft::list<T> ftv;
@@ -2152,7 +1845,6 @@ void listInsertSingleValuesTest() {
 
 template<typename T>
 void listInsertSeveralValuesTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List inset multiple values into different positions");
 
     ft::list<T> ftv;
@@ -2187,7 +1879,6 @@ void listInsertSeveralValuesTest() {
 
 template<typename T>
 void listInsertIteratorPointedValuesTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List inset iterated data into different positions");
 
     const int data_len = 20;
@@ -2230,7 +1921,6 @@ void listInsertIteratorPointedValuesTest() {
 
 template<typename T>
 void listEraseSingleValuesTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List erase single values from different positions");
 
     ft::list<T> ftv;
@@ -2269,7 +1959,6 @@ void listEraseSingleValuesTest() {
 
 template<typename T>
 void listEraseIteratorPointedValuesTest() {
-    g_logcurrent = &std::cout;
     printTestName<T>("List erase iterated data from different positions");
 
     ft::list<T> ftv;
@@ -2733,14 +2422,14 @@ void listSpliceIterBeginTest() {
     typename ft::list<T>::iterator fit = ftlist.begin();
     typename std::list<T>::iterator sit = stdlist.begin();
     // position what to place (left end)
-    int x_pos_left = rand() % (ftlist2.size() - 2) + 1;
+    int x_pos_left = rand() % (ftlist2.size() - 9) + 1;
     typename ft::list<T>::iterator xfitlft = ftlist2.begin();
     ft::advance(xfitlft, x_pos_left);
     typename std::list<T>::iterator xsitlft = stdlist2.begin();
     for (int i = x_pos_left; i--;)
         ++xsitlft;
     // position what to place (right end)
-    int x_pos_right = rand() % (ftlist2.size() - x_pos_left - 1) + 1;
+    int x_pos_right = rand() % (ftlist2.size() - x_pos_left - 3) + 1;
     typename ft::list<T>::iterator xfitrht = xfitlft;
     ft::advance(xfitrht, x_pos_right);
     typename std::list<T>::iterator xsitrht = xsitlft;
@@ -3440,144 +3129,1183 @@ void listCompareGTETest() {
     EXPECT_EQ(ftlist >= ftlistgt2, stdlist >= stdlistgt2);
 }
 
+template<typename T>
+void defaultMapConstructorTest() {
+    printTestName<T>("Default constructor");
+    ft::map<T, T> ftv;
+    std::map<T, T> stv;
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void iteratorMapConstructorTest() {
+    printTestName<T>("Constructor for iterators begin and end");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> fiter;
+    std::map<T, T>   siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        fiter.insert(ft::make_pair(key, value));
+        siter.insert(std::make_pair(key, value));
+    }
+    fiter.print_map();
+
+    typename ft::map<T, T>::iterator lit = fiter.begin();
+    ft::advance(lit, 2);
+    typename ft::map<T, T>::iterator rit = fiter.end();
+    ft::advance(rit, -3);
+    ft::map<T, T> ftv(lit, rit);
+    typename std::map<T, T>::iterator lsit = siter.begin();
+    ft::advance(lsit, 2);
+    typename std::map<T, T>::iterator rsit = siter.end();
+    ft::advance(rsit, -3);
+    std::map<T, T> stv(lsit, rsit);
+    testMapContainersEqual(ftv, stv);
+}
+
+template<class T>
+bool map_constructor_greater_compare(T a, T b) {
+    return a > b;
+}
+
+template<typename T>
+void defaultMapWithCompareTest() {
+    printTestName<T>("Default constructor with compare function");
+    ft::map<T, T, bool (*)(T a, T b)> ftv(map_constructor_greater_compare<T>);
+    std::map<T, T, bool (*)(T a, T b)> stv(map_constructor_greater_compare<T>);
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void iteratorMapWithCompareTest() {
+    printTestName<T>("Constructor for iterators begin and end");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T, bool (*)(T a, T b)> fiter(map_constructor_greater_compare<T>);
+    std::map<T, T, bool (*)(T a, T b)>   siter(map_constructor_greater_compare<T>);
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        fiter.insert(ft::make_pair(key, value));
+        siter.insert(std::make_pair(key, value));
+    }
+    fiter.print_map();
+
+    typename ft::map<T, T, bool (*)(T a, T b)>::iterator lit = fiter.begin();
+    ft::advance(lit, 2);
+    typename ft::map<T, T, bool (*)(T a, T b)>::iterator rit = fiter.end();
+    ft::advance(rit, -3);
+    ft::map<T, T, bool (*)(T a, T b)> ftv(lit, rit, map_constructor_greater_compare<T>);
+
+    typename std::map<T, T, bool (*)(T a, T b)>::iterator lsit = siter.begin();
+    ft::advance(lsit, 2);
+    typename std::map<T, T, bool (*)(T a, T b)>::iterator rsit = siter.end();
+    ft::advance(rsit, -3);
+    std::map<T, T, bool (*)(T a, T b)> stv(lsit, rsit, map_constructor_greater_compare<T>);
+
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void copyMapConstructorTest() {
+    {
+        printTestName<T>("Copy constructor for default container");
+        ft::map<T, T> ftv_o;
+        std::map<T, T> stv_o;
+        ft::map<T, T> ftv(ftv_o);
+        std::map<T, T> stv(stv_o);
+        testMapContainersEqual(ftv, stv);
+    }
+    {
+        printTestName<T>("Copy constructor for iterators begin and end");
+
+        std::size_t numOfItems = rand() % 20 + 10;
+        ft::map<T, T>    fiter;
+        std::map<T, T>   siter;
+        for (std::size_t i = 0; i < numOfItems; ++i) {
+            T key = getRandomValue<T>();
+            T value = getRandomValue<T>();
+            fiter.insert(ft::make_pair(key, value));
+            siter.insert(std::make_pair(key, value));
+        }
+
+        typename ft::map<T, T>::iterator lit = fiter.begin();
+        ft::advance(lit, 2);
+        typename ft::map<T, T>::iterator rit = fiter.end();
+        ft::advance(rit, -3);
+        ft::map<T, T> ftv_o(lit, rit);
+        typename std::map<T, T>::iterator lsit = siter.begin();
+        ft::advance(lsit, 2);
+        typename std::map<T, T>::iterator rsit = siter.end();
+        ft::advance(rsit, -3);
+        std::map<T, T> stv_o(lsit, rsit);
+
+        ft::map<T, T> ftv(ftv_o);
+        std::map<T, T> stv(stv_o);
+
+        testMapContainersEqual(ftv, stv);
+    }
+}
+
+template<typename T>
+void assignOperatorEmptyTest() {
+    printTestName<T>("Assignation operator of empty container");
+    ft::pair<T, T> farr[5] = {
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() }
+    };
+    std::pair<T, T> sarr[5] = {
+        { farr[0].first, farr[0].second },
+        { farr[1].first, farr[1].second },
+        { farr[2].first, farr[2].second },
+        { farr[3].first, farr[3].second },
+        { farr[4].first, farr[4].second },
+    };
+    ft::map<T, T> ftv_o;
+    std::map<T, T> stv_o;
+    testMapContainersEqual(ftv_o, stv_o);
+    ft::map<T, T> ftv(farr, farr + 5);
+    std::map<T, T> stv(sarr, sarr + 5);
+    ftv = ftv_o;
+    stv = stv_o;
+    testMapContainersEqual(ftv_o, stv_o);
+}
+
+template<typename T>
+void assignOperatorNotEmptyTest() {
+    printTestName<T>("Assignation operator of a container");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> fiter;
+    std::map<T, T>   siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        fiter.insert(ft::make_pair(key, value));
+        siter.insert(std::make_pair(key, value));
+    }
+
+    ft::map<T, T> ftv;
+    std::map<T, T> stv;
+    ftv = fiter;
+    stv = siter;
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void assignOperatorEmptyWithCmpTest() {
+    printTestName<T>("Assignation operator of empty container with cmp fucntion");
+    ft::pair<T, T> farr[5] = {
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() },
+        { getRandomValue<T>(), getRandomValue<T>() }
+    };
+    std::pair<T, T> sarr[5] = {
+        { farr[0].first, farr[0].second },
+        { farr[1].first, farr[1].second },
+        { farr[2].first, farr[2].second },
+        { farr[3].first, farr[3].second },
+        { farr[4].first, farr[4].second },
+    };
+    ft::map<T, T, bool (*)(T a, T b)> ftv_o(map_constructor_greater_compare<T>);
+    std::map<T, T, bool (*)(T a, T b)> stv_o(map_constructor_greater_compare<T>);
+    testMapContainersEqual(ftv_o, stv_o);
+    ft::map<T, T, bool (*)(T a, T b)> ftv(farr, farr + 5, map_constructor_greater_compare<T>);
+    std::map<T, T, bool (*)(T a, T b)> stv(sarr, sarr + 5, map_constructor_greater_compare<T>);
+    ftv = ftv_o;
+    stv = stv_o;
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void assignOperatorNotEmptyWithCmpTest() {
+    printTestName<T>("Assignation operator of a container with cmp fucntion");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T, bool (*)(T a, T b)> fiter(map_constructor_greater_compare<T>);
+    std::map<T, T, bool (*)(T a, T b)>   siter(map_constructor_greater_compare<T>);
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        fiter.insert(ft::make_pair(key, value));
+        siter.insert(std::make_pair(key, value));
+    }
+
+    ft::map<T, T, bool (*)(T a, T b)> ftv;
+    std::map<T, T, bool (*)(T a, T b)> stv;
+    ftv = fiter;
+    stv = siter;
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapInsertHintTest() {
+    printTestName<T>("Testing map insert hint");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ftv.begin(),ft::make_pair(key, value));
+        stv.insert(stv.begin(),std::make_pair(key, value));
+    }
+
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapInsertIteratorsTest() {
+    printTestName<T>("Testing map insert iterators");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> fiter;
+    std::map<T, T>   siter;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        fiter.insert(ft::make_pair(key, value));
+        siter.insert(std::make_pair(key, value));
+    }
+
+    ft::map<T,T> ftv;
+    std::map<T,T> stv;
+    ftv.insert(fiter.rbegin(), fiter.rend());
+    stv.insert(siter.rbegin(), siter.rend());
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapEraseSingleTest() {
+    printTestName<T>("Testing map erase single iterator");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    ftv.erase(ftv.begin());
+    stv.erase(stv.begin());
+
+    typename ft::map<T,T>::iterator fit;
+    typename std::map<T,T>::iterator sit;
+    for (int i = 0; i < 5; ++i) {
+        int pos = rand() % stv.size();
+        fit = ftv.begin();
+        ft::advance(fit, pos);
+        sit = stv.begin();
+        std::advance(sit, pos);
+        std::cout << "erase pos " << pos << " (" << sit->first << ")" << std::endl;
+        ftv.erase(fit);
+        stv.erase(sit);
+        ftv.print_map();
+    }
+    testMapContainersEqual(ftv, stv);
+    while (!ftv.empty())
+        ftv.erase(ftv.begin());
+    while (!stv.empty())
+        stv.erase(stv.begin());
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapEraseKeyTest() {
+    printTestName<T>("Testing map erase by key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        std::cout << key << std::endl;
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    ftv.print_map();
+    std::cout << "erase start: " << ftv.begin()->first << std::endl;
+    ftv.erase(ftv.begin());
+    stv.erase(stv.begin());
+    ftv.print_map();
+    testMapContainersEqual(ftv, stv);
+
+    typename ft::map<T,T>::iterator fit;
+    typename std::map<T,T>::iterator sit;
+    for (int i = 0; i < 5; ++i) {
+        int pos = rand() % stv.size();
+        sit = stv.begin();
+        std::advance(sit, pos);
+        std::cout << "erase " << sit->first << std::endl;
+        ftv.erase(sit->first);
+        stv.erase(sit->first);
+        ftv.print_map();
+    }
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapEraseIteratorsTest() {
+    printTestName<T>("Testing map erase iterators range");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    ftv.erase(ftv.begin());
+    stv.erase(stv.begin());
+
+    typename ft::map<T,T>::iterator fit = ftv.begin();
+    typename std::map<T,T>::iterator sit = stv.begin();
+    int pos = rand() % stv.size();
+    ft::advance(fit, pos);
+    std::advance(sit, pos);
+    typename ft::map<T,T>::iterator fen = fit;
+    typename std::map<T,T>::iterator sen = sit;
+    int pos1 = rand() % (ftv.size() - pos);
+    ft::advance(fen, pos1);
+    std::advance(sen, pos1);
+
+    std::cout << "delete range " << pos << '-' << pos1 << std::endl;
+    ftv.print_map();
+    ftv.erase(fit, fen);
+    stv.erase(sit, sen);
+    ftv.print_map();
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapSwapEmptyTest() {
+    printTestName<T>("Testing map swap when both empty");
+
+    ft::map<T, T> ftv1;
+    std::map<T, T>   stv1;
+    ft::map<T, T> ftv2;
+    std::map<T, T>   stv2;
+
+    ftv1.swap(ftv2);
+    stv1.swap(stv2);
+    testMapContainersEqual(ftv1, stv1);
+    testMapContainersEqual(ftv2, stv2);
+}
+
+template<typename T>
+void mapSwapOneEmptyTest() {
+    printTestName<T>("Testing map swap when one empty");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv1;
+    std::map<T, T>   stv1;
+    ft::map<T, T> ftv2;
+    std::map<T, T>   stv2;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv2.insert(ft::make_pair(key, value));
+        stv2.insert(std::make_pair(key, value));
+    }
+
+    ftv1.swap(ftv2);
+    stv1.swap(stv2);
+    testMapContainersEqual(ftv1, stv1);
+    testMapContainersEqual(ftv2, stv2);
+}
+
+template<typename T>
+void mapSwapNotEmptyTest() {
+    printTestName<T>("Testing map swap when filled");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv1;
+    std::map<T, T>   stv1;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv1.insert(ft::make_pair(key, value));
+        stv1.insert(std::make_pair(key, value));
+    }
+    numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv2;
+    std::map<T, T>   stv2;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv2.insert(ft::make_pair(key, value));
+        stv2.insert(std::make_pair(key, value));
+    }
+
+    ftv1.swap(ftv2);
+    stv1.swap(stv2);
+    testMapContainersEqual(ftv1, stv1);
+    testMapContainersEqual(ftv2, stv2);
+}
+
+template<typename T>
+void mapClearTest() {
+    printTestName<T>("Testing map clear");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    ftv.clear();
+    stv.clear();
+    testMapContainersEqual(ftv, stv);
+    ftv.clear();
+    stv.clear();
+    testMapContainersEqual(ftv, stv);
+    for (std::size_t i = 9; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapKeyCompTest() {
+    printTestName<T>("Testing map key compare function");
+
+    bool(*function)(T,T) = map_constructor_greater_compare<T>;
+    ft::map<T,T,bool(*)(T,T)>  ftv(function);
+    std::map<T,T,bool(*)(T,T)> stv(function);
+
+    EXPECT_EQ(ftv.key_comp(), function);
+    EXPECT_EQ(stv.key_comp(), function);
+    EXPECT_EQ(ftv.key_comp(), stv.key_comp());
+}
+
+template<typename T>
+void mapValCompTest() {
+    printTestName<T>("Testing map value compare function");
+
+    bool(*function)(T,T) = map_constructor_greater_compare<T>;
+    ft::map<T,T,bool(*)(T,T)>  ftv(function);
+    std::map<T,T,bool(*)(T,T)> stv(function);
+
+    typename ft::map<T,T,bool(*)(T,T)>::value_compare ftcmp = ftv.value_comp();
+    typename std::map<T,T,bool(*)(T,T)>::value_compare stcmp = stv.value_comp();
+
+    ft::pair<T,T> fp1 = ft::make_pair(getRandomValue<T>(), getRandomValue<T>());
+    std::pair<T,T> sp1 = std::make_pair(fp1.first, fp1.second);
+
+    ft::pair<T,T> fp2 = ft::make_pair(getRandomValue<T>(), getRandomValue<T>());
+    std::pair<T,T> sp2 = std::make_pair(fp2.first, fp2.second);
+
+    EXPECT_EQ(ftcmp(fp1, fp2), stcmp(sp1, sp2));
+    EXPECT_EQ(ftcmp(fp1, fp1), stcmp(sp1, sp1));
+}
+
+template<typename T>
+void mapFindExistTest() {
+    printTestName<T>("Testing map find when keys exist");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    for (typename std::map<T,T>::iterator it = stv.begin(); it != stv.end(); ++it) {
+        typename ft::map<T,T>::iterator fit = ftv.find(it->first);
+        typename std::map<T,T>::iterator sit = stv.find(it->first);
+        EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapFindNotExistTest() {
+    printTestName<T>("Testing map find when keys not exist");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    for (int i = 0; i < 100; ++i) {
+        T key = getRandomValue<T>();
+        typename ft::map<T,T>::iterator fit = ftv.find(key);
+        typename std::map<T,T>::iterator sit = stv.find(key);
+        EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    }
+}
+
+template<typename T>
+void mapCountEmptyTest() {
+    printTestName<T>("Testing map count on empty containers");
+
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+
+    for (int i = 0; i < 100; ++i) {
+        T key = getRandomValue<T>();
+        EXPECT_EQ(ftv.count(key), stv.count(key));
+    }
+}
+
+template<typename T>
+void mapCountExistTest() {
+    printTestName<T>("Testing map count when keys exist");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    for (typename std::map<T,T>::iterator it = stv.begin(); it != stv.end(); ++it) {
+        EXPECT_EQ(ftv.count(it->first), stv.count(it->first));
+    }
+    testMapContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void mapCountNotExistTest() {
+    printTestName<T>("Testing map count when keys not exist");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    for (int i = 0; i < 100; ++i) {
+        T key = getRandomValue<T>();
+        EXPECT_EQ(ftv.count(key), stv.count(key));
+    }
+}
+
+template<typename T>
+void mapLowerBoundBelowMinTest() {
+    printTestName<T>("Testing map lower bound below minimum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T lower = T();
+    while (!(lower < ftv.begin()->first)) {
+        lower = getRandomValue<T>();
+    }
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(lower);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(lower);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapLowerBoundAboveMaxTest() {
+    printTestName<T>("Testing map lower bound above maximum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T greater = T();
+    T max_ = (--ftv.end())->first;
+    while (!(greater > max_)) {
+        greater = getRandomValue<T>();
+    }
+//    std::cout << "Searching value '" << greater << "'" << std::endl <<
+//              "start value '" << ftv.begin()->first << "'" << std::endl <<
+//              "end   value '" << (--ftv.end())->first << "'" << std::endl;
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(greater);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(greater);
+//    std::cout << "ft found: ";
+//    if (fit == ftv.end())
+//        std::cout << "/end/";
+//    else
+//        std::cout << fit->first;
+//    std::cout << std::endl;
+//    std::cout << "std found: ";
+//    if (fit == ftv.end())
+//        std::cout << "/end/";
+//    else
+//        std::cout << sit->first;
+//    std::cout << std::endl;
+//    ftv.print_map();
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapLowerBoundExistantTest() {
+    printTestName<T>("Testing map lower bound with existing key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    std::size_t pos = rand() % stv.size();
+    typename ft::map<T,T>::iterator fpos = ftv.begin();
+    ft::advance(fpos, pos);
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(fpos->first);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(fpos->first);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapLowerBoundRandomTest() {
+    printTestName<T>("Testing map lower bound with random key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T key = getRandomValue<T>();
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(key);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(key);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundBelowMinTest() {
+    printTestName<T>("Testing map upper bound below minimum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T lower = T();
+    while (!(lower < ftv.begin()->first)) {
+        lower = getRandomValue<T>();
+    }
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(lower);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(lower);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundAboveMaxTest() {
+    printTestName<T>("Testing map upper bound above maximum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T greater = T();
+    while (!(greater > ftv.begin()->first)) {
+        greater = getRandomValue<T>();
+    }
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(greater);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(greater);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundExistantTest() {
+    printTestName<T>("Testing map upper bound with existing key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    std::size_t pos = rand() % stv.size();
+    typename ft::map<T,T>::iterator fpos = ftv.begin();
+    ft::advance(fpos, pos);
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(fpos->first);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(fpos->first);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundRandomTest() {
+    printTestName<T>("Testing map upper bound with random key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T key = getRandomValue<T>();
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(key);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(key);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeBelowMinTest() {
+    printTestName<T>("Testing map equal range below minimum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T lower = T();
+    while (!(lower < ftv.begin()->first)) {
+        lower = getRandomValue<T>();
+    }
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(lower);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(lower);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeAboveMaxTest() {
+    printTestName<T>("Testing map equal range above maximum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T greater = T();
+    while (!(greater > ftv.begin()->first)) {
+        greater = getRandomValue<T>();
+    }
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(greater);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(greater);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeExistantTest() {
+    printTestName<T>("Testing map equal range with existing key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    std::size_t pos = rand() % stv.size();
+    typename ft::map<T,T>::iterator fpos = ftv.begin();
+    ft::advance(fpos, pos);
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(fpos->first);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(fpos->first);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeRandomTest() {
+    printTestName<T>("Testing map equal range with random key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T key = getRandomValue<T>();
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(key);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(key);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
 /*** VECTOR TESTS ***/
 
-TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
-TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
-TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
-TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
-TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
-TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
-
-TEST(VectorAssignation, AssignationOperatorToMoreCap) FT_DO_TEST(assignationOperatorToMoreCapTest)
-TEST(VectorAssignation, AssignationOperatorToMoreSize) FT_DO_TEST(assignationOperatorToMoreSizeTest)
-TEST(VectorAssignation, AssignationOperatorToLess) FT_DO_TEST(assignationOperatorToLessTest)
-TEST(VectorAssignation, AssignationOperatorToSame) FT_DO_TEST(assignationOperatorToSameTest)
-
-TEST(VectorCapacity, ResizeLess) FT_DO_TEST(resizeLessTest)
-TEST(VectorCapacity, ResizeMore) FT_DO_TEST(resizeMoreTest)
-TEST(VectorCapacity, ResizeSame) FT_DO_TEST(resizeSameTest)
-
-TEST(VectorCapacity, ReserveLess) FT_DO_TEST(reserveLessTest)
-TEST(VectorCapacity, ReserveMore) FT_DO_TEST(reserveMoreTest)
-TEST(VectorCapacity, ReserveSame) FT_DO_TEST(reserveSameTest)
-TEST(VectorCapacity, ReserveGreaterThanMax) FT_DO_TEST(reserveGreaterThanMaxTest)
-
-TEST(VectorElementAccess, operatorBracketsAccess) FT_DO_TEST(OperatorBracketsAccessTest)
-TEST(VectorElementAccess, functionAt) FT_DO_TEST(FunctionAtTest)
-TEST(VectorElementAccess, functionFront) FT_DO_TEST(FunctionFrontTest)
-TEST(VectorElementAccess, functionBack) FT_DO_TEST(FunctionBackTest)
-
-TEST(VectorAssign, assignFillLess) FT_DO_TEST(AssignFillLessTest)
-TEST(VectorAssign, assignFillBetweenSizeCap) FT_DO_TEST(AssignFillBetweenSizeCapTest)
-TEST(VectorAssign, assignFillMore) FT_DO_TEST(AssignFillMoreTest)
-TEST(VectorAssign, assignFillMaxSize) FT_DO_TEST(AssignFillMaxSizeTest)
-TEST(VectorAssign, assignFillMoreThanMax) FT_DO_TEST(AssignFillMoreThanMaxTest)
-TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
-
-TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
-TEST(VectorPopBack, popBack) FT_DO_TEST(PopBackTest)
-
-TEST(VectorSwap, swap) FT_DO_TEST(SwapTest)
-TEST(VectorSwap, swapOneEmpty) FT_DO_TEST(SwapOneEmptyTest)
-TEST(VectorSwap, swapOneCleared) FT_DO_TEST(SwapOneClearedTest)
-TEST(VectorSwap, swapEmpty) FT_DO_TEST(SwapEmptyTest)
-TEST(VectorSwap, swapCleared) FT_DO_TEST(SwapClearedTest)
-
-TEST(VectorClear, clear) FT_DO_TEST(ClearTest)
-TEST(VectorClear, clearEmpty) FT_DO_TEST(ClearEmptyTest)
-TEST(VectorClear, clearDouble) FT_DO_TEST(ClearDoubleTest)
-
-TEST(VectorInsert, insert) FT_DO_TEST(InsertTest)
-TEST(VectorInsert, insertMultiple) FT_DO_TEST(InsertMultipleTest)
-TEST(VectorInsert, insertRange) FT_DO_TEST(InsertRangeTest)
-TEST(VectorErase, erase) FT_DO_TEST(EraseTest)
-TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
-
-/*** LIST TESTS ***/
-
-TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
-TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
-TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
-TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
-TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
-TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
-
-TEST(ListAssignation, ListAssignationBothEmpty) FT_DO_TEST(listAssignationBothEmptyTest)
-TEST(ListAssignation, ListAssignationBothNotEmpty) FT_DO_TEST(listAssignationBothNotEmptyTest)
-TEST(ListAssignation, ListAssignationToEmpty) FT_DO_TEST(listAssignationToEmptyTest)
-TEST(ListAssignation, ListAssignationFromEmpty) FT_DO_TEST(listAssignationFromEmptyTest)
-
-TEST(ListAssignationFunction, ListAssignationFunctionBothEmpty) FT_DO_TEST(listAssignationFunctionBothEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionBothNotEmpty) FT_DO_TEST(listAssignationFunctionBothNotEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionToEmpty) FT_DO_TEST(listAssignationFunctionToEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionFromEmpty) FT_DO_TEST(listAssignationFunctionFromEmptyTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeZero) FT_DO_TEST(listAssignationFunctionSizeZeroTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeZeroVal) FT_DO_TEST(listAssignationFunctionSizeZeroValTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeNoVal) FT_DO_TEST(listAssignationFunctionSizeNoValTest)
-TEST(ListAssignationFunction, ListAssignationFunctionSizeVal) FT_DO_TEST(listAssignationFunctionSizeValTest)
-
-TEST(ListPushPop, ListPushPopFront) FT_DO_TEST(listPushPopFrontTest)
-TEST(ListPushPop, ListPushPopBack) FT_DO_TEST(listPushPopBackTest)
-TEST(ListPushPop, ListPushFrontPopBack) FT_DO_TEST(listPushFrontPopBackTest)
-TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
-
-TEST(ListInsert, ListInsertSingleValues) FT_DO_TEST(listInsertSingleValuesTest)
-TEST(ListInsert, ListInsertSeveralValues) FT_DO_TEST(listInsertSeveralValuesTest)
-TEST(ListInsert, ListInsertIteratorPointedValues) FT_DO_TEST(listInsertIteratorPointedValuesTest)
-
-TEST(ListErase, ListEraseSingleValues) FT_DO_TEST(listEraseSingleValuesTest)
-TEST(ListErase, ListEraseIteratorPointedValues) FT_DO_TEST(listEraseIteratorPointedValuesTest)
-
-TEST(ListSwap, ListSwap) FT_DO_TEST(listSwapTest)
-TEST(ListSwap, ListSwapLEmpty) FT_DO_TEST(listSwapLEmptyTest)
-TEST(ListSwap, ListSwapREmpty) FT_DO_TEST(listSwapREmptyTest)
-TEST(ListSwap, ListSwapEmpty) FT_DO_TEST(listSwapBothEmptyTest)
-TEST(ListSwap, ListNonMemberSwap) FT_DO_TEST(listNonMemberSwapTest)
-TEST(ListSwap, ListNonMemberSwapLEmpty) FT_DO_TEST(listNonMemberSwapLEmptyTest)
-TEST(ListSwap, ListNonMemberSwapREmpty) FT_DO_TEST(listNonMemberSwapREmptyTest)
-TEST(ListSwap, ListNonMemberSwapEmpty) FT_DO_TEST(listNonMemberSwapBothEmptyTest)
-
-TEST(ListResize, ListResizeWithoutDefault) FT_DO_TEST(listResizeWithoutDefaultTest)
-TEST(ListResize, ListResizeWithDefault) FT_DO_TEST(listResizeWithDefaultTest)
-
-TEST(ListClear, ListClear) FT_DO_TEST(listClearTest)
-
-TEST(ListSplice, ListSpliceBegin) FT_DO_TEST(listSpliceBeginTest)
-TEST(ListSplice, ListSpliceEnd) FT_DO_TEST(listSpliceEndTest)
-TEST(ListSplice, ListSpliceRandom) FT_DO_TEST(listSpliceRandomTest)
-TEST(ListSplice, ListSpliceOneBegin) FT_DO_TEST(listSpliceOneBeginTest)
-TEST(ListSplice, ListSpliceOneEnd) FT_DO_TEST(listSpliceOneEndTest)
-TEST(ListSplice, ListSpliceOneRandom) FT_DO_TEST(listSpliceOneRandomTest)
-TEST(ListSplice, ListSpliceIterBegin) FT_DO_TEST(listSpliceIterBeginTest)
-TEST(ListSplice, ListSpliceIterEnd) FT_DO_TEST(listSpliceIterEndTest)
-TEST(ListSplice, ListSpliceIterRandom) FT_DO_TEST(listSpliceIterRandomTest)
-
-TEST(ListRemove, ListRemoveNotRandom) FT_DO_TEST(listRemoveNotRandomTest)
-TEST(ListRemove, ListRemove) FT_DO_TEST(listRemoveTest)
-TEST(ListRemove, ListRemoveAll) FT_DO_TEST(listRemoveAllTest)
-TEST(ListRemove, ListRemoveAllSame) FT_DO_TEST(listRemoveAllSameTest)
-TEST(ListRemove, ListRemoveIf) FT_DO_TEST(listRemoveIfTest)
-
-TEST(ListUnique, ListUnique) FT_DO_TEST(listUniqueTest)
-TEST(ListUnique, ListUniqueSorted) FT_DO_TEST(listUniqueSortedTest)
-TEST(ListUnique, ListUniqueCompare) FT_DO_TEST(listUniqueCompareTest)
-TEST(ListUnique, ListUniqueSortedCompare) FT_DO_TEST(listUniqueSortedCompareTest)
-
-TEST(ListMerge, ListMerge)  FT_DO_TEST(listMergeTest)
-
-TEST(ListSort, ListSortExample)  FT_DO_TEST(listSortExampleTest)
-
-TEST(ListReverse, ListReverse) FT_DO_TEST(listReverseTest)
-
-TEST(ListCompare, ListCompareEquals) FT_DO_TEST(listCompareEqualsTest)
-TEST(ListCompare, ListCompareNotEquals) FT_DO_TEST(listCompareNotEqualsTest)
-TEST(ListCompare, ListCompareLessThan) FT_DO_TEST(listCompareLessThanTest)
-TEST(ListCompare, ListCompareGreaterThan) FT_DO_TEST(listCompareGreaterThanTest)
-TEST(ListCompare, ListCompareLTE) FT_DO_TEST(listCompareLTETest)
-TEST(ListCompare, ListCompareGTE) FT_DO_TEST(listCompareGTETest)
+//TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
+//TEST(VectorConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsConstructorTest)
+//TEST(VectorConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsConstructorTest)
+//TEST(VectorConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueConstructorTest)
+//TEST(VectorConstructors, IteratorConstructor)  FT_DO_TEST(iteratorConstructorTest)
+//TEST(VectorConstructors, CopyConstructor)  FT_DO_TEST(copyConstructorTest)
+//
+//TEST(VectorAssignation, AssignationOperatorToMoreCap) FT_DO_TEST(assignationOperatorToMoreCapTest)
+//TEST(VectorAssignation, AssignationOperatorToMoreSize) FT_DO_TEST(assignationOperatorToMoreSizeTest)
+//TEST(VectorAssignation, AssignationOperatorToLess) FT_DO_TEST(assignationOperatorToLessTest)
+//TEST(VectorAssignation, AssignationOperatorToSame) FT_DO_TEST(assignationOperatorToSameTest)
+//
+//TEST(VectorCapacity, ResizeLess) FT_DO_TEST(resizeLessTest)
+//TEST(VectorCapacity, ResizeMore) FT_DO_TEST(resizeMoreTest)
+//TEST(VectorCapacity, ResizeSame) FT_DO_TEST(resizeSameTest)
+//
+//TEST(VectorCapacity, ReserveLess) FT_DO_TEST(reserveLessTest)
+//TEST(VectorCapacity, ReserveMore) FT_DO_TEST(reserveMoreTest)
+//TEST(VectorCapacity, ReserveSame) FT_DO_TEST(reserveSameTest)
+//TEST(VectorCapacity, ReserveGreaterThanMax) FT_DO_TEST(reserveGreaterThanMaxTest)
+//
+//TEST(VectorElementAccess, operatorBracketsAccess) FT_DO_TEST(OperatorBracketsAccessTest)
+//TEST(VectorElementAccess, functionAt) FT_DO_TEST(FunctionAtTest)
+//TEST(VectorElementAccess, functionFront) FT_DO_TEST(FunctionFrontTest)
+//TEST(VectorElementAccess, functionBack) FT_DO_TEST(FunctionBackTest)
+//
+//TEST(VectorAssign, assignFillLess) FT_DO_TEST(AssignFillLessTest)
+//TEST(VectorAssign, assignFillBetweenSizeCap) FT_DO_TEST(AssignFillBetweenSizeCapTest)
+//TEST(VectorAssign, assignFillMore) FT_DO_TEST(AssignFillMoreTest)
+//TEST(VectorAssign, assignFillMaxSize) FT_DO_TEST(AssignFillMaxSizeTest)
+//TEST(VectorAssign, assignFillMoreThanMax) FT_DO_TEST(AssignFillMoreThanMaxTest)
+//TEST(VectorAssign, assignFillSame) FT_DO_TEST(AssignFillSameTest)
+//
+//TEST(VectorPushBack, pushBack) FT_DO_TEST(PushBackTest)
+//TEST(VectorPopBack, popBack) FT_DO_TEST(PopBackTest)
+//
+//TEST(VectorSwap, swap) FT_DO_TEST(SwapTest)
+//TEST(VectorSwap, swapOneEmpty) FT_DO_TEST(SwapOneEmptyTest)
+//TEST(VectorSwap, swapOneCleared) FT_DO_TEST(SwapOneClearedTest)
+//TEST(VectorSwap, swapEmpty) FT_DO_TEST(SwapEmptyTest)
+//TEST(VectorSwap, swapCleared) FT_DO_TEST(SwapClearedTest)
+//
+//TEST(VectorClear, clear) FT_DO_TEST(ClearTest)
+//TEST(VectorClear, clearEmpty) FT_DO_TEST(ClearEmptyTest)
+//TEST(VectorClear, clearDouble) FT_DO_TEST(ClearDoubleTest)
+//
+//TEST(VectorInsert, insert) FT_DO_TEST(InsertTest)
+//TEST(VectorInsert, insertMultiple) FT_DO_TEST(InsertMultipleTest)
+//TEST(VectorInsert, insertRange) FT_DO_TEST(InsertRangeTest)
+//TEST(VectorErase, erase) FT_DO_TEST(EraseTest)
+//TEST(VectorErase, eraseRange) FT_DO_TEST(EraseRangeTest)
+//
+///*** LIST TESTS ***/
+//
+//TEST(ListConstructors, DefaultConstructor) FT_DO_TEST(defaultListConstructorTest)
+//TEST(ListConstructors, ZeroElementsConstructor) FT_DO_TEST(zeroElementsListConstructorTest)
+//TEST(ListConstructors, TwentyElementsConstructor) FT_DO_TEST(twentyElementsListConstructorTest)
+//TEST(ListConstructors, TwentyElementsWithDefaultValueConstructor) FT_DO_TEST(twentyElementsWithDefaultValueListConstructorTest)
+//TEST(ListConstructors, IteratorConstructor)  FT_DO_TEST(iteratorListConstructorTest)
+//TEST(ListConstructors, CopyConstructor)  FT_DO_TEST(copyListConstructorTest)
+//
+//TEST(ListAssignation, ListAssignationBothEmpty) FT_DO_TEST(listAssignationBothEmptyTest)
+//TEST(ListAssignation, ListAssignationBothNotEmpty) FT_DO_TEST(listAssignationBothNotEmptyTest)
+//TEST(ListAssignation, ListAssignationToEmpty) FT_DO_TEST(listAssignationToEmptyTest)
+//TEST(ListAssignation, ListAssignationFromEmpty) FT_DO_TEST(listAssignationFromEmptyTest)
+//
+//TEST(ListAssignationFunction, ListAssignationFunctionBothEmpty) FT_DO_TEST(listAssignationFunctionBothEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionBothNotEmpty) FT_DO_TEST(listAssignationFunctionBothNotEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionToEmpty) FT_DO_TEST(listAssignationFunctionToEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionFromEmpty) FT_DO_TEST(listAssignationFunctionFromEmptyTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeZero) FT_DO_TEST(listAssignationFunctionSizeZeroTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeZeroVal) FT_DO_TEST(listAssignationFunctionSizeZeroValTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeNoVal) FT_DO_TEST(listAssignationFunctionSizeNoValTest)
+//TEST(ListAssignationFunction, ListAssignationFunctionSizeVal) FT_DO_TEST(listAssignationFunctionSizeValTest)
+//
+//TEST(ListPushPop, ListPushPopFront) FT_DO_TEST(listPushPopFrontTest)
+//TEST(ListPushPop, ListPushPopBack) FT_DO_TEST(listPushPopBackTest)
+//TEST(ListPushPop, ListPushFrontPopBack) FT_DO_TEST(listPushFrontPopBackTest)
+//TEST(ListPushPop, ListPushBackPopFront) FT_DO_TEST(listPushBackPopFrontTest)
+//
+//TEST(ListInsert, ListInsertSingleValues) FT_DO_TEST(listInsertSingleValuesTest)
+//TEST(ListInsert, ListInsertSeveralValues) FT_DO_TEST(listInsertSeveralValuesTest)
+//TEST(ListInsert, ListInsertIteratorPointedValues) FT_DO_TEST(listInsertIteratorPointedValuesTest)
+//
+//TEST(ListErase, ListEraseSingleValues) FT_DO_TEST(listEraseSingleValuesTest)
+//TEST(ListErase, ListEraseIteratorPointedValues) FT_DO_TEST(listEraseIteratorPointedValuesTest)
+//
+//TEST(ListSwap, ListSwap) FT_DO_TEST(listSwapTest)
+//TEST(ListSwap, ListSwapLEmpty) FT_DO_TEST(listSwapLEmptyTest)
+//TEST(ListSwap, ListSwapREmpty) FT_DO_TEST(listSwapREmptyTest)
+//TEST(ListSwap, ListSwapEmpty) FT_DO_TEST(listSwapBothEmptyTest)
+//TEST(ListSwap, ListNonMemberSwap) FT_DO_TEST(listNonMemberSwapTest)
+//TEST(ListSwap, ListNonMemberSwapLEmpty) FT_DO_TEST(listNonMemberSwapLEmptyTest)
+//TEST(ListSwap, ListNonMemberSwapREmpty) FT_DO_TEST(listNonMemberSwapREmptyTest)
+//TEST(ListSwap, ListNonMemberSwapEmpty) FT_DO_TEST(listNonMemberSwapBothEmptyTest)
+//
+//TEST(ListResize, ListResizeWithoutDefault) FT_DO_TEST(listResizeWithoutDefaultTest)
+//TEST(ListResize, ListResizeWithDefault) FT_DO_TEST(listResizeWithDefaultTest)
+//
+//TEST(ListClear, ListClear) FT_DO_TEST(listClearTest)
+//
+//TEST(ListSplice, ListSpliceBegin) FT_DO_TEST(listSpliceBeginTest)
+//TEST(ListSplice, ListSpliceEnd) FT_DO_TEST(listSpliceEndTest)
+//TEST(ListSplice, ListSpliceRandom) FT_DO_TEST(listSpliceRandomTest)
+//TEST(ListSplice, ListSpliceOneBegin) FT_DO_TEST(listSpliceOneBeginTest)
+//TEST(ListSplice, ListSpliceOneEnd) FT_DO_TEST(listSpliceOneEndTest)
+//TEST(ListSplice, ListSpliceOneRandom) FT_DO_TEST(listSpliceOneRandomTest)
+//TEST(ListSplice, ListSpliceIterBegin) FT_DO_TEST(listSpliceIterBeginTest)
+//TEST(ListSplice, ListSpliceIterEnd) FT_DO_TEST(listSpliceIterEndTest)
+//TEST(ListSplice, ListSpliceIterRandom) FT_DO_TEST(listSpliceIterRandomTest)
+//
+//TEST(ListRemove, ListRemoveNotRandom) FT_DO_TEST(listRemoveNotRandomTest)
+//TEST(ListRemove, ListRemove) FT_DO_TEST(listRemoveTest)
+//TEST(ListRemove, ListRemoveAll) FT_DO_TEST(listRemoveAllTest)
+//TEST(ListRemove, ListRemoveAllSame) FT_DO_TEST(listRemoveAllSameTest)
+//TEST(ListRemove, ListRemoveIf) FT_DO_TEST(listRemoveIfTest)
+//
+//TEST(ListUnique, ListUnique) FT_DO_TEST(listUniqueTest)
+//TEST(ListUnique, ListUniqueSorted) FT_DO_TEST(listUniqueSortedTest)
+//TEST(ListUnique, ListUniqueCompare) FT_DO_TEST(listUniqueCompareTest)
+//TEST(ListUnique, ListUniqueSortedCompare) FT_DO_TEST(listUniqueSortedCompareTest)
+//
+//TEST(ListMerge, ListMerge)  FT_DO_TEST(listMergeTest)
+//
+//TEST(ListSort, ListSortExample)  FT_DO_TEST(listSortExampleTest)
+//
+//TEST(ListReverse, ListReverse) FT_DO_TEST(listReverseTest)
+//
+//TEST(ListCompare, ListCompareEquals) FT_DO_TEST(listCompareEqualsTest)
+//TEST(ListCompare, ListCompareNotEquals) FT_DO_TEST(listCompareNotEqualsTest)
+//TEST(ListCompare, ListCompareLessThan) FT_DO_TEST(listCompareLessThanTest)
+//TEST(ListCompare, ListCompareGreaterThan) FT_DO_TEST(listCompareGreaterThanTest)
+//TEST(ListCompare, ListCompareLTE) FT_DO_TEST(listCompareLTETest)
+//TEST(ListCompare, ListCompareGTE) FT_DO_TEST(listCompareGTETest)
 
 /*** MAP TESTS ***/
+
+TEST(MapConstructors, DefaultConstructor) FT_DO_TEST(defaultMapConstructorTest)
+TEST(MapConstructors, IteratorConstructor)  FT_DO_TEST(iteratorMapConstructorTest)
+TEST(MapConstructors, DefaultWithCompare) FT_DO_TEST(defaultMapWithCompareTest)
+TEST(MapConstructors, IteratorWithCompare)  FT_DO_TEST(iteratorMapWithCompareTest)
+TEST(MapConstructors, CopyConstructor)  FT_DO_TEST(copyMapConstructorTest)
+TEST(MapConstructors, AssignOperatorEmpty) FT_DO_TEST(assignOperatorEmptyTest)
+TEST(MapConstructors, AssignOperatorNotEmpty)  FT_DO_TEST(assignOperatorNotEmptyTest)
+TEST(MapConstructors, AssignOperatorEmptyWithCmp) FT_DO_TEST(assignOperatorEmptyWithCmpTest)
+TEST(MapConstructors, AssignOperatorNotEmptyWithCmp)  FT_DO_TEST(assignOperatorNotEmptyWithCmpTest)
+
+TEST(MapOperatorSquare, OperSqtest) {
+    std::map<char, std::string> ftv;
+    std::map<char, std::string> stv;
+
+    std::string keys = getRandomValue<std::string>();
+
+    int i = 0;
+    char k[4];
+
+    for (std::string::size_type s = 0; s < keys.length() && s < 23; ++s) {
+        std::string val = getRandomValue<std::string>();
+        ftv[keys[s]] = val;
+        stv[keys[s]] = val;
+        if (s % 5 == 0)
+            k[i++] = keys[s];
+    }
+
+    ftv[k[0]] = ftv[k[1]];
+    ftv[k[2]] = ftv[k[3]];
+    stv[k[0]] = stv[k[1]];
+    stv[k[2]] = stv[k[3]];
+
+    testMapContainersEqual(ftv, stv);
+}
+
+TEST(MapOperatorSquare, OperSqtestCmp) {
+    std::map<char, std::string, bool (*)(char, char)> ftv(map_constructor_greater_compare<char>);
+    std::map<char, std::string, bool (*)(char, char)> stv(map_constructor_greater_compare<char>);
+
+    std::string keys = getRandomValue<std::string>();
+
+    int i = 0;
+    char k[4];
+
+    for (std::string::size_type s = 0; s < keys.length() && s < 23; ++s) {
+        std::string val = getRandomValue<std::string>();
+        ftv[keys[s]] = val;
+        stv[keys[s]] = val;
+        if (s % 5 == 0)
+            k[i++] = keys[s];
+    }
+
+    ftv[k[0]] = ftv[k[1]];
+    ftv[k[2]] = ftv[k[3]];
+    stv[k[0]] = stv[k[1]];
+    stv[k[2]] = stv[k[3]];
+
+    testMapContainersEqual(ftv, stv);
+}
+
+TEST(MapInsert, InsertHint)  FT_DO_TEST(mapInsertHintTest)
+TEST(MapInsert, InsertIterators)  FT_DO_TEST(mapInsertIteratorsTest)
+
+TEST(MapErase, EraseSingle)  FT_DO_TEST(mapEraseSingleTest)
+TEST(MapErase, EraseKey)  FT_DO_TEST(mapEraseKeyTest)
+TEST(MapErase, EraseIterators)  FT_DO_TEST(mapEraseIteratorsTest)
+
+TEST(MapSwap, SwapEmpty)  FT_DO_TEST(mapSwapEmptyTest)
+TEST(MapSwap, SwapOneEmpty)  FT_DO_TEST(mapSwapOneEmptyTest)
+TEST(MapSwap, SwapNotEmpty)  FT_DO_TEST(mapSwapNotEmptyTest)
+
+TEST(MapClear, Clear)  FT_DO_TEST(mapClearTest)
+TEST(MapKeyComp, KeyComp)  FT_DO_TEST(mapKeyCompTest)
+TEST(MapValComp, KeyComp)  FT_DO_TEST(mapValCompTest)
+
+TEST(MapFind, FindExist)  FT_DO_TEST(mapFindExistTest)
+TEST(MapFind, FindNotExist)  FT_DO_TEST(mapFindNotExistTest)
+
+TEST(MapCount, CountEmpty)  FT_DO_TEST(mapCountEmptyTest)
+TEST(MapCount, CountExist)  FT_DO_TEST(mapCountExistTest)
+TEST(MapCount, CountNotExist)  FT_DO_TEST(mapCountNotExistTest)
+
+TEST(MapLowerBound, BelowMin)  FT_DO_TEST(mapLowerBoundBelowMinTest)
+TEST(MapLowerBound, AboveMax)  FT_DO_TEST(mapLowerBoundAboveMaxTest)
+TEST(MapLowerBound, Existant)  FT_DO_TEST(mapLowerBoundExistantTest)
+TEST(MapLowerBound, Random)    FT_DO_TEST(mapLowerBoundRandomTest)
+
+TEST(MapUpperBound, BelowMin)  FT_DO_TEST(mapUpperBoundBelowMinTest)
+TEST(MapUpperBound, AboveMax)  FT_DO_TEST(mapUpperBoundAboveMaxTest)
+TEST(MapUpperBound, Existant)  FT_DO_TEST(mapUpperBoundExistantTest)
+TEST(MapUpperBound, Random)    FT_DO_TEST(mapUpperBoundRandomTest)
+
+TEST(MapEqualRange, BelowMin)  FT_DO_TEST(mapEqualRangeBelowMinTest)
+TEST(MapEqualRange, AboveMax)  FT_DO_TEST(mapEqualRangeAboveMaxTest)
+TEST(MapEqualRange, Existant)  FT_DO_TEST(mapEqualRangeExistantTest)
+TEST(MapEqualRange, Random)    FT_DO_TEST(mapEqualRangeRandomTest)
+
 /*** STACK TESTS ***/
 /*** QUEUE TESTS ***/
 

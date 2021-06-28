@@ -366,13 +366,6 @@ namespace ft {
 
         void swap(list &x) {
             ft::swap(*this, x);
-//            ft::swap(_allocator, x._allocator);
-//            ft::swap(_size, x._size);
-//            ft::swap(_node, x._node);
-//            _node.next->prev = &_node;
-//            _node.prev->next = &_node;
-//            x._node.next->prev = &x._node;
-//            x._node.prev->next = &x._node;
         }
 
         void resize(size_type n, value_type val = value_type()) {
