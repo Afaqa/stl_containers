@@ -197,6 +197,10 @@ namespace ft {
             return *this;
         }
 
+        ~list() {
+            clear();
+        }
+
         iterator begin() {
             return iterator(_node.next);
         }
