@@ -8,7 +8,6 @@
 #include "type_traits.hpp"
 #include "algorithm.hpp"
 #include <iostream>
-#include <sstream> // todo del
 
 namespace ft {
 
@@ -127,6 +126,68 @@ namespace ft {
         iterator_value _data;
     };
 
+    template<typename T>
+    class map_const_iterator {
+        typedef T iterator_value;
+    public:
+        typedef typename iterator_value::value_type value_type;
+        typedef std::ptrdiff_t                      difference_type;
+        typedef value_type                          *pointer;
+        typedef value_type                          &reference;
+        typedef std::bidirectional_iterator_tag     iterator_category;
+    private:
+        typedef typename value_type::first_type  _key_type;
+        typedef typename value_type::second_type _mapped_type;
+    public:
+        map_const_iterator() : _data() {}
+
+        explicit map_const_iterator(iterator_value data) : _data(data) {}
+
+        explicit map_const_iterator(const map_iterator<T> &other) : _data(other.data) {}
+
+        map_const_iterator(map_const_iterator const &other) : _data(other._data) {}
+
+        map_const_iterator &operator=(map_const_iterator const &other) {
+            _data = other._data;
+            return *this;
+        }
+
+        ~map_const_iterator() {}
+
+        map_const_iterator &operator++() {
+            ++_data;
+            return *this;
+        }
+
+        map_const_iterator &operator--() {
+            --_data;
+            return *this;
+        }
+
+        map_const_iterator operator++(int) {
+            map_const_iterator ret(_data);
+            ++*this;
+            return ret;
+        }
+
+        map_const_iterator operator--(int) {
+            map_const_iterator ret(_data);
+            --*this;
+            return ret;
+        }
+
+        bool operator==(map_const_iterator const &other) const { return _data == other._data; }
+
+        bool operator!=(map_const_iterator const &other) const { return !(*this == other); }
+
+        reference operator*() const { return *_data; }
+
+        pointer operator->() const { return _data.get_pointer(); }
+
+    private:
+        iterator_value _data;
+    };
+
     template<class Key, class T, class Compare = LessThanPredicate <Key>, class Alloc = allocator <pair<const Key, T>>>
     class map {
         struct _value_compare;
@@ -149,7 +210,7 @@ namespace ft {
         typedef typename allocator_type::pointer                         pointer;
         typedef typename allocator_type::const_pointer                   const_pointer;
         typedef map_iterator<map_iterator_value>                         iterator;
-        typedef map_iterator<map_iterator_value>                         const_iterator; //todo fix
+        typedef map_const_iterator<map_iterator_value>                   const_iterator;
         typedef ft::reverse_iterator<iterator>                           reverse_iterator;
         typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
         typedef typename std::iterator_traits<iterator>::difference_type difference_type;
@@ -436,7 +497,7 @@ namespace ft {
         }
 
         const_iterator begin() const {
-            return _make_iterator(_tree.start);
+            return _make_const_iterator(_tree.start);
         }
 
         iterator end() {
@@ -444,7 +505,7 @@ namespace ft {
         }
 
         const_iterator end() const {
-            return _make_iterator(_tree.end);
+            return _make_const_iterator(_tree.end);
         }
 
         reverse_iterator rbegin() {
@@ -568,7 +629,7 @@ namespace ft {
 
         const_iterator find(const key_type &k) const {
             _node_type *node = _find_node(k);
-            return node ? _make_iterator(node) : end();
+            return node ? _make_const_iterator(node) : end();
         }
 
         size_type count(const key_type &k) const {
@@ -580,7 +641,7 @@ namespace ft {
         }
 
         const_iterator lower_bound(const key_type &k) const {
-            return _make_iterator(_find_node_not_less(k));
+            return _make_const_iterator(_find_node_not_less(k));
         }
 
         iterator upper_bound(const key_type &k) {
@@ -588,7 +649,7 @@ namespace ft {
         }
 
         const_iterator upper_bound(const key_type &k) const {
-            return _make_iterator(_find_node_more(k));
+            return _make_const_iterator(_find_node_more(k));
         }
 
         pair<const_iterator, const_iterator> equal_range(const key_type &k) const {
@@ -601,42 +662,6 @@ namespace ft {
 
         allocator_type get_allocator() const {
             return allocator_type(_allocator);
-        }
-
-        void print_map() {
-            std::cout << "--- map: ---" << std::endl;
-            _do_print(_tree.head);
-            std::cout << "--- :fin ---" << std::endl;
-        }
-
-        void _do_print(_node_type *node, int indent = 0) {
-            if (!node) {
-                std::cout << "NULL" << std::endl;
-                return;
-            }
-            if (!node->value) {
-                std::cout << "END" << std::endl;
-                return;
-            }
-            std::stringstream s;
-            s << node->value->first << ":" << node->value->second;
-            if (!node->parent)
-                s << "(p not)";
-            else if (node == node->parent->left)
-                s << "(p lft)";
-            else if (node == node->parent->right)
-                s << "(p rht)";
-            else
-                s << "(p err)";
-            s << "[" << (node->color ? "red" : "blk") << "]";
-            s << " - ";
-            std::cout << s.str();
-            _do_print(node->right, indent + s.str().length() - (indent ? 0 : 2));
-            std::stringstream ind;
-            for (int          i = 0; i < indent; ++i)
-                ind << ' ';
-            std::cout << ind.str() << '|' << std::endl << ind.str();
-            _do_print(node->left, indent);
         }
 
     private:
@@ -668,7 +693,11 @@ namespace ft {
             return !_less(key, node) && !_more(key, node);
         }
 
-        const_iterator _make_iterator(_node_type *node) const {
+        iterator _make_iterator(_node_type *node) {
+            return iterator(map_iterator_value(node, &_tree));
+        }
+
+        const_iterator _make_const_iterator(_node_type *node) const {
             return const_iterator(map_iterator_value(node, &_tree));
         }
 
@@ -696,24 +725,6 @@ namespace ft {
         }
 
         _node_type *_find_node_not_less(const key_type &key) const {
-//            _node_type *current = _tree.head;
-//            if (_more(key, current)) {
-//                while (_tree.has_right(current) && _more(key, current)) {
-//                    current = current->right;
-//                }
-//                if (_more(key, current))
-//                    return _tree.end;
-//                // if not less, then they are equal
-//                if (_less(key, current))
-//                    return current->parent;
-//            }
-//            else if (_less(key, current)) {
-//                while (current->left && _less(key, current)) {
-//                    current = current->left;
-//                }
-//            }
-//            return current;
-
             _node_type *current = _tree.start;
             while (!_is_end(current) && _more(key, current))
                 current = current->next();
@@ -721,26 +732,6 @@ namespace ft {
         }
 
         _node_type *_find_node_more(const key_type &key) const {
-//            _node_type *current = _tree.start;
-//            if (_less(key, current)) {
-//                while (current && !_is_end(current) && _less(key, current)) {
-//                    current = current->right;
-//                }
-//                if (!current || _is_end(current))
-//                    return NULL;
-//                else if (!_more(key, current))
-//                    return _tree.has_right(current) ? current->right : NULL;
-//            }
-//            else if (_more(key, current)) {
-//                while (current && !_is_end(current) && _more(key, current)) {
-//                    current = current->left;
-//                }
-//                if (!current || _is_end(current))
-//                    return NULL;
-//                return current->parent;
-//            }
-//            return current;
-
             _node_type *current = _tree.start;
             while (!_is_end(current) && _more(key, current))
                 current = current->next();
@@ -846,7 +837,7 @@ namespace ft {
 
         _node_type *_delete(_node_type *current, const key_type &key) {
             if (!current)
-                return NULL; // todo check leak
+                return NULL;
             else if (_less(key, current) && current->left) {
                 if (current->left->left && !current->left->is_red() && !current->left->left->is_red())
                     current = _tree.move_red_left(current);
@@ -857,10 +848,7 @@ namespace ft {
                     current = current->rotate_right();
                 if (!_tree.has_right(current) && _equal(key, current)) {
                     // delete the node, connect node->left, dont lose _tree.end
-//                    print_map();
-
                     if (current->parent && current->parent->left != current) {
-//                        current->parent->right = current->left;
                         if (current->right && current->left) {
                             _node_type *tmp = current->left;
                             while (tmp->right)
@@ -883,17 +871,12 @@ namespace ft {
                     !current->right->left->is_red())
                     current = _tree.move_red_right(current);
                 if (_equal(key, current) && current->right) {
-                    print_map();
                     _node_type *min = _get_min(current->right);
-                    std::cout << "SWAPPING START" << std::endl;
-                    print_map();
                     if (min == current->right) {
                         _swap_relative_nodes(current, min);
                     }
                     else
                         _swap_nodes(current, min);
-                    print_map();
-                    std::cout << "SWAPPING END" << std::endl;
                     ft::swap(current, min);
                     if (min == current->right) {
                         current->right = min->right;
@@ -903,7 +886,6 @@ namespace ft {
                     }
                     if (min->right)
                         min->right->parent = min->parent;
-                    print_map();
                     _delete_node(min);
                 }
                 else

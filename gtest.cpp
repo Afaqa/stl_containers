@@ -345,8 +345,7 @@ T getRandomValue();
 
 template<>
 int getRandomValue<int>() {
-//    return rand() % 10101010 - rand() % 5050505;
-    return rand() % 10000;
+    return rand() % 10101010 - rand() % 5050505;
 }
 
 template<>
@@ -3208,7 +3207,6 @@ void iteratorMapConstructorTest() {
         fiter.insert(ft::make_pair(key, value));
         siter.insert(std::make_pair(key, value));
     }
-    fiter.print_map();
 
     typename ft::map<T, T>::iterator lit = fiter.begin();
     ft::advance(lit, 2);
@@ -3249,7 +3247,6 @@ void iteratorMapWithCompareTest() {
         fiter.insert(ft::make_pair(key, value));
         siter.insert(std::make_pair(key, value));
     }
-    fiter.print_map();
 
     typename ft::map<T, T, bool (*)(T a, T b)>::iterator lit = fiter.begin();
     ft::advance(lit, 2);
@@ -3469,7 +3466,6 @@ void mapEraseSingleTest() {
         std::cout << "erase pos " << pos << " (" << sit->first << ")" << std::endl;
         ftv.erase(fit);
         stv.erase(sit);
-        ftv.print_map();
     }
     testMapContainersEqual(ftv, stv);
     while (!ftv.empty())
@@ -3494,11 +3490,9 @@ void mapEraseKeyTest() {
         stv.insert(std::make_pair(key, value));
     }
 
-    ftv.print_map();
     std::cout << "erase start: " << ftv.begin()->first << std::endl;
     ftv.erase(ftv.begin());
     stv.erase(stv.begin());
-    ftv.print_map();
     testMapContainersEqual(ftv, stv);
 
     typename ft::map<T,T>::iterator fit;
@@ -3510,7 +3504,6 @@ void mapEraseKeyTest() {
         std::cout << "erase " << sit->first << std::endl;
         ftv.erase(sit->first);
         stv.erase(sit->first);
-        ftv.print_map();
     }
     testMapContainersEqual(ftv, stv);
 }
@@ -3544,10 +3537,8 @@ void mapEraseIteratorsTest() {
     std::advance(sen, pos1);
 
     std::cout << "delete range " << pos << '-' << pos1 << std::endl;
-    ftv.print_map();
     ftv.erase(fit, fen);
     stv.erase(sit, sen);
-    ftv.print_map();
     testMapContainersEqual(ftv, stv);
 }
 
@@ -3825,24 +3816,8 @@ void mapLowerBoundAboveMaxTest() {
     while (!(greater > max_)) {
         greater = getRandomValue<T>();
     }
-//    std::cout << "Searching value '" << greater << "'" << std::endl <<
-//              "start value '" << ftv.begin()->first << "'" << std::endl <<
-//              "end   value '" << (--ftv.end())->first << "'" << std::endl;
     typename ft::map<T,T>::iterator fit = ftv.lower_bound(greater);
     typename std::map<T,T>::iterator sit = stv.lower_bound(greater);
-//    std::cout << "ft found: ";
-//    if (fit == ftv.end())
-//        std::cout << "/end/";
-//    else
-//        std::cout << fit->first;
-//    std::cout << std::endl;
-//    std::cout << "std found: ";
-//    if (fit == ftv.end())
-//        std::cout << "/end/";
-//    else
-//        std::cout << sit->first;
-//    std::cout << std::endl;
-//    ftv.print_map();
     EXPECT_EQ(fit == ftv.end(), sit == stv.end());
     if (fit != ftv.end() && sit != stv.end()) {
         EXPECT_EQ(fit->first, sit->first);
