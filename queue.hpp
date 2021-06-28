@@ -49,18 +49,24 @@ namespace ft {
 
     private:
         container_type _container;
-//        friend bool operator==(const queue<T, Container> &lhs,
-//                               const queue<T, Container> &rhs);
-        friend bool operator!=(const queue<T, Container> &lhs,
-                               const queue<T, Container> &rhs);
-        friend bool operator<(const queue<T, Container> &lhs,
-                              const queue<T, Container> &rhs);
-        friend bool operator<=(const queue<T, Container> &lhs,
-                               const queue<T, Container> &rhs);
-        friend bool operator>(const queue<T, Container> &lhs,
-                              const queue<T, Container> &rhs);
-        friend bool operator>=(const queue<T, Container> &lhs,
-                               const queue<T, Container> &rhs);
+        template<class T1, class C1>
+        friend bool operator==(const queue<T1, C1> &lhs,
+                               const queue<T1, C1> &rhs);
+        template<class T1, class C1>
+        friend bool operator!=(const queue<T1, C1> &lhs,
+                               const queue<T1, C1> &rhs);
+        template<class T1, class C1>
+        friend bool operator<(const queue<T1, C1> &lhs,
+                              const queue<T1, C1> &rhs);
+        template<class T1, class C1>
+        friend bool operator<=(const queue<T1, C1> &lhs,
+                               const queue<T1, C1> &rhs);
+        template<class T1, class C1>
+        friend bool operator>(const queue<T1, C1> &lhs,
+                              const queue<T1, C1> &rhs);
+        template<class T1, class C1>
+        friend bool operator>=(const queue<T1, C1> &lhs,
+                               const queue<T1, C1> &rhs);
     };
 
     template<class T, class Container>
