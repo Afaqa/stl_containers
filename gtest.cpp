@@ -3721,6 +3721,355 @@ void mapCountNotExistTest() {
     }
 }
 
+template<typename T>
+void mapLowerBoundBelowMinTest() {
+    printTestName<T>("Testing map lower bound below minimum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T lower = T();
+    while (!(lower < ftv.begin()->first)) {
+        lower = getRandomValue<T>();
+    }
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(lower);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(lower);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapLowerBoundAboveMaxTest() {
+    printTestName<T>("Testing map lower bound above maximum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T greater = T();
+    T max_ = (--ftv.end())->first;
+    while (!(greater > max_)) {
+        greater = getRandomValue<T>();
+    }
+//    std::cout << "Searching value '" << greater << "'" << std::endl <<
+//              "start value '" << ftv.begin()->first << "'" << std::endl <<
+//              "end   value '" << (--ftv.end())->first << "'" << std::endl;
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(greater);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(greater);
+//    std::cout << "ft found: ";
+//    if (fit == ftv.end())
+//        std::cout << "/end/";
+//    else
+//        std::cout << fit->first;
+//    std::cout << std::endl;
+//    std::cout << "std found: ";
+//    if (fit == ftv.end())
+//        std::cout << "/end/";
+//    else
+//        std::cout << sit->first;
+//    std::cout << std::endl;
+//    ftv.print_map();
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapLowerBoundExistantTest() {
+    printTestName<T>("Testing map lower bound with existing key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    std::size_t pos = rand() % stv.size();
+    typename ft::map<T,T>::iterator fpos = ftv.begin();
+    ft::advance(fpos, pos);
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(fpos->first);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(fpos->first);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapLowerBoundRandomTest() {
+    printTestName<T>("Testing map lower bound with random key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T key = getRandomValue<T>();
+    typename ft::map<T,T>::iterator fit = ftv.lower_bound(key);
+    typename std::map<T,T>::iterator sit = stv.lower_bound(key);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundBelowMinTest() {
+    printTestName<T>("Testing map upper bound below minimum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T lower = T();
+    while (!(lower < ftv.begin()->first)) {
+        lower = getRandomValue<T>();
+    }
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(lower);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(lower);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundAboveMaxTest() {
+    printTestName<T>("Testing map upper bound above maximum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T greater = T();
+    while (!(greater > ftv.begin()->first)) {
+        greater = getRandomValue<T>();
+    }
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(greater);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(greater);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundExistantTest() {
+    printTestName<T>("Testing map upper bound with existing key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    std::size_t pos = rand() % stv.size();
+    typename ft::map<T,T>::iterator fpos = ftv.begin();
+    ft::advance(fpos, pos);
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(fpos->first);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(fpos->first);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapUpperBoundRandomTest() {
+    printTestName<T>("Testing map upper bound with random key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T key = getRandomValue<T>();
+    typename ft::map<T,T>::iterator fit = ftv.upper_bound(key);
+    typename std::map<T,T>::iterator sit = stv.upper_bound(key);
+    EXPECT_EQ(fit == ftv.end(), sit == stv.end());
+    if (fit != ftv.end() && sit != stv.end()) {
+        EXPECT_EQ(fit->first, sit->first);
+        EXPECT_EQ(fit->second, sit->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeBelowMinTest() {
+    printTestName<T>("Testing map equal range below minimum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T lower = T();
+    while (!(lower < ftv.begin()->first)) {
+        lower = getRandomValue<T>();
+    }
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(lower);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(lower);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeAboveMaxTest() {
+    printTestName<T>("Testing map equal range above maximum key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T greater = T();
+    while (!(greater > ftv.begin()->first)) {
+        greater = getRandomValue<T>();
+    }
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(greater);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(greater);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeExistantTest() {
+    printTestName<T>("Testing map equal range with existing key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    std::size_t pos = rand() % stv.size();
+    typename ft::map<T,T>::iterator fpos = ftv.begin();
+    ft::advance(fpos, pos);
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(fpos->first);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(fpos->first);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
+template<typename T>
+void mapEqualRangeRandomTest() {
+    printTestName<T>("Testing map equal range with random key");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::map<T, T> ftv;
+    std::map<T, T>   stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T key = getRandomValue<T>();
+        T value      = getRandomValue<T>();
+        ftv.insert(ft::make_pair(key, value));
+        stv.insert(std::make_pair(key, value));
+    }
+
+    T key = getRandomValue<T>();
+    ft::pair<typename ft::map<T,T>::iterator,typename ft::map<T,T>::iterator> fit = ftv.equal_range(key);
+    std::pair<typename std::map<T,T>::iterator,typename std::map<T,T>::iterator> sit = stv.equal_range(key);
+    EXPECT_EQ(fit.first == ftv.end(), sit.first == stv.end());
+    if (fit.first != ftv.end() && sit.first != stv.end()) {
+        EXPECT_EQ(fit.first->first, sit.first->first);
+        EXPECT_EQ(fit.first->second, sit.first->second);
+    }
+    EXPECT_EQ(fit.second == ftv.end(), sit.second == stv.end());
+    if (fit.second != ftv.end() && sit.second != stv.end()) {
+        EXPECT_EQ(fit.second->first, sit.second->first);
+        EXPECT_EQ(fit.second->second, sit.second->second);
+    }
+}
+
 /*** VECTOR TESTS ***/
 
 //TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
@@ -3942,20 +4291,20 @@ TEST(MapCount, CountEmpty)  FT_DO_TEST(mapCountEmptyTest)
 TEST(MapCount, CountExist)  FT_DO_TEST(mapCountExistTest)
 TEST(MapCount, CountNotExist)  FT_DO_TEST(mapCountNotExistTest)
 
-//TEST(MapLowerBound, BelowMin)  FT_DO_TEST(mapLowerBoundBelowMinTest)
-//TEST(MapLowerBound, AboveMax)  FT_DO_TEST(mapLowerBoundAboveMaxTest)
-//TEST(MapLowerBound, Existant)  FT_DO_TEST(mapLowerBoundExistantTest)
-//TEST(MapLowerBound, Random)    FT_DO_TEST(mapLowerBoundRandomTest)
-//
-//TEST(MapUpperBound, BelowMin)  FT_DO_TEST(mapUpperBoundBelowMinTest)
-//TEST(MapUpperBound, AboveMax)  FT_DO_TEST(mapUpperBoundAboveMaxTest)
-//TEST(MapUpperBound, Existant)  FT_DO_TEST(mapUpperBoundExistantTest)
-//TEST(MapUpperBound, Random)    FT_DO_TEST(mapUpperBoundRandomTest)
-//
-//TEST(MapEqualRange, BelowMin)  FT_DO_TEST(mapEqualRangeBelowMinTest)
-//TEST(MapEqualRange, AboveMax)  FT_DO_TEST(mapEqualRangeAboveMaxTest)
-//TEST(MapEqualRange, Existant)  FT_DO_TEST(mapEqualRangeExistantTest)
-//TEST(MapEqualRange, Random)    FT_DO_TEST(mapEqualRangeRandomTest)
+TEST(MapLowerBound, BelowMin)  FT_DO_TEST(mapLowerBoundBelowMinTest)
+TEST(MapLowerBound, AboveMax)  FT_DO_TEST(mapLowerBoundAboveMaxTest)
+TEST(MapLowerBound, Existant)  FT_DO_TEST(mapLowerBoundExistantTest)
+TEST(MapLowerBound, Random)    FT_DO_TEST(mapLowerBoundRandomTest)
+
+TEST(MapUpperBound, BelowMin)  FT_DO_TEST(mapUpperBoundBelowMinTest)
+TEST(MapUpperBound, AboveMax)  FT_DO_TEST(mapUpperBoundAboveMaxTest)
+TEST(MapUpperBound, Existant)  FT_DO_TEST(mapUpperBoundExistantTest)
+TEST(MapUpperBound, Random)    FT_DO_TEST(mapUpperBoundRandomTest)
+
+TEST(MapEqualRange, BelowMin)  FT_DO_TEST(mapEqualRangeBelowMinTest)
+TEST(MapEqualRange, AboveMax)  FT_DO_TEST(mapEqualRangeAboveMaxTest)
+TEST(MapEqualRange, Existant)  FT_DO_TEST(mapEqualRangeExistantTest)
+TEST(MapEqualRange, Random)    FT_DO_TEST(mapEqualRangeRandomTest)
 
 /*** STACK TESTS ***/
 /*** QUEUE TESTS ***/

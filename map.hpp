@@ -184,6 +184,40 @@ namespace ft {
 
             bool is_red() const { return color; }
 
+            _node_type *next() {
+                _node_type *tmp = this;
+                if (tmp->right != NULL) {
+                    tmp = tmp->right;
+                    while (tmp->left)
+                        tmp = tmp->left;
+                }
+                else {
+                    while (tmp->parent && tmp != tmp->parent->left) {
+                        tmp = tmp->parent;
+                    }
+                    if (tmp->parent)
+                        tmp = tmp->parent;
+                }
+                return tmp;
+            }
+
+            _node_type *prev() {
+                _node_type *tmp = this;
+                if (tmp->left != NULL) {
+                    tmp = tmp->left;
+                    while (tmp->right)
+                        tmp = tmp->right;
+                }
+                else {
+                    while (tmp->parent && tmp != tmp->parent->right) {
+                        tmp = tmp->parent;
+                    }
+                    if (tmp->parent)
+                        tmp = tmp->parent;
+                }
+                return tmp;
+            }
+
             //      |                     |
             //     l_node        =>       r_node
             //    /     \\       =>     //     \
@@ -662,45 +696,56 @@ namespace ft {
         }
 
         _node_type *_find_node_not_less(const key_type &key) const {
+//            _node_type *current = _tree.head;
+//            if (_more(key, current)) {
+//                while (_tree.has_right(current) && _more(key, current)) {
+//                    current = current->right;
+//                }
+//                if (_more(key, current))
+//                    return _tree.end;
+//                // if not less, then they are equal
+//                if (_less(key, current))
+//                    return current->parent;
+//            }
+//            else if (_less(key, current)) {
+//                while (current->left && _less(key, current)) {
+//                    current = current->left;
+//                }
+//            }
+//            return current;
+
             _node_type *current = _tree.start;
-            if (_less(key, current)) {
-                while (current && !_is_end(current) && _less(key, current)) {
-                    current = current->right;
-                }
-                if (!current || _is_end(current))
-                    return NULL;
-            }
-            else if (_mode(key, current)) {
-                while (current && !_is_end(current) && _mode(key, current)) {
-                    current = current->left;
-                }
-                if (!current || _is_end(current))
-                    return NULL;
-                else if (_less(key, current))
-                    return current->parent;
-            }
+            while (!_is_end(current) && _more(key, current))
+                current = current->next();
             return current;
         }
 
         _node_type *_find_node_more(const key_type &key) const {
+//            _node_type *current = _tree.start;
+//            if (_less(key, current)) {
+//                while (current && !_is_end(current) && _less(key, current)) {
+//                    current = current->right;
+//                }
+//                if (!current || _is_end(current))
+//                    return NULL;
+//                else if (!_more(key, current))
+//                    return _tree.has_right(current) ? current->right : NULL;
+//            }
+//            else if (_more(key, current)) {
+//                while (current && !_is_end(current) && _more(key, current)) {
+//                    current = current->left;
+//                }
+//                if (!current || _is_end(current))
+//                    return NULL;
+//                return current->parent;
+//            }
+//            return current;
+
             _node_type *current = _tree.start;
-            if (_less(key, current)) {
-                while (current && !_is_end(current) && _less(key, current)) {
-                    current = current->right;
-                }
-                if (!current || _is_end(current))
-                    return NULL;
-                else if (!_more(key, current))
-                    return _tree.has_right(current) ? current->right : NULL;
-            }
-            else if (_more(key, current)) {
-                while (current && !_is_end(current) && _more(key, current)) {
-                    current = current->left;
-                }
-                if (!current || _is_end(current))
-                    return NULL;
-                return current->parent;
-            }
+            while (!_is_end(current) && _more(key, current))
+                current = current->next();
+            if (!_is_end(current) && !_less(key, current))
+                return current->next(); // equal
             return current;
         }
 
