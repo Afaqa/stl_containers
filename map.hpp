@@ -728,11 +728,46 @@ namespace ft {
             return node;
         }
 
+        //       |        |=>        |
+        //     parent     |=>     child
+        //     /   \      |=>     /   \
+        //    a    child  |=>    a   parent
+        //        /   \   |=>        /   \
+        //       b     c  |=>       b     c
+        void _swap_relative_nodes(_node_type *parent, _node_type *child) {
+            _node_type *tmp;
+            if (child == parent->left) {
+                tmp = child->left;
+                child->left = parent;
+                parent->left = tmp;
+                ft::swap(child->right, parent->right);
+            }
+            else if (child == parent->right) {
+                tmp = child->right;
+                child->right = parent;
+                parent->right = tmp;
+                ft::swap(child->left, parent->left);
+            }
+            if (parent->parent) {
+                if (parent->parent->right == parent) {
+                    parent->parent->right = child;
+                }
+                else {
+                    parent->parent->left = child;
+                }
+            }
+            child->parent = parent->parent;
+            if (parent->left) parent->left->parent = parent;
+            if (parent->right) parent->right->parent = parent;
+            if (child->left) child->left->parent = child;
+            if (child->right) child->right->parent = child;
+            ft::swap(parent->color, child->color);
+        }
+
+        // swap nodes (swap links between their parents and children)
+        // value does not change and iterators pointing to existing
+        // nodes will still work
         void _swap_nodes(_node_type *a, _node_type *b) {
-            // swap children and parent pointers of a and b
-            ft::swap(b->left, a->left);
-            ft::swap(b->right, a->right);
-            ft::swap(b->parent, a->parent);
             // swap parent left or right pointers
             if (a->parent && b->parent) {
                 _node_type *&a_par_node = a->parent->left == a ? a->parent->left : a->parent->right;
@@ -757,13 +792,11 @@ namespace ft {
             // set b's children parent pointer to a
             if (b->left) b->left->parent   = a;
             if (b->right) b->right->parent = a;
-            // fix possible errors
-            if (b->left == b) b->left = a;
-            if (b->right == b) b->right = a;
-            if (b->parent == b) b->parent = a;
-            if (a->left == a) a->left = b;
-            if (a->right == a) a->right = b;
-            if (a->parent == a) a->parent = b;
+            // swap children and parent pointers of a and b
+            ft::swap(b->left, a->left);
+            ft::swap(b->right, a->right);
+            ft::swap(b->parent, a->parent);
+            ft::swap(b->color, a->color);
         }
 
         _node_type *_delete(_node_type *current, const key_type &key) {
@@ -807,12 +840,15 @@ namespace ft {
                 if (_equal(key, current) && current->right) {
                     print_map();
                     _node_type *min = _get_min(current->right);
+                    std::cout << "SWAPPING START" << std::endl;
+                    print_map();
                     if (min == current->right) {
                         _swap_relative_nodes(current, min);
                     }
                     else
-                        _swap_nodes(current, min); // todo when min == current->right -- both become self parents
-//                    ft::swap(current->value, min->value);
+                        _swap_nodes(current, min);
+                    print_map();
+                    std::cout << "SWAPPING END" << std::endl;
                     ft::swap(current, min);
                     if (min == current->right) {
                         current->right = min->right;

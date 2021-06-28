@@ -3408,8 +3408,10 @@ void mapEraseSingleTest() {
         ft::advance(fit, pos);
         sit = stv.begin();
         std::advance(sit, pos);
+        std::cout << "erase pos " << pos << " (" << sit->first << ")" << std::endl;
         ftv.erase(fit);
         stv.erase(sit);
+        ftv.print_map();
     }
     testMapContainersEqual(ftv, stv);
     while (!ftv.empty())
