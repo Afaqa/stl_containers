@@ -4,6 +4,8 @@
 #include "list.hpp"
 #include <map>
 #include "map.hpp"
+#include <stack>
+#include "stack.hpp"
 #include "gtest/gtest.h"
 #include <fstream>
 
@@ -217,6 +219,32 @@ void testMapContainersEqual(T const& cont1, U const& cont2) {
         EXPECT_EQ(rit1 == cont1.rend(), rit2 == cont2.rend());
         if (it1 != cont1.begin() || rit1 != cont1.rbegin())
             std::cout << std::endl;
+    }
+}
+
+template<typename T, typename U>
+void testStackContainersEqual(T const& cont1, U const& cont2) {
+    const char *equals = COLOR_RED " == " COLOR_RESET;
+    EXPECT_EQ(cont1.empty(), cont2.empty());
+    std::cout << "Empty " << cont1.empty() << equals << cont2.empty() << std::endl;
+    EXPECT_EQ(cont1.size(), cont2.size());
+    std::cout << "Size " << cont1.size() << equals << cont2.size() << std::endl;
+    if (cont1.size() && cont2.size()) {
+        std::cout << "Top " << cont1.top() << equals << cont2.top() << std::endl;
+        EXPECT_EQ(cont1.top(), cont2.top());
+        std::cout << "\ttest and output values:" << std::endl;
+        T contlft = cont1;
+        U contrht = cont2;
+        typename T::size_type i = 0;
+        while (!contlft.empty() && !contrht.empty()) {
+            typename T::value_type a = contlft.top();
+            typename T::value_type b = contrht.top();
+            contlft.pop();
+            contrht.pop();
+            printValues(i++, a, b);
+            EXPECT_EQ(a, b);
+        }
+        EXPECT_EQ(contlft.size(), contrht.size());
     }
 }
 
@@ -4070,6 +4098,398 @@ void mapEqualRangeRandomTest() {
     }
 }
 
+template<typename T>
+void stackEmptyConstructorTest() {
+    printTestName<T>("Stack empty constructor");
+
+    ft::stack<T> ftv;
+    std::stack<T> stv;
+    testStackContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void stackListConstructorTest() {
+    printTestName<T>("Stack constructor from list");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::list<T>  flst;
+    std::list<T> slst;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value      = getRandomValue<T>();
+        flst.push_back(value);
+        slst.push_back(value);
+    }
+
+    ft::stack<T,ft::list<T>> ftv(flst);
+    std::stack<T,std::list<T>> stv(slst);
+    testStackContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void stackVectorConstructorTest() {
+    printTestName<T>("Stack constructor from vector");
+
+    std::size_t numOfItems = rand() % 20 + 10;
+    ft::vector<T>  fvec;
+    std::vector<T> svec;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value      = getRandomValue<T>();
+        fvec.push_back(value);
+        svec.push_back(value);
+    }
+
+    ft::stack<T,ft::vector<T> > ftv(fvec);
+    std::stack<T,std::vector<T> > stv(svec);
+    testStackContainersEqual(ftv, stv);
+}
+
+template<typename T>
+void stackEmptyTest() {
+    printTestName<T>("Stack test empty");
+
+    ft::stack<T> ftv;
+    std::stack<T> stv;
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    T value = getRandomValue<T>();
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+void stackEmptyListTest() {
+    printTestName<T>("Stack test empty when list");
+
+    ft::stack<T,ft::list<T>> ftv;
+    std::stack<T,std::list<T>> stv;
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    T value = getRandomValue<T>();
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+void stackEmptyVectorTest() {
+    printTestName<T>("Stack test empty when vector");
+
+    ft::stack<T,ft::vector<T> > ftv;
+    std::stack<T,std::vector<T> > stv;
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    T value = getRandomValue<T>();
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.push(value);
+    stv.push(value);
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+    ftv.pop();
+    stv.pop();
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+void stackSizeTest() {
+    printTestName<T>("Stack test size");
+
+    int num;
+    ft::stack<T> ftv;
+    std::stack<T> stv;
+    EXPECT_EQ(ftv.size(), stv.size());
+    T value = getRandomValue<T>();
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % (ftv.size() - 5) + 1;
+    for (int i = 0; i < num; ++i) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    while (!ftv.empty() || !stv.empty()) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+}
+
+template<typename T>
+void stackSizeListTest() {
+    printTestName<T>("Stack test size when list");
+
+    int num;
+    ft::stack<T,ft::list<T>> ftv;
+    std::stack<T,std::list<T>> stv;
+    EXPECT_EQ(ftv.size(), stv.size());
+    T value = getRandomValue<T>();
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 % (ftv.size() - 5) + 1;
+    for (int i = 0; i < num; ++i) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    while (!ftv.empty() || !stv.empty()) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+}
+
+template<typename T>
+void stackSizeVectorTest() {
+    printTestName<T>("Stack size when vector");
+
+    int num;
+    ft::stack<T,ft::vector<T> > ftv;
+    std::stack<T,std::vector<T> > stv;
+    EXPECT_EQ(ftv.size(), stv.size());
+    T value = getRandomValue<T>();
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 + 4;
+    for (int i = 0; i < num; ++i) {
+        ftv.push(value);
+        stv.push(value);
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    num = rand() % 10 % (ftv.size() - 5) + 1;
+    for (int i = 0; i < num; ++i) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+    while (!ftv.empty() || !stv.empty()) {
+        ftv.pop();
+        stv.pop();
+    }
+    EXPECT_EQ(ftv.size(), stv.size());
+}
+
+template<typename T>
+void stackPushPopListTest() {
+    printTestName<T>("Stack test push and pop when list");
+
+    std::size_t numOfItems = rand() % 50 + 50;
+    ft::stack<T,ft::list<T>> ftv;
+    std::stack<T,std::list<T>> stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push(value);
+        stv.push(value);
+        EXPECT_EQ(ftv.size(), stv.size());
+    }
+
+    while (!ftv.empty() && !stv.empty()) {
+        T a = ftv.top();
+        T b = stv.top();
+        ftv.pop();
+        stv.pop();
+        EXPECT_EQ(ftv.size(), stv.size());
+        EXPECT_EQ(a, b);
+    }
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+void stackPushPopVectorTest() {
+    printTestName<T>("Stack test push and pop when vector");
+
+    std::size_t numOfItems = rand() % 50 + 50;
+    ft::stack<T,ft::vector<T> > ftv;
+    std::stack<T,std::vector<T> > stv;
+    for (std::size_t i = 0; i < numOfItems; ++i) {
+        T value = getRandomValue<T>();
+        ftv.push(value);
+        stv.push(value);
+        EXPECT_EQ(ftv.size(), stv.size());
+    }
+
+    while (!ftv.empty() && !stv.empty()) {
+        T a = ftv.top();
+        T b = stv.top();
+        ftv.pop();
+        stv.pop();
+        EXPECT_EQ(ftv.size(), stv.size());
+        EXPECT_EQ(a, b);
+    }
+    EXPECT_EQ(ftv.empty(), stv.empty());
+}
+
+template<typename T>
+std::pair<T*,int> getStackCompareData() {
+    T *data = new T[5];
+    data[0] = 5;
+    data[1] = 32;
+    data[2] = 15;
+    data[3] = 420;
+    data[4] = 32;
+    return std::pair<T*, int>(data, 5);
+}
+
+template<>
+std::pair<std::string*,int> getStackCompareData<std::string>() {
+    std::string *data = new std::string[4];
+    data[0] = "a";
+    data[2] = "asf";
+    data[3] = "vas";
+    return std::pair<std::string*, int>(data, 3);
+}
+
+template<>
+std::pair<SomeStruct*,int> getStackCompareData<SomeStruct>() {
+    SomeStruct *data = new SomeStruct[3];
+    data[0] = {"a", 4};
+    data[1] = {"asf", 17};
+    data[2] = {"vas", 22};
+    return std::pair<SomeStruct*, int>(data, 3);
+}
+
+template<typename T>
+std::pair<T*,int> getStackCompareLess() {
+    T *data = new T[4];
+    data[0] = 5;
+    data[1] = 32;
+    data[2] = 15;
+    data[3] = 420;
+    return std::pair<T*, int>(data, 4);
+}
+
+template<>
+std::pair<std::string*,int> getStackCompareLess<std::string>() {
+    std::string *data = new std::string[4];
+    data[0] = "a";
+    data[1] = "asd";
+    data[2] = "vas";
+    return std::pair<std::string*, int>(data, 3);
+}
+
+template<>
+std::pair<SomeStruct*,int> getStackCompareLess<SomeStruct>() {
+    SomeStruct *data = new SomeStruct[3];
+    data[0] = {"a", 4};
+    data[1] = {"as", 13};
+    data[2] = {"vas", 22};
+    return std::pair<SomeStruct*, int>(data, 3);
+}
+
+template<typename T>
+std::pair<T*,int> getStackCompareMore() {
+    T *data = new T[5];
+    data[0] = 5;
+    data[1] = 32;
+    data[2] = 15;
+    data[3] = 421;
+    data[4] = 32;
+    return std::pair<T*, int>(data, 5);
+}
+
+template<>
+std::pair<std::string*,int> getStackCompareMore<std::string>() {
+    std::string *data = new std::string[5];
+    data[0] = "a";
+    data[1] = "asf";
+    data[2] = "vas";
+    data[3] = "ff";
+    return std::pair<std::string*, int>(data, 4);
+}
+
+template<>
+std::pair<SomeStruct*,int> getStackCompareMore<SomeStruct>() {
+    SomeStruct *data = new SomeStruct[3];
+    data[0] = {"b", 5};
+    data[1] = {"asf", 17};
+    data[2] = {"vas", 22};
+    return std::pair<SomeStruct*, int>(data, 3);
+}
+
+template<typename T>
+void stackCompareOperatorsTest() {
+    printTestName<T>("Testing stack compare operators");
+
+    std::pair<T*,int> data = getStackCompareData<T>();
+    std::pair<T*,int> less = getStackCompareLess<T>();
+    std::pair<T*,int> more = getStackCompareMore<T>();
+
+    ft::stack<T,ft::vector<T> > ftdata;
+    std::stack<T,ft::vector<T> > stdata;
+    for (int i = 0; i < data.second; ++i) {
+        ftdata.push(data.first[i]);
+        stdata.push(data.first[i]);
+    }
+    delete [] data.first;
+
+    ft::stack<T,ft::vector<T> > ftless;
+    std::stack<T,ft::vector<T> > stless;
+    for (int i = 0; i < less.second; ++i) {
+        ftless.push(less.first[i]);
+        stless.push(less.first[i]);
+    }
+    delete [] less.first;
+
+    ft::stack<T,ft::vector<T> > ftmore;
+    std::stack<T,ft::vector<T> > stmore;
+    for (int i = 0; i < more.second; ++i) {
+        ftmore.push(more.first[i]);
+        stmore.push(more.first[i]);
+    }
+    delete [] more.first;
+
+    EXPECT_EQ(ftdata == ftdata, stdata == stdata);
+    EXPECT_EQ(ftdata != ftless, stdata != stless);
+    EXPECT_EQ(ftdata > ftless, stdata > stless);
+    EXPECT_EQ(ftdata < ftmore, stdata < stmore);
+    EXPECT_EQ(ftdata <= ftdata, stdata <= stdata);
+    EXPECT_EQ(ftdata >= ftdata, stdata >= stdata);
+    EXPECT_EQ(ftdata >= ftless, stdata >= stless);
+    EXPECT_EQ(ftdata <= ftmore, stdata <= stmore);
+}
+
 /*** VECTOR TESTS ***/
 
 //TEST(VectorConstructors, DefaultConstructor) FT_DO_TEST(defaultConstructorTest)
@@ -4307,6 +4727,24 @@ TEST(MapEqualRange, Existant)  FT_DO_TEST(mapEqualRangeExistantTest)
 TEST(MapEqualRange, Random)    FT_DO_TEST(mapEqualRangeRandomTest)
 
 /*** STACK TESTS ***/
+
+TEST(StackConstructor, StackEmptyConstructor) FT_DO_TEST(stackEmptyConstructorTest)
+TEST(StackConstructor, StackListConstructor) FT_DO_TEST(stackListConstructorTest)
+TEST(StackConstructor, StackVectorConstructor) FT_DO_TEST(stackVectorConstructorTest)
+
+TEST(StackEmpty, StackEmpty) FT_DO_TEST(stackEmptyTest)
+TEST(StackEmpty, StackEmptyList) FT_DO_TEST(stackEmptyListTest)
+TEST(StackEmpty, StackEmptyVector) FT_DO_TEST(stackEmptyVectorTest)
+
+TEST(StackSize, StackSize) FT_DO_TEST(stackSizeTest)
+TEST(StackSize, StackSizeList) FT_DO_TEST(stackSizeListTest)
+TEST(StackSize, StackSizeVector) FT_DO_TEST(stackSizeVectorTest)
+
+TEST(StackPush, StackPushPopList) FT_DO_TEST(stackPushPopListTest)
+TEST(StackPush, StackPushPopVector) FT_DO_TEST(stackPushPopVectorTest)
+
+TEST(StackCompare, StackCompareEquals) FT_DO_TEST(stackCompareOperatorsTest)
+
 /*** QUEUE TESTS ***/
 
 int main(int argc, char **argv) {
