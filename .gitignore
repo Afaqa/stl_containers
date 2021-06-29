@@ -1,4 +1,5 @@
 *
+!gtest/
 !CMakeLists.txt
 !.gitignore
 !*.hpp
