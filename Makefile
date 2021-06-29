@@ -6,14 +6,16 @@ all: clone_gtest
 	mv Makefile Makefile_tmp
 	cmake CMakeLists.txt
 	mv Makefile Makefile_cmake
-	mv Makefile_tmp Makefile
 	make -f Makefile_cmake
+	mv Makefile_tmp Makefile
 
 clone_gtest:
-	git clone https://github.com/google/googletest.git $(GTEST_DIR)
-	cd $(GTEST_DIR)
-	git pull
-	cd -
+	if [ -d "$(GTEST_DIR)" ];\
+	then\
+		git -C $(GTEST_DIR) pull;\
+	else\
+		git clone https://github.com/google/googletest.git $(GTEST_DIR);\
+	fi
 
 clean:
 	rm -rf $(OBJ)
