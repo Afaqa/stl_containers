@@ -3,6 +3,41 @@
 
 namespace ft {
 
+    template <class T>
+    struct has_iterator_typedefs
+    {
+    private:
+        struct _char2 {
+            char one;
+            char two;
+        };
+        template <class _Up> static _char2 test(...);
+        template <class _Up> static char test(typename std::__void_t<typename _Up::iterator_category>::type*,
+                                               typename std::__void_t<typename _Up::difference_type>::type*,
+                                               typename std::__void_t<typename _Up::value_type>::type*,
+                                               typename std::__void_t<typename _Up::reference>::type*,
+                                               typename std::__void_t<typename _Up::pointer>::type*
+        );
+    public:
+        static const bool value = sizeof(test<T>(0,0,0,0,0)) == sizeof(char);
+    };
+
+    template<class It, bool>
+    struct _iterator_traits {};
+
+    template<class It>
+    struct _iterator_traits<It, true>
+    {
+        typedef typename It::difference_type   difference_type;
+        typedef typename It::value_type        value_type;
+        typedef typename It::pointer           pointer;
+        typedef typename It::reference         reference;
+        typedef typename It::iterator_category iterator_category;
+    };
+
+    template<class It>
+    struct iterator_traits : _iterator_traits<It, has_iterator_typedefs<It>::value> {};
+
     struct false_type {
         static const bool value = false;
     };

@@ -223,7 +223,7 @@ namespace ft {
         typedef map_const_iterator<map_iterator_value<const _node_type> > const_iterator;
         typedef ft::reverse_iterator<iterator>                            reverse_iterator;
         typedef ft::reverse_iterator<const_iterator>                      const_reverse_iterator;
-        typedef typename std::iterator_traits<iterator>::difference_type  difference_type;
+        typedef typename ft::iterator_traits<iterator>::difference_type  difference_type;
         typedef std::size_t                                               size_type;
     private:
         typedef typename allocator_type::template rebind<_node_type>::other _node_allocator;

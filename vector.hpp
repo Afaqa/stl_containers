@@ -27,7 +27,7 @@ namespace ft {
         typedef random_access_iterator<const value_type>                 const_iterator;
         typedef ft::reverse_iterator<iterator>                           reverse_iterator;
         typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
-        typedef typename std::iterator_traits<iterator>::difference_type difference_type;
+        typedef typename ft::iterator_traits<iterator>::difference_type difference_type;
 
         explicit vector(const allocator_type &alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL),
                                                                           _capacity(0) {
@@ -46,7 +46,7 @@ namespace ft {
         vector(InputIterator first,
                typename enable_if<
                    is_valid_iterator_type<InputIterator, std::random_access_iterator_tag, pointer>::value &&
-                   !is_same<typename std::iterator_traits<InputIterator>::iterator_category, std::random_access_iterator_tag>::value,
+                   !is_same<typename ft::iterator_traits<InputIterator>::iterator_category, std::random_access_iterator_tag>::value,
                    InputIterator>::type last,
                const allocator_type &alloc = allocator_type()) :
             _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
@@ -60,7 +60,7 @@ namespace ft {
         vector(ForwardIterator first,
                typename enable_if<
                    is_valid_iterator_type<ForwardIterator, std::random_access_iterator_tag, pointer>::value &&
-                   !is_same<typename std::iterator_traits<ForwardIterator>::iterator_category, std::input_iterator_tag>::value, ForwardIterator>::type last,
+                   !is_same<typename ft::iterator_traits<ForwardIterator>::iterator_category, std::input_iterator_tag>::value, ForwardIterator>::type last,
                const allocator_type &alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL),
                                                                  _capacity(0) {
             difference_type n = ft::distance(first, last);

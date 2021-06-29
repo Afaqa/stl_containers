@@ -154,7 +154,7 @@ namespace ft {
         typedef list_const_iterator<value_type>                          const_iterator;
         typedef ft::reverse_iterator<iterator>                           reverse_iterator;
         typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
-        typedef typename std::iterator_traits<iterator>::difference_type difference_type;
+        typedef typename ft::iterator_traits<iterator>::difference_type difference_type;
     private:
         typedef _list_node<T>                                               _node_type;
         typedef typename allocator_type::template rebind<_node_type>::other _node_alloc;

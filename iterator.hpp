@@ -10,11 +10,11 @@ namespace ft {
     class reverse_iterator {
     public:
         typedef Iterator                                                   iterator_type;
-        typedef typename std::iterator_traits<Iterator>::iterator_category iterator_category;
-        typedef typename std::iterator_traits<Iterator>::value_type        value_type;
-        typedef typename std::iterator_traits<Iterator>::difference_type   difference_type;
-        typedef typename std::iterator_traits<Iterator>::pointer           pointer;
-        typedef typename std::iterator_traits<Iterator>::reference         reference;
+        typedef typename ft::iterator_traits<Iterator>::iterator_category iterator_category;
+        typedef typename ft::iterator_traits<Iterator>::value_type        value_type;
+        typedef typename ft::iterator_traits<Iterator>::difference_type   difference_type;
+        typedef typename ft::iterator_traits<Iterator>::pointer           pointer;
+        typedef typename ft::iterator_traits<Iterator>::reference         reference;
 
         reverse_iterator() : _data() {
 
@@ -421,7 +421,7 @@ namespace ft {
 
     template<class InputIterator>
     inline void advance_sub_(InputIterator &it,
-                             typename std::iterator_traits<InputIterator>::difference_type n,
+                             typename ft::iterator_traits<InputIterator>::difference_type n,
                              std::input_iterator_tag) {
         for (; n > 0; --n)
             ++it;
@@ -429,7 +429,7 @@ namespace ft {
 
     template<class BidirectionalIterator>
     inline void advance_sub_(BidirectionalIterator &it,
-                             typename std::iterator_traits<BidirectionalIterator>::difference_type n,
+                             typename ft::iterator_traits<BidirectionalIterator>::difference_type n,
                              std::bidirectional_iterator_tag) {
         if (n > 0)
             for (; n > 0; --n)
@@ -441,35 +441,35 @@ namespace ft {
 
     template<class RandomAccessIterator>
     inline void advance_sub_(RandomAccessIterator &it,
-                             typename std::iterator_traits<RandomAccessIterator>::difference_type n,
+                             typename ft::iterator_traits<RandomAccessIterator>::difference_type n,
                              std::random_access_iterator_tag) {
         it += n;
     }
 
     template<typename Iterator>
-    inline void advance(Iterator &it, typename std::iterator_traits<Iterator>::difference_type n) {
-        advance_sub_(it, n, typename std::iterator_traits<Iterator>::iterator_category());
+    inline void advance(Iterator &it, typename ft::iterator_traits<Iterator>::difference_type n) {
+        advance_sub_(it, n, typename ft::iterator_traits<Iterator>::iterator_category());
     }
 
     template<class InputIterator>
-    inline typename std::iterator_traits<InputIterator>::difference_type
+    inline typename ft::iterator_traits<InputIterator>::difference_type
     _sub_distance(InputIterator first, InputIterator last, std::input_iterator_tag) {
-        typename std::iterator_traits<InputIterator>::difference_type dist(0);
+        typename ft::iterator_traits<InputIterator>::difference_type dist(0);
         for (; first != last; ++first)
             ++dist;
         return dist;
     }
 
     template<class RandomAccessIterator>
-    inline typename std::iterator_traits<RandomAccessIterator>::difference_type
+    inline typename ft::iterator_traits<RandomAccessIterator>::difference_type
     _sub_distance(RandomAccessIterator first, RandomAccessIterator last, std::random_access_iterator_tag) {
         return last - first;
     }
 
     template<class Iterator>
-    inline typename std::iterator_traits<Iterator>::difference_type
+    inline typename ft::iterator_traits<Iterator>::difference_type
     distance(Iterator first, Iterator last) {
-        return _sub_distance(first, last, typename std::iterator_traits<Iterator>::iterator_category());
+        return _sub_distance(first, last, typename ft::iterator_traits<Iterator>::iterator_category());
     }
 }
 
