@@ -11,6 +11,15 @@ namespace ft {
         static const bool value = true;
     };
 
+    template<class T>
+    struct remove_const {
+        typedef T type;
+    };
+    template<class T>
+    struct remove_const<const T> {
+        typedef T type;
+    };
+
     template<class T, class U>
     struct is_same : public false_type {
     };

@@ -129,7 +129,7 @@ namespace ft {
                 _construct_data(_data, _end, val);
             }
             else {
-                size_type      copySize = std::min(n, size());
+                size_type      copySize = ft::min(n, size());
                 for (size_type i = 0; i < copySize; ++i) {
                     _data[i] = val;
                 }

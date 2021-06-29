@@ -78,6 +78,8 @@ namespace ft {
     private:
         typedef typename value_type::first_type  _key_type;
         typedef typename value_type::second_type _mapped_type;
+        typedef const value_type                 *_const_pointer;
+        typedef const value_type                 &_const_reference;
     public:
         map_iterator() : _data() {}
 
@@ -120,30 +122,37 @@ namespace ft {
 
         reference operator*() { return *_data; }
 
+        _const_reference operator*() const { return *_data; }
+
         pointer operator->() { return _data.get_pointer(); }
 
-    private:
+        _const_pointer operator->() const { return _data.get_pointer(); }
+
         iterator_value _data;
+    private:
     };
 
     template<typename T>
     class map_const_iterator {
         typedef T iterator_value;
     public:
-        typedef typename iterator_value::value_type value_type;
-        typedef std::ptrdiff_t                      difference_type;
-        typedef value_type                          *pointer;
-        typedef value_type                          &reference;
-        typedef std::bidirectional_iterator_tag     iterator_category;
+        typedef const typename iterator_value::value_type value_type;
+        typedef std::ptrdiff_t                            difference_type;
+        typedef value_type                                *pointer;
+        typedef value_type                                &reference;
+        typedef std::bidirectional_iterator_tag           iterator_category;
     private:
-        typedef typename value_type::first_type  _key_type;
-        typedef typename value_type::second_type _mapped_type;
+        typedef typename value_type::first_type              _key_type;
+        typedef typename value_type::second_type             _mapped_type;
+        typedef const value_type                             *_const_pointer;
+        typedef const value_type                             &_const_reference;
+        typedef typename iterator_value::iterator_value_type _it_value_type;
     public:
         map_const_iterator() : _data() {}
 
         explicit map_const_iterator(iterator_value data) : _data(data) {}
 
-        explicit map_const_iterator(const map_iterator<T> &other) : _data(other.data) {}
+        map_const_iterator(const map_iterator<_it_value_type> &other) : _data(other._data) {}
 
         map_const_iterator(map_const_iterator const &other) : _data(other._data) {}
 
@@ -180,41 +189,42 @@ namespace ft {
 
         bool operator!=(map_const_iterator const &other) const { return !(*this == other); }
 
-        reference operator*() const { return *_data; }
+        _const_reference operator*() const { return *_data; }
 
-        pointer operator->() const { return _data.get_pointer(); }
+        _const_pointer operator->() const { return _data.get_pointer(); }
 
     private:
         iterator_value _data;
     };
 
-    template<class Key, class T, class Compare = LessThanPredicate <Key>, class Alloc = allocator <pair<const Key, T>>>
+    template<class Key, class T, class Compare = LessThanPredicate <Key>, class Alloc = allocator <pair<const Key, T> > >
     class map {
         struct _value_compare;
         struct _tree_node;
         struct _tree;
 
+        template<typename Type>
         class map_iterator_value;
 
         typedef _tree_node _node_type;
         typedef _tree      _tree_type;
     public:
-        typedef Key                                                      key_type;
-        typedef T                                                        mapped_type;
-        typedef pair<const key_type, mapped_type>                        value_type;
-        typedef Compare                                                  key_compare;
-        typedef _value_compare                                           value_compare;
-        typedef Alloc                                                    allocator_type;
-        typedef typename allocator_type::reference                       reference;
-        typedef typename allocator_type::const_reference                 const_reference;
-        typedef typename allocator_type::pointer                         pointer;
-        typedef typename allocator_type::const_pointer                   const_pointer;
-        typedef map_iterator<map_iterator_value>                         iterator;
-        typedef map_const_iterator<map_iterator_value>                   const_iterator;
-        typedef ft::reverse_iterator<iterator>                           reverse_iterator;
-        typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
-        typedef typename std::iterator_traits<iterator>::difference_type difference_type;
-        typedef std::size_t                                              size_type;
+        typedef Key                                                       key_type;
+        typedef T                                                         mapped_type;
+        typedef pair<const key_type, mapped_type>                         value_type;
+        typedef Compare                                                   key_compare;
+        typedef _value_compare                                            value_compare;
+        typedef Alloc                                                     allocator_type;
+        typedef typename allocator_type::reference                        reference;
+        typedef typename allocator_type::const_reference                  const_reference;
+        typedef typename allocator_type::pointer                          pointer;
+        typedef typename allocator_type::const_pointer                    const_pointer;
+        typedef map_iterator<map_iterator_value<_node_type> >             iterator;
+        typedef map_const_iterator<map_iterator_value<const _node_type> > const_iterator;
+        typedef ft::reverse_iterator<iterator>                            reverse_iterator;
+        typedef ft::reverse_iterator<const_iterator>                      const_reverse_iterator;
+        typedef typename std::iterator_traits<iterator>::difference_type  difference_type;
+        typedef std::size_t                                               size_type;
     private:
         typedef typename allocator_type::template rebind<_node_type>::other _node_allocator;
 
@@ -248,7 +258,7 @@ namespace ft {
             _node_type *next() {
                 _node_type *tmp = this;
                 if (tmp->right != NULL) {
-                    tmp = tmp->right;
+                    tmp     = tmp->right;
                     while (tmp->left)
                         tmp = tmp->left;
                 }
@@ -265,7 +275,7 @@ namespace ft {
             _node_type *prev() {
                 _node_type *tmp = this;
                 if (tmp->left != NULL) {
-                    tmp = tmp->left;
+                    tmp     = tmp->left;
                     while (tmp->right)
                         tmp = tmp->right;
                 }
@@ -332,10 +342,10 @@ namespace ft {
             _tree(const _tree &x) : head(x.head), size(x.size), start(x.start), end(x.end) {}
 
             _tree &operator=(const _tree &x) {
-                head = x.head;
-                size = x.size;
+                head  = x.head;
+                size  = x.size;
                 start = x.start;
-                end = x.end;
+                end   = x.end;
                 return *this;
             }
 
@@ -379,15 +389,22 @@ namespace ft {
             }
         };
 
+        template<typename Type>
         class map_iterator_value {
         public:
-            typedef typename _node_type::value_type value_type;
+            typedef const Type                            const_type;
+            typedef typename ft::remove_const<Type>::type type;
+            typedef map_iterator_value<type>              iterator_value_type;
+            typedef map_iterator_value<const_type>        const_iterator_value_type;
+            typedef typename Type::value_type             value_type;
 
             map_iterator_value() : _tree() {}
 
             map_iterator_value(_node_type *data, const _tree_type *tree) : _data(data), _tree(tree) {}
 
-            map_iterator_value(const map_iterator_value &other) : _data(other._data), _tree(other._tree) {}
+            map_iterator_value(const map_iterator_value<type> &other) : _data(other._data), _tree(other._tree) {}
+
+            map_iterator_value(const map_iterator_value<const_type> &other) : _data(other._data), _tree(other._tree) {}
 
             ~map_iterator_value() {}
 
@@ -435,11 +452,15 @@ namespace ft {
 
             reference operator*() { return *_data->value; }
 
+            const_reference operator*() const { return *_data->value; }
+
             pointer get_pointer() { return _data->value; }
 
-        private:
+            const_pointer get_pointer() const { return _data->value; }
+
             _node_type       *_data;
             const _tree_type *_tree;
+        private:
 
             _node_type *_get_lowest(_node_type *node) {
                 while (node->left != NULL) {
@@ -513,7 +534,7 @@ namespace ft {
         }
 
         const_reverse_iterator rbegin() const {
-            return reverse_iterator(end());
+            return const_reverse_iterator(end());
         }
 
         reverse_iterator rend() {
@@ -521,7 +542,7 @@ namespace ft {
         }
 
         const_reverse_iterator rend() const {
-            return reverse_iterator(begin());
+            return const_reverse_iterator(begin());
         }
 
         bool empty() const {
@@ -542,7 +563,7 @@ namespace ft {
             _node_type *node = _find_node(k);
             if (!node) {
                 // pair . iterator -> ret
-                return insert(k).first->second;
+                return insert(ft::make_pair(k, mapped_type())).first->second;
             }
             // _mode_type -> value_type -> ret
             return node->value->second;
@@ -694,11 +715,11 @@ namespace ft {
         }
 
         iterator _make_iterator(_node_type *node) {
-            return iterator(map_iterator_value(node, &_tree));
+            return iterator(map_iterator_value<_node_type>(node, &_tree));
         }
 
         const_iterator _make_const_iterator(_node_type *node) const {
-            return const_iterator(map_iterator_value(node, &_tree));
+            return iterator(map_iterator_value<_node_type>(node, &_tree));
         }
 
         _node_type *_create_node(const_reference val) {
@@ -743,7 +764,7 @@ namespace ft {
         _node_type *_delete_min(_node_type *node) {
             if (!node->left) {
                 node->parent->left = NULL;
-                _node_type *ret = NULL;
+                _node_type *ret    = NULL;
                 if (node->right) {
                     ret = node->right;
                     ret->parent = node->parent;
@@ -774,13 +795,13 @@ namespace ft {
             _node_type *tmp;
             if (child == parent->left) {
                 tmp = child->left;
-                child->left = parent;
+                child->left  = parent;
                 parent->left = tmp;
                 ft::swap(child->right, parent->right);
             }
             else if (child == parent->right) {
                 tmp = child->right;
-                child->right = parent;
+                child->right  = parent;
                 parent->right = tmp;
                 ft::swap(child->left, parent->left);
             }
@@ -793,10 +814,10 @@ namespace ft {
                 }
             }
             child->parent = parent->parent;
-            if (parent->left) parent->left->parent = parent;
+            if (parent->left) parent->left->parent   = parent;
             if (parent->right) parent->right->parent = parent;
-            if (child->left) child->left->parent = child;
-            if (child->right) child->right->parent = child;
+            if (child->left) child->left->parent     = child;
+            if (child->right) child->right->parent   = child;
             ft::swap(parent->color, child->color);
         }
 
@@ -852,8 +873,8 @@ namespace ft {
                         if (current->right && current->left) {
                             _node_type *tmp = current->left;
                             while (tmp->right)
-                                tmp = tmp->right;
-                            tmp->right = _tree.end;
+                                tmp         = tmp->right;
+                            tmp->right        = _tree.end;
                             _tree.end->parent = tmp;
                         }
                     }
@@ -871,7 +892,7 @@ namespace ft {
                     !current->right->left->is_red())
                     current = _tree.move_red_right(current);
                 if (_equal(key, current) && current->right) {
-                    _node_type *min = _get_min(current->right);
+                    _node_type *min        = _get_min(current->right);
                     if (min == current->right) {
                         _swap_relative_nodes(current, min);
                     }
