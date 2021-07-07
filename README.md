@@ -4,8 +4,6 @@
 
 ## STL containers ##
 
----
-
 This is an implementation if C++98 STL containers: vector, list, map, stack, queue; 
 and related to them: allocator, iterators, enable_if;
 without features of containers added on C++11 and later.
