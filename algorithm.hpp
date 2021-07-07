@@ -1,7 +1,7 @@
 #ifndef ALGORITHM_HPP
 #define ALGORITHM_HPP
 
-namespace ft {
+namespace stl {
 
     template<class Type>
     struct LessThanPredicate {

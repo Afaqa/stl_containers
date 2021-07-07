@@ -2,5 +2,6 @@
 !CMakeLists.txt
 !Makefile
 !.gitignore
+!README.md
 !*.hpp
 !*.cpp

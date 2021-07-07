@@ -3,7 +3,7 @@
 
 #include <limits>
 
-namespace ft {
+namespace stl {
 
     template<class T>
     class allocator;
