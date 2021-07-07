@@ -1,7 +1,7 @@
 #ifndef TYPE_TRAITS_HPP
 #define TYPE_TRAITS_HPP
 
-namespace ft {
+namespace stl {
 
     template <class T>
     struct has_iterator_typedefs

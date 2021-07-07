@@ -3,7 +3,7 @@
 
 #include "list.hpp"
 
-namespace ft {
+namespace stl {
     template<class T, class Container = list <T> >
     class queue {
     public:

@@ -9,7 +9,7 @@
 #include "algorithm.hpp"
 #include <iostream>
 
-namespace ft {
+namespace stl {
 
     template<class T>
     struct _list_node {
@@ -152,9 +152,9 @@ namespace ft {
         typedef typename allocator_type::const_pointer                   const_pointer;
         typedef list_iterator<value_type>                                iterator;
         typedef list_const_iterator<value_type>                          const_iterator;
-        typedef ft::reverse_iterator<iterator>                           reverse_iterator;
-        typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
-        typedef typename ft::iterator_traits<iterator>::difference_type difference_type;
+        typedef stl::reverse_iterator<iterator>                           reverse_iterator;
+        typedef stl::reverse_iterator<const_iterator>                     const_reverse_iterator;
+        typedef typename stl::iterator_traits<iterator>::difference_type difference_type;
     private:
         typedef _list_node<T>                                               _node_type;
         typedef typename allocator_type::template rebind<_node_type>::other _node_alloc;
@@ -369,7 +369,7 @@ namespace ft {
         }
 
         void swap(list &x) {
-            ft::swap(*this, x);
+            stl::swap(*this, x);
         }
 
         void resize(size_type n, value_type val = value_type()) {
@@ -407,7 +407,7 @@ namespace ft {
             _node_type *x_left_node = _get_node(first, x.begin(), x._node.next);
             _node_type *x_right_node = _get_node(last, x.begin(), x._node.next);
             x_right_node = x_right_node->prev;
-            size_type size = ft::distance(first, last);
+            size_type size = stl::distance(first, last);
             _connect_nodes(node, x_left_node, x_right_node);
             _size += size;
             x._size -= size;
@@ -484,7 +484,7 @@ namespace ft {
         void reverse() {
             _node_type *current = _node.next;
             for (;;current = current->prev) {
-                ft::swap(current->next, current->prev);
+                stl::swap(current->next, current->prev);
                 if (current == &_node)
                     break;
             }
@@ -558,11 +558,11 @@ namespace ft {
             for (_node_type *j = left; j != right; j = j->next) {
                 if (comp(*j->value, pivot)) {
                     i = i == &_node ? left : i->next;
-                    ft::swap(i->value, j->value);
+                    stl::swap(i->value, j->value);
                 }
             }
             i = i == &_node ? left : i->next;
-            ft::swap(i->value, right->value);
+            stl::swap(i->value, right->value);
             return i;
         }
     };

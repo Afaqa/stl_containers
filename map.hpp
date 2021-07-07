@@ -9,7 +9,7 @@
 #include "algorithm.hpp"
 #include <iostream>
 
-namespace ft {
+namespace stl {
 
     template<class T1, class T2>
     struct pair;
@@ -221,9 +221,9 @@ namespace ft {
         typedef typename allocator_type::const_pointer                    const_pointer;
         typedef map_iterator<map_iterator_value<_node_type> >             iterator;
         typedef map_const_iterator<map_iterator_value<const _node_type> > const_iterator;
-        typedef ft::reverse_iterator<iterator>                            reverse_iterator;
-        typedef ft::reverse_iterator<const_iterator>                      const_reverse_iterator;
-        typedef typename ft::iterator_traits<iterator>::difference_type  difference_type;
+        typedef stl::reverse_iterator<iterator>                            reverse_iterator;
+        typedef stl::reverse_iterator<const_iterator>                      const_reverse_iterator;
+        typedef typename stl::iterator_traits<iterator>::difference_type  difference_type;
         typedef std::size_t                                               size_type;
     private:
         typedef typename allocator_type::template rebind<_node_type>::other _node_allocator;
@@ -393,7 +393,7 @@ namespace ft {
         class map_iterator_value {
         public:
             typedef const Type                            const_type;
-            typedef typename ft::remove_const<Type>::type type;
+            typedef typename stl::remove_const<Type>::type type;
             typedef map_iterator_value<type>              iterator_value_type;
             typedef map_iterator_value<const_type>        const_iterator_value_type;
             typedef typename Type::value_type             value_type;
@@ -563,7 +563,7 @@ namespace ft {
             _node_type *node = _find_node(k);
             if (!node) {
                 // pair . iterator -> ret
-                return insert(ft::make_pair(k, mapped_type())).first->second;
+                return insert(stl::make_pair(k, mapped_type())).first->second;
             }
             // _mode_type -> value_type -> ret
             return node->value->second;
@@ -574,7 +574,7 @@ namespace ft {
                 _insert_pre_end(_tree.head, val);
                 _tree.head->color = _tree.head->black;
                 _tree.update_range();
-                return ft::make_pair(begin(), true);
+                return stl::make_pair(begin(), true);
             }
             pair<_node_type *, bool> inserted = _insert(_tree.head, val);
             _tree.update_range();
@@ -582,7 +582,7 @@ namespace ft {
 
             }
             _tree.head->color = _tree.head->black;
-            return ft::make_pair(_make_iterator(inserted.first), inserted.second);
+            return stl::make_pair(_make_iterator(inserted.first), inserted.second);
         }
 
         iterator insert(iterator position, const value_type &val) {
@@ -621,9 +621,9 @@ namespace ft {
         }
 
         void swap(map &x) {
-            ft::swap(_allocator, x._allocator);
-            ft::swap(_kcomp, x._kcomp);
-            ft::swap(_tree, x._tree);
+            stl::swap(_allocator, x._allocator);
+            stl::swap(_kcomp, x._kcomp);
+            stl::swap(_tree, x._tree);
         }
 
         void clear() {
@@ -797,13 +797,13 @@ namespace ft {
                 tmp = child->left;
                 child->left  = parent;
                 parent->left = tmp;
-                ft::swap(child->right, parent->right);
+                stl::swap(child->right, parent->right);
             }
             else if (child == parent->right) {
                 tmp = child->right;
                 child->right  = parent;
                 parent->right = tmp;
-                ft::swap(child->left, parent->left);
+                stl::swap(child->left, parent->left);
             }
             if (parent->parent) {
                 if (parent->parent->right == parent) {
@@ -818,7 +818,7 @@ namespace ft {
             if (parent->right) parent->right->parent = parent;
             if (child->left) child->left->parent     = child;
             if (child->right) child->right->parent   = child;
-            ft::swap(parent->color, child->color);
+            stl::swap(parent->color, child->color);
         }
 
         // swap nodes (swap links between their parents and children)
@@ -829,7 +829,7 @@ namespace ft {
             if (a->parent && b->parent) {
                 _node_type *&a_par_node = a->parent->left == a ? a->parent->left : a->parent->right;
                 _node_type *&b_par_node = b->parent->left == b ? b->parent->left : b->parent->right;
-                ft::swap(a_par_node, b_par_node);
+                stl::swap(a_par_node, b_par_node);
             }
             else if (a->parent) {
                 if (a->parent->left == a)
@@ -850,10 +850,10 @@ namespace ft {
             if (b->left) b->left->parent   = a;
             if (b->right) b->right->parent = a;
             // swap children and parent pointers of a and b
-            ft::swap(b->left, a->left);
-            ft::swap(b->right, a->right);
-            ft::swap(b->parent, a->parent);
-            ft::swap(b->color, a->color);
+            stl::swap(b->left, a->left);
+            stl::swap(b->right, a->right);
+            stl::swap(b->parent, a->parent);
+            stl::swap(b->color, a->color);
         }
 
         _node_type *_delete(_node_type *current, const key_type &key) {
@@ -898,7 +898,7 @@ namespace ft {
                     }
                     else
                         _swap_nodes(current, min);
-                    ft::swap(current, min);
+                    stl::swap(current, min);
                     if (min == current->right) {
                         current->right = min->right;
                     }

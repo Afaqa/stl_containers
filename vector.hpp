@@ -9,7 +9,7 @@
 #include "algorithm.hpp"
 #include <iostream>
 
-namespace ft {
+namespace stl {
 
     template<class T, class Alloc = allocator<T> >
     class vector {
@@ -25,9 +25,9 @@ namespace ft {
         typedef typename allocator_type::const_pointer                   const_pointer;
         typedef random_access_iterator<value_type>                       iterator;
         typedef random_access_iterator<const value_type>                 const_iterator;
-        typedef ft::reverse_iterator<iterator>                           reverse_iterator;
-        typedef ft::reverse_iterator<const_iterator>                     const_reverse_iterator;
-        typedef typename ft::iterator_traits<iterator>::difference_type difference_type;
+        typedef stl::reverse_iterator<iterator>                           reverse_iterator;
+        typedef stl::reverse_iterator<const_iterator>                     const_reverse_iterator;
+        typedef typename stl::iterator_traits<iterator>::difference_type difference_type;
 
         explicit vector(const allocator_type &alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL),
                                                                           _capacity(0) {
@@ -46,7 +46,7 @@ namespace ft {
         vector(InputIterator first,
                typename enable_if<
                    is_valid_iterator_type<InputIterator, std::random_access_iterator_tag, pointer>::value &&
-                   !is_same<typename ft::iterator_traits<InputIterator>::iterator_category, std::random_access_iterator_tag>::value,
+                   !is_same<typename stl::iterator_traits<InputIterator>::iterator_category, std::random_access_iterator_tag>::value,
                    InputIterator>::type last,
                const allocator_type &alloc = allocator_type()) :
             _allocator(alloc), _data(NULL), _end(NULL), _capacity(0) {
@@ -60,10 +60,10 @@ namespace ft {
         vector(ForwardIterator first,
                typename enable_if<
                    is_valid_iterator_type<ForwardIterator, std::random_access_iterator_tag, pointer>::value &&
-                   !is_same<typename ft::iterator_traits<ForwardIterator>::iterator_category, std::input_iterator_tag>::value, ForwardIterator>::type last,
+                   !is_same<typename stl::iterator_traits<ForwardIterator>::iterator_category, std::input_iterator_tag>::value, ForwardIterator>::type last,
                const allocator_type &alloc = allocator_type()) : _allocator(alloc), _data(NULL), _end(NULL),
                                                                  _capacity(0) {
-            difference_type n = ft::distance(first, last);
+            difference_type n = stl::distance(first, last);
             if (n != 0) {
                 _allocate(n);
                 _construct_data(first, last);
@@ -100,7 +100,7 @@ namespace ft {
         template<class ForwardIterator>
         void assign(ForwardIterator first,
                     typename enable_if<is_valid_iterator_type<ForwardIterator, std::forward_iterator_tag, pointer>::value, ForwardIterator>::type last) {
-            size_type n = ft::distance(first, last);
+            size_type n = stl::distance(first, last);
             if (n > _capacity) {
                 _delete_data();
                 _allocate(n);
@@ -129,7 +129,7 @@ namespace ft {
                 _construct_data(_data, _end, val);
             }
             else {
-                size_type      copySize = ft::min(n, size());
+                size_type      copySize = stl::min(n, size());
                 for (size_type i = 0; i < copySize; ++i) {
                     _data[i] = val;
                 }

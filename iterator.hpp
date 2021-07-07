@@ -4,17 +4,17 @@
 #include <iterator>
 #include "type_traits.hpp"
 
-namespace ft {
+namespace stl {
 
     template<class Iterator>
     class reverse_iterator {
     public:
         typedef Iterator                                                   iterator_type;
-        typedef typename ft::iterator_traits<Iterator>::iterator_category iterator_category;
-        typedef typename ft::iterator_traits<Iterator>::value_type        value_type;
-        typedef typename ft::iterator_traits<Iterator>::difference_type   difference_type;
-        typedef typename ft::iterator_traits<Iterator>::pointer           pointer;
-        typedef typename ft::iterator_traits<Iterator>::reference         reference;
+        typedef typename stl::iterator_traits<Iterator>::iterator_category iterator_category;
+        typedef typename stl::iterator_traits<Iterator>::value_type        value_type;
+        typedef typename stl::iterator_traits<Iterator>::difference_type   difference_type;
+        typedef typename stl::iterator_traits<Iterator>::pointer           pointer;
+        typedef typename stl::iterator_traits<Iterator>::reference         reference;
 
         reverse_iterator() : _data() {
 
@@ -421,7 +421,7 @@ namespace ft {
 
     template<class InputIterator>
     inline void advance_sub_(InputIterator &it,
-                             typename ft::iterator_traits<InputIterator>::difference_type n,
+                             typename stl::iterator_traits<InputIterator>::difference_type n,
                              std::input_iterator_tag) {
         for (; n > 0; --n)
             ++it;
@@ -429,7 +429,7 @@ namespace ft {
 
     template<class BidirectionalIterator>
     inline void advance_sub_(BidirectionalIterator &it,
-                             typename ft::iterator_traits<BidirectionalIterator>::difference_type n,
+                             typename stl::iterator_traits<BidirectionalIterator>::difference_type n,
                              std::bidirectional_iterator_tag) {
         if (n > 0)
             for (; n > 0; --n)
@@ -441,35 +441,35 @@ namespace ft {
 
     template<class RandomAccessIterator>
     inline void advance_sub_(RandomAccessIterator &it,
-                             typename ft::iterator_traits<RandomAccessIterator>::difference_type n,
+                             typename stl::iterator_traits<RandomAccessIterator>::difference_type n,
                              std::random_access_iterator_tag) {
         it += n;
     }
 
     template<typename Iterator>
-    inline void advance(Iterator &it, typename ft::iterator_traits<Iterator>::difference_type n) {
-        advance_sub_(it, n, typename ft::iterator_traits<Iterator>::iterator_category());
+    inline void advance(Iterator &it, typename stl::iterator_traits<Iterator>::difference_type n) {
+        advance_sub_(it, n, typename stl::iterator_traits<Iterator>::iterator_category());
     }
 
     template<class InputIterator>
-    inline typename ft::iterator_traits<InputIterator>::difference_type
+    inline typename stl::iterator_traits<InputIterator>::difference_type
     _sub_distance(InputIterator first, InputIterator last, std::input_iterator_tag) {
-        typename ft::iterator_traits<InputIterator>::difference_type dist(0);
+        typename stl::iterator_traits<InputIterator>::difference_type dist(0);
         for (; first != last; ++first)
             ++dist;
         return dist;
     }
 
     template<class RandomAccessIterator>
-    inline typename ft::iterator_traits<RandomAccessIterator>::difference_type
+    inline typename stl::iterator_traits<RandomAccessIterator>::difference_type
     _sub_distance(RandomAccessIterator first, RandomAccessIterator last, std::random_access_iterator_tag) {
         return last - first;
     }
 
     template<class Iterator>
-    inline typename ft::iterator_traits<Iterator>::difference_type
+    inline typename stl::iterator_traits<Iterator>::difference_type
     distance(Iterator first, Iterator last) {
-        return _sub_distance(first, last, typename ft::iterator_traits<Iterator>::iterator_category());
+        return _sub_distance(first, last, typename stl::iterator_traits<Iterator>::iterator_category());
     }
 }
 
